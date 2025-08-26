@@ -8,7 +8,7 @@ export const verifyToken = async (req, res, next) => {
     try {
         const token = req.headers['x-access-token'];
 
-        if (!token) return res.status(403).json({ message: 'No token provided' });
+        if (!token) return res.status(403).json({ message: 'No se ha proporcionado ningún token.' });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.userId = decoded.id; // Guardamos el id del usuario en el objeto request
@@ -16,12 +16,12 @@ export const verifyToken = async (req, res, next) => {
         // Opcional: Verificar que el usuario realmente existe
         const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
         if (users.length === 0) {
-            return res.status(404).json({ message: 'No user found' });
+            return res.status(404).json({ message: 'No se ha encontrado ningún usuario.' });
         }
 
         next(); // Si todo es correcto, continúa a la siguiente función (el controlador)
     } catch (error) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: 'No autorizado' });
     }
 };
 
@@ -34,5 +34,5 @@ export const isAdmin = async (req, res, next) => {
         return;
     }
 
-    return res.status(403).json({ message: 'Require Admin Role!' });
+    return res.status(403).json({ message: '¡Se requiere rol de administrador!' });
 };

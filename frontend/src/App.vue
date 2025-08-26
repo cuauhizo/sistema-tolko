@@ -1,11 +1,22 @@
-<script setup></script>
+<script setup>
+import { RouterView } from 'vue-router';
+import Navbar from './components/Navbar.vue';
+import { useAuthStore } from './stores/auth';
+
+const authStore = useAuthStore();
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <Navbar v-if="authStore.isAuthenticated" />
+
+  <main>
+    <RouterView />
+  </main>
 </template>
 
-<style scoped></style>
+<style>
+/* Puedes agregar estilos globales aquí si lo deseas */
+body {
+  background-color: #f8f9fa;
+}
+</style>

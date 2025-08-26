@@ -10,7 +10,7 @@ export const getUsers = async (req, res) => {
         );
         res.status(200).json(rows);
     } catch (error) {
-        return res.status(500).json({ message: 'Something went wrong' });
+        return res.status(500).json({ message: 'Algo salió mal.' });
     }
 };
 
@@ -18,7 +18,7 @@ export const getUsers = async (req, res) => {
 export const createUser = async (req, res) => {
     const { username, email, password, role_id } = req.body;
     if (!username || !email || !password || !role_id) {
-        return res.status(400).json({ message: 'Missing required fields' });
+        return res.status(400).json({ message: 'Faltan campos obligatorios' });
     }
     try {
         const salt = await bcrypt.genSalt(10);
@@ -38,9 +38,9 @@ export const createUser = async (req, res) => {
     } catch (error) {
          // Código de error para duplicados en MySQL
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Username or email already exists' });
+            return res.status(409).json({ message: 'El nombre de usuario o correo electrónico ya existe.' });
         }
-        return res.status(500).json({ message: 'Something went wrong' });
+        return res.status(500).json({ message: 'Algo salió mal.' });
     }
 };
 
@@ -51,11 +51,11 @@ export const getUserById = async (req, res) => {
         const [rows] = await pool.query('SELECT id, username, email, role_id FROM users WHERE id = ?', [id]);
 
         if (rows.length <= 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         res.status(200).json(rows[0]);
     } catch (error) {
-        return res.status(500).json({ message: 'Something went wrong' });
+        return res.status(500).json({ message: 'Algo salió mal.' });
     }
 };
 
@@ -74,7 +74,7 @@ export const updateUser = async (req, res) => {
         );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
         
         // Devolvemos los datos actualizados
@@ -83,9 +83,9 @@ export const updateUser = async (req, res) => {
 
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Username or email already exists' });
+            return res.status(409).json({ message: 'El nombre de usuario o correo electrónico ya existe.' });
         }
-        return res.status(500).json({ message: 'Something went wrong' });
+        return res.status(500).json({ message: 'Algo salió mal.' });
     }
 };
 
@@ -96,11 +96,11 @@ export const deleteUser = async (req, res) => {
         const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
 
         if (result.affectedRows <= 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
         // 204 significa "No Content", una respuesta común para un DELETE exitoso.
         res.sendStatus(204); 
     } catch (error) {
-        return res.status(500).json({ message: 'Something went wrong' });
+        return res.status(500).json({ message: 'Algo salió mal.' });
     }
 };

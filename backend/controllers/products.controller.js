@@ -1,15 +1,42 @@
-import { Router } from 'express';
-import { getProducts, createProduct, updateProduct, deleteProduct } from '../controllers/products.controller.js';
-import { verifyToken, isAdmin } from '../middlewares/authJwt.js';
+import { pool } from '../config/db.js';
 
-const router = Router();
+export const getProducts = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM products');
+        res.json(rows);
+    } catch (error) {
+        return res.status(500).json({ message: 'Algo salió mal.' });
+    }
+};
 
-// Cualquiera puede ver los productos
-router.get('/', getProducts);
+// ... y así para los otros métodos (create, update, delete)
 
-// Solo usuarios autenticados Y que sean admin pueden crear, actualizar o eliminar
-router.post('/', [verifyToken, isAdmin], createProduct);
-router.put('/:id', [verifyToken, isAdmin], updateProduct);
-router.delete('/:id', [verifyToken, isAdmin], deleteProduct);
+export const createProduct = async (req, res) => {
+    try {
+        // const [rows] = await pool.query('SELECT * FROM products');
+        // res.json(rows);
+        console.log('reached createProduct controller');
+    } catch (error) {
+        return res.status(500).json({ message: 'Algo salió mal.' });
+    }
+};
 
-export default router;
+export const updateProduct = async (req, res) => {
+    try {
+        // const [rows] = await pool.query('SELECT * FROM products');
+        // res.json(rows);
+        console.log('reached updateProduct controller');
+    } catch (error) {
+        return res.status(500).json({ message: 'Algo salió mal.' });
+    }
+}
+
+export const deleteProduct = async (req, res) => {
+    try {
+        // const [rows] = await pool.query('SELECT * FROM products');
+        // res.json(rows);
+        console.log('reached deleteProduct controller');
+    } catch (error) {
+        return res.status(500).json({ message: 'Algo salió mal.' });
+    }
+}

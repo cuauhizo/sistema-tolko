@@ -1,0 +1,54 @@
+<script setup>
+import { RouterLink, useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/login');
+};
+</script>
+
+<template>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <RouterLink class="navbar-brand" to="/">Sistema de Inventario</RouterLink>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul v-if="authStore.isAuthenticated" class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/">Inicio</RouterLink>
+          </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/products">Productos</RouterLink>
+          </li>
+          </ul>
+
+        <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <button @click="handleLogout" class="btn btn-outline-light">Cerrar Sesión</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<style scoped>
+/* Agrega estilos si es necesario */
+.router-link-active {
+  font-weight: bold;
+}
+</style>

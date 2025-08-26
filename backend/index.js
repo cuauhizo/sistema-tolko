@@ -21,7 +21,7 @@ app.use(express.json());
 const whiteList = [process.env.FRONTEND_URL, undefined];
 const corsOptions = {
   origin: function (origin, callback) {
-    // console.log(origin);
+    console.log(origin);
     if (whiteList.includes(origin)) {
       //Permitir la conexión
       callback(null, true);

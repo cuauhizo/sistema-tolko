@@ -29,7 +29,7 @@ export const signUp = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Failed to create user' });
+        res.status(500).json({ message: 'No se pudo crear el usuario.' });
     }
 };
 
@@ -37,18 +37,19 @@ export const signUp = async (req, res) => {
 export const signIn = async (req, res) => {
     const { email, password } = req.body;
 
+    console.log(objects(req.body));
     try {
         // 1. Buscar al usuario por email
         const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         const user = users[0];
 
         // 2. Comparar la contraseña ingresada con la hasheada en la BD
         const passwordIsValid = await bcrypt.compare(password, user.password);
         if (!passwordIsValid) {
-            return res.status(401).json({ token: null, message: 'Invalid Password' });
+            return res.status(401).json({ token: null, message: 'Contraseña no válida' });
         }
 
         // 3. Si es válida, crear y enviar el token
@@ -60,6 +61,6 @@ export const signIn = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Login error' });
+        res.status(500).json({ message: 'Error de inicio de sesión' });
     }
 };
