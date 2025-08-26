@@ -6,7 +6,7 @@ import cors from 'cors';
 // Importar rutas
 import productsRoutes from './routes/products.routes.js';
 import authRoutes from './routes/auth.routes.js';
-import usersRoutes from './routes/users.routes.js'; 
+import usersRoutes from './routes/users.routes.js';
 
 // Variables de entorno
 dotenv.config();

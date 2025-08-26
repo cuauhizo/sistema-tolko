@@ -5,9 +5,10 @@ import { verifyToken, isAdmin } from '../middlewares/authJwt.js';
 const router = Router();
 
 // Cualquiera puede ver los productos
-router.get('/', getProducts);
+// router.get('/', getProducts);
 
 // Solo usuarios autenticados Y que sean admin pueden crear, actualizar o eliminar
+router.get('/', [verifyToken], getProducts);
 router.post('/', [verifyToken, isAdmin], createProduct);
 router.put('/:id', [verifyToken, isAdmin], updateProduct);
 router.delete('/:id', [verifyToken, isAdmin], deleteProduct);
