@@ -15,7 +15,7 @@ export const createProduct = async (req, res) => {
     try {
         // const [rows] = await pool.query('SELECT * FROM products');
         // res.json(rows);
-        console.log('reached createProduct controller');
+        console.log('Desde controlador createProduct.');
     } catch (error) {
         return res.status(500).json({ message: 'Algo salió mal.' });
     }
@@ -25,7 +25,7 @@ export const updateProduct = async (req, res) => {
     try {
         // const [rows] = await pool.query('SELECT * FROM products');
         // res.json(rows);
-        console.log('reached updateProduct controller');
+        console.log('Desde controlador updateProduct.');
     } catch (error) {
         return res.status(500).json({ message: 'Algo salió mal.' });
     }
@@ -35,7 +35,7 @@ export const deleteProduct = async (req, res) => {
     try {
         // const [rows] = await pool.query('SELECT * FROM products');
         // res.json(rows);
-        console.log('reached deleteProduct controller');
+        console.log('Desde controlador deleteProduct.');
     } catch (error) {
         return res.status(500).json({ message: 'Algo salió mal.' });
     }

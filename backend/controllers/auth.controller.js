@@ -37,7 +37,6 @@ export const signUp = async (req, res) => {
 export const signIn = async (req, res) => {
     const { email, password } = req.body;
 
-    console.log(objects(req.body));
     try {
         // 1. Buscar al usuario por email
         const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
