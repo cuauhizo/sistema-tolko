@@ -1,9 +1,9 @@
 <script setup>
-import { RouterView } from 'vue-router';
-import Navbar from './components/Navbar.vue';
-import { useAuthStore } from './stores/auth';
+import { RouterView } from 'vue-router'
+import Navbar from './components/Navbar.vue'
+import { useAuthStore } from './stores/auth'
 
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 </script>
 
 <template>
@@ -12,6 +12,7 @@ const authStore = useAuthStore();
   <main>
     <RouterView />
   </main>
+  <Toast />
 </template>
 
 <style>

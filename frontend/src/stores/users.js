@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
+import { useNotificationStore } from './notifications'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
@@ -27,6 +28,7 @@ export const useUsersStore = defineStore('users', {
 
     // Aquí agregaremos las acciones para crear, actualizar y eliminar usuarios más adelante
     async addUser(userData) {
+      const notifications = useNotificationStore()
       this.isLoading = true
       this.error = null
       try {
@@ -34,7 +36,9 @@ export const useUsersStore = defineStore('users', {
         // Para obtener el nombre del rol, necesitamos hacer una pequeña trampa o ajustar el backend
         const newUser = { ...data, role: data.role_id === 1 ? 'admin' : 'user' }
         this.users.push(newUser)
+        notifications.showSuccess('¡Usuario agregado exitosamente!')
       } catch (error) {
+        notifications.showError('No se pudo agregar el usuario.')
         this.error = 'No se pudo agregar el usuario.'
         console.error('Error al agregar usuario:', error)
         throw error
@@ -43,20 +47,8 @@ export const useUsersStore = defineStore('users', {
       }
     },
 
-    async deleteUser(userId) {
-      this.error = null
-      try {
-        await apiClient.delete(`/users/${userId}`)
-        // Filtramos la lista para remover el usuario eliminado de la vista
-        this.users = this.users.filter((u) => u.id !== userId)
-      } catch (error) {
-        this.error = 'No se pudo eliminar el usuario.'
-        console.error('Error al eliminar usuario:', error)
-        throw error
-      }
-    },
-
     async updateUser(userId, userData) {
+      const notifications = useNotificationStore()
       this.error = null
       this.isLoading = true
       try {
@@ -69,12 +61,30 @@ export const useUsersStore = defineStore('users', {
         if (index !== -1) {
           this.users[index] = updatedUser
         }
+        notifications.showSuccess('¡Usuario actualizado correctamente!')
       } catch (error) {
+        notifications.showError('No se pudo actualizar el usuario.')
         this.error = 'No se pudo actualizar el usuario.'
         console.error('Error al actualizar usuario:', error)
         throw error
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async deleteUser(userId) {
+      const notifications = useNotificationStore()
+      this.error = null
+      try {
+        await apiClient.delete(`/users/${userId}`)
+        // Filtramos la lista para remover el usuario eliminado de la vista
+        this.users = this.users.filter((u) => u.id !== userId)
+        notifications.showSuccess('Usuario eliminado.')
+      } catch (error) {
+        notifications.showError('No se pudo eliminar el usuario.')
+        this.error = 'No se pudo eliminar el usuario.'
+        console.error('Error al eliminar usuario:', error)
+        throw error
       }
     },
   },

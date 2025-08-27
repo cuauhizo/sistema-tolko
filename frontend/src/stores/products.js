@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
+import { useNotificationStore } from './notifications'
 
 export const useProductsStore = defineStore('products', {
   state: () => ({
@@ -26,13 +27,16 @@ export const useProductsStore = defineStore('products', {
 
     // añadirProducto
     async addProduct(productData) {
+      const notifications = useNotificationStore()
       this.isLoading = true
       this.error = null
       try {
         const { data } = await apiClient.post('/products', productData)
         // Agregamos el nuevo producto a la lista existente sin tener que recargar todo
         this.products.push(data)
+        notifications.showSuccess('¡Producto agregado exitosamente!')
       } catch (error) {
+        notifications.showError('No se pudo agregar el producto.')
         this.error = 'No se pudo agregar el producto.'
         console.error('Error adding product:', error)
         throw error // Lanzamos el error para que la vista pueda manejarlo
@@ -43,6 +47,7 @@ export const useProductsStore = defineStore('products', {
 
     // actualizarProducto
     async updateProduct(productId, productData) {
+      const notifications = useNotificationStore()
       this.isLoading = true
       this.error = null
       try {
@@ -54,7 +59,9 @@ export const useProductsStore = defineStore('products', {
           // Reemplazamos el objeto antiguo con el nuevo para actualizar la UI
           this.products[index] = data
         }
+        notifications.showSuccess('¡Producto actualizado correctamente!')
       } catch (error) {
+        notifications.showError('No se pudo actualizar el producto.')
         this.error = 'No se pudo actualizar el producto.'
         console.error('Error al actualizar producto:', error)
         throw error
@@ -65,12 +72,15 @@ export const useProductsStore = defineStore('products', {
 
     // eliminarProducto
     async deleteProduct(productId) {
+      const notifications = useNotificationStore()
       this.error = null
       try {
         await apiClient.delete(`/products/${productId}`)
         // Filtramos la lista para remover el producto eliminado, actualizando la UI al instante
         this.products = this.products.filter((p) => p.id !== productId)
+        notifications.showSuccess('Producto eliminado.')
       } catch (error) {
+        notifications.showError('No se pudo eliminar el producto.')
         this.error = 'No se pudo eliminar el producto.'
         console.error('Error al eliminar producto:', error)
         throw error
