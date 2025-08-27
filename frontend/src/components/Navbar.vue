@@ -1,14 +1,14 @@
 <script setup>
-import { RouterLink, useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const authStore = useAuthStore();
-const router = useRouter();
+const authStore = useAuthStore()
+const router = useRouter()
 
 const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -34,9 +34,16 @@ const handleLogout = () => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/products">Productos</RouterLink>
           </li>
-          </ul>
-
-        <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto">
+          <li v-if="authStore.isAdmin" class="nav-item">
+            <RouterLink class="nav-link" to="/users">Usuarios</RouterLink>
+          </li>
+        </ul>
+        <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto d-flex align-items-center flex-row">
+          <li class="nav-item me-3">
+            <span class="navbar-text">
+              Hola, {{ authStore.username }}
+            </span>
+          </li>
           <li class="nav-item">
             <button @click="handleLogout" class="btn btn-outline-light">Cerrar Sesión</button>
           </li>
