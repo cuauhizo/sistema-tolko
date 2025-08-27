@@ -21,7 +21,7 @@ const formatCurrency = (value) => {
 </script>
 
 <template>
-  <div class="container mt-4">
+  <div class="container my-4">
     <h1 class="mb-4">Dashboard</h1>
     <h4 class="text-muted mb-4">Bienvenido, {{ authStore.username }}</h4>
 
@@ -103,6 +103,21 @@ const formatCurrency = (value) => {
                   Gestionar las cuentas y los roles de los usuarios del sistema.
                 </p>
                 <span class="btn btn-outline-secondary mt-auto">Ir a Usuarios</span>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+
+        <div v-if="authStore.isAdmin" class="col-md-6 col-lg-4">
+          <RouterLink to="/categories" class="card-link-wrapper">
+            <div class="card text-center shadow-sm h-100">
+              <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-tags-fill display-3 text-info mb-3"></i>
+                <h5 class="card-title text-info">Gestionar Categorías</h5>
+                <p class="card-text text-muted flex-grow-1">
+                  Crear, editar y organizar las categorías de los productos.
+                </p>
+                <span class="btn btn-outline-info mt-auto">Ir a Categorías</span>
               </div>
             </div>
           </RouterLink>

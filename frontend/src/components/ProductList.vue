@@ -37,6 +37,7 @@ const handleEditClick = (product) => {
       <thead class="table-dark">
         <tr>
           <th>Nombre</th>
+          <th>Categoría</th>
           <th>Descripción</th>
           <th>Stock</th>
           <th>Unidad</th>
@@ -46,10 +47,16 @@ const handleEditClick = (product) => {
       </thead>
       <tbody>
         <tr v-if="products.length === 0">
-          <td colspan="6" class="text-center">No hay productos para mostrar.</td>
+          <td colspan="7" class="text-center">No hay productos para mostrar.</td>
         </tr>
         <tr v-for="product in products" :key="product.id">
           <td>{{ product.name }}</td>
+          <td>
+            <span v-if="product.category_name" class="badge bg-secondary">{{
+              product.category_name
+            }}</span>
+            <span v-else class="text-muted">N/A</span>
+          </td>
           <td>{{ product.description }}</td>
           <td>{{ product.stock }}</td>
           <td>{{ product.unit }}</td>

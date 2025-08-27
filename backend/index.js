@@ -8,6 +8,7 @@ import productsRoutes from './routes/products.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import categoriesRoutes from './routes/categories.routes.js';
 
 // Variables de entorno
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 // Definir puerto
 const PORT = process.env.PORT || 4000;

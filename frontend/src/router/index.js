@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import HomeView from '../views/HomeView.vue' // Crea un HomeView.vue simple
+import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
-import ProductsView from '../views/ProductsView.vue' // El que ya tenías
+import ProductsView from '../views/ProductsView.vue'
 import UsersView from '../views/UsersView.vue'
+import CategoriesView from '../views/CategoriesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,19 +13,25 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true }, // Esta ruta requiere autenticación
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/categories',
+      name: 'categories',
+      component: CategoriesView,
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/products',
       name: 'products',
       component: ProductsView,
-      meta: { requiresAuth: true }, // Esta también
+      meta: { requiresAuth: true },
     },
     {
-      path: '/users', // <-- AÑADE LA NUEVA RUTA
+      path: '/users',
       name: 'users',
       component: UsersView,
-      meta: { requiresAuth: true, requiresAdmin: true }, // <-- Ruta protegida y solo para admins
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/login',
@@ -43,7 +50,8 @@ router.beforeEach((to, from, next) => {
   }
 
   // Si la ruta requiere admin y el usuario no lo es, lo redirigimos
-  if (to.meta.requiresAdmin && !authStore.isAdmin) { // <-- Necesitaremos añadir `isAdmin` a la store
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    // <-- Necesitaremos añadir `isAdmin` a la store
     return next({ name: 'home' }) // O a una página de "Acceso Denegado"
   }
 

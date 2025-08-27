@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useCategoriesStore } from '../stores/categories'
 
 // 1. Define las props que el componente puede recibir
 const props = defineProps({
@@ -9,8 +10,14 @@ const props = defineProps({
   },
 })
 
+const categoriesStore = useCategoriesStore()
 const product = ref({})
 const modalTitle = ref('Agregar Nuevo Producto')
+
+// 3. Carga las categorías cuando el componente se monta
+onMounted(() => {
+  categoriesStore.fetchCategories()
+})
 
 // 2. Observa cambios en la prop 'productToEdit'
 watch(
@@ -51,7 +58,7 @@ defineExpose({
     aria-labelledby="productModalLabel"
     aria-hidden="true"
   >
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="productModalLabel">{{ modalTitle }}</h5>
@@ -64,10 +71,36 @@ defineExpose({
         </div>
         <form @submit.prevent="handleSubmit">
           <div class="modal-body">
-            <div class="mb-3">
-              <label for="name" class="form-label">Nombre del Producto</label>
-              <input type="text" class="form-control" id="name" v-model="product.name" required />
+            <div class="row">
+              <div class="col-md-8">
+                <div class="mb-3">
+                  <label for="name" class="form-label">Nombre del Producto</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="name"
+                    v-model="product.name"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="category" class="form-label">Categoría</label>
+                  <select class="form-select" id="category" v-model="product.category_id">
+                    <option :value="null">Sin categoría</option>
+                    <option
+                      v-for="category in categoriesStore.categories"
+                      :key="category.id"
+                      :value="category.id"
+                    >
+                      {{ category.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
+
             <div class="mb-3">
               <label for="description" class="form-label">Descripción</label>
               <textarea
@@ -77,6 +110,7 @@ defineExpose({
                 rows="3"
               ></textarea>
             </div>
+
             <div class="row">
               <div class="col-md-4 mb-3">
                 <label for="stock" class="form-label">Stock</label>
@@ -117,9 +151,7 @@ defineExpose({
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">
-              Guardar Cambios
-            </button>
+            <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Guardar</button>
           </div>
         </form>
       </div>

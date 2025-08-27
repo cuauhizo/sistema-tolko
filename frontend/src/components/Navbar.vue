@@ -37,12 +37,16 @@ const handleLogout = () => {
           <li v-if="authStore.isAdmin" class="nav-item">
             <RouterLink class="nav-link" to="/users">Usuarios</RouterLink>
           </li>
+          <li v-if="authStore.isAdmin" class="nav-item">
+            <RouterLink class="nav-link" to="/categories">Categorías</RouterLink>
+          </li>
         </ul>
-        <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto d-flex align-items-center flex-row">
+        <ul
+          v-if="authStore.isAuthenticated"
+          class="navbar-nav ms-auto d-flex align-items-center flex-row"
+        >
           <li class="nav-item me-3">
-            <span class="navbar-text">
-              Hola, {{ authStore.username }}
-            </span>
+            <span class="navbar-text"> Hola, {{ authStore.username }} </span>
           </li>
           <li class="nav-item">
             <button @click="handleLogout" class="btn btn-outline-light">Cerrar Sesión</button>
