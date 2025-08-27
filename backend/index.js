@@ -1,12 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import colors from 'colors'
+import colors from 'colors';
 import cors from 'cors';
 
 // Importar rutas
 import productsRoutes from './routes/products.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 // Variables de entorno
 dotenv.config();
@@ -42,7 +43,8 @@ app.use(cors(corsOptions));
 // Rutas de la API
 app.use('/api/products', productsRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes); 
+app.use('/api/users', usersRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Definir puerto
 const PORT = process.env.PORT || 4000;
