@@ -4,55 +4,52 @@ import { useNotificationStore } from './notifications'
 
 export const useCategoriesStore = defineStore('categories', {
   state: () => ({
+    // El estado es un array simple. La DataTable u otros componentes se encargarán de la presentación.
     categories: [],
     isLoading: false,
     error: null,
   }),
 
   actions: {
+    // ÚNICA FUNCIÓN PARA OBTENER LAS CATEGORÍAS
     async fetchCategories() {
       this.isLoading = true
       this.error = null
       try {
-        const { data } = await apiClient.get('/categories')
-        this.categories = data
+        // Pedimos todas las categorías con un límite alto
+        const response = await apiClient.get('/categories?limit=1000')
+        // Guardamos directamente el array que viene en el campo 'data' de la respuesta
+        this.categories = response.data.data
       } catch (error) {
-        const notifications = useNotificationStore()
         this.error = 'No se pudieron cargar las categorías.'
-        notifications.showError(this.error)
         console.error('Error al obtener categorías:', error)
       } finally {
         this.isLoading = false
       }
     },
 
+    // LAS ACCIONES CRUD AHORA RECARGAN LA LISTA PARA MÁXIMA CONSISTENCIA
     async addCategory(categoryData) {
       const notifications = useNotificationStore()
       try {
-        const { data } = await apiClient.post('/categories', categoryData)
-        this.categories.push(data)
-        this.categories.sort((a, b) => a.name.localeCompare(b.name)) // Mantiene la lista ordenada
+        await apiClient.post('/categories', categoryData)
         notifications.showSuccess('¡Categoría creada exitosamente!')
+        await this.fetchCategories() // Recarga la lista completa
       } catch (error) {
         notifications.showError(error.response?.data?.message || 'No se pudo crear la categoría.')
-        throw error
       }
     },
 
     async updateCategory(categoryId, categoryData) {
       const notifications = useNotificationStore()
       try {
-        const { data } = await apiClient.put(`/categories/${categoryId}`, categoryData)
-        const index = this.categories.findIndex((c) => c.id === categoryId)
-        if (index !== -1) {
-          this.categories[index] = data
-        }
+        await apiClient.put(`/categories/${categoryId}`, categoryData)
         notifications.showSuccess('¡Categoría actualizada correctamente!')
+        await this.fetchCategories() // Recarga la lista completa
       } catch (error) {
         notifications.showError(
           error.response?.data?.message || 'No se pudo actualizar la categoría.',
         )
-        throw error
       }
     },
 
@@ -60,14 +57,10 @@ export const useCategoriesStore = defineStore('categories', {
       const notifications = useNotificationStore()
       try {
         await apiClient.delete(`/categories/${categoryId}`)
-        // Filtramos la categoría eliminada de nuestra lista local para actualizar la UI
-        this.categories = this.categories.filter((c) => c.id !== categoryId)
-        notifications.showSuccess('Categoría eliminada correctamente.')
+        notifications.showSuccess('Categoría eliminada.')
+        await this.fetchCategories() // Recarga la lista completa
       } catch (error) {
-        notifications.showError(
-          error.response?.data?.message || 'No se pudo eliminar la categoría.',
-        )
-        throw error
+        notifications.showError('No se pudo eliminar la categoría.')
       }
     },
   },

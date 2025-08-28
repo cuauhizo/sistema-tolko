@@ -1,25 +1,14 @@
 import { pool } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
-// OBTENER todos los usuarios
-export const getUsers = async (req, res) => {
-  try {
-    // Hacemos un JOIN para obtener también el nombre del rol
-    const [rows] = await pool.query(
-      'SELECT u.id, u.username, u.email, u.created_at, r.name as role FROM users u JOIN roles r ON u.role_id = r.id'
-    );
-    res.status(200).json(rows);
-  } catch (error) {
-    return res.status(500).json({ message: 'Algo salió mal.' });
-  }
-};
-
 // CREAR un nuevo usuario (por un admin)
 export const createUser = async (req, res) => {
   const { username, email, password, role_id } = req.body;
+
   if (!username || !email || !password || !role_id) {
     return res.status(400).json({ message: 'Faltan campos obligatorios' });
   }
+
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -46,17 +35,40 @@ export const createUser = async (req, res) => {
   }
 };
 
-// OBTENER un usuario por ID
-export const getUserById = async (req, res) => {
+// OBTENER todos los usuarios
+export const getUsers = async (req, res) => {
   try {
-    const { id } = req.params;
-    const [rows] = await pool.query('SELECT id, username, email, role_id FROM users WHERE id = ?', [id]);
+    // Leemos los parámetros 'page' y 'limit' de la URL. Si no vienen, usamos valores por defecto.
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-    if (rows.length <= 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-    res.status(200).json(rows[0]);
+    // Primero, contamos el total de usuarios para la paginación
+    const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM users');
+    const totalUsers = totalRows[0].total;
+
+    // Luego, obtenemos solo los usuarios para la página actual
+    const query = `
+            SELECT
+                u.id, u.username, u.email, u.created_at, r.name as role
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            ORDER BY u.created_at ASC
+            LIMIT ? OFFSET ?
+        `;
+    const [users] = await pool.query(query, [limit, offset]);
+    // Enviamos una respuesta estructurada que el frontend pueda usar
+    res.status(200).json({
+      data: users,
+      pagination: {
+        total: totalUsers,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(totalUsers / limit),
+      },
+    });
   } catch (error) {
+    console.error('Error al obtener los usuarios:', error);
     return res.status(500).json({ message: 'Algo salió mal.' });
   }
 };
