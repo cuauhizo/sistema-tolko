@@ -77,7 +77,23 @@ const formatCurrency = (value) => {
 
     <div class="mt-5">
       <h2 class="mb-3">Accesos Rápidos</h2>
+
       <div class="row g-4">
+        <div v-if="authStore.isAdmin" class="col-md-6 col-lg-4">
+          <RouterLink to="/categories" class="card-link-wrapper">
+            <div class="card text-center shadow-sm h-100">
+              <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-tags-fill display-3 text-info mb-3"></i>
+                <h5 class="card-title text-info">Gestionar Categorías</h5>
+                <p class="card-text text-muted flex-grow-1">
+                  Crear, editar y organizar las categorías de los productos.
+                </p>
+                <span class="btn btn-outline-info mt-auto">Ir a Categorías</span>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+
         <div class="col-md-6 col-lg-4">
           <RouterLink to="/products" class="card-link-wrapper">
             <div class="card text-center shadow-sm h-100">
@@ -109,15 +125,30 @@ const formatCurrency = (value) => {
         </div>
 
         <div v-if="authStore.isAdmin" class="col-md-6 col-lg-4">
-          <RouterLink to="/categories" class="card-link-wrapper">
+          <RouterLink to="/tasks" class="card-link-wrapper">
             <div class="card text-center shadow-sm h-100">
               <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <i class="bi bi-tags-fill display-3 text-info mb-3"></i>
-                <h5 class="card-title text-info">Gestionar Categorías</h5>
+                <i class="bi bi-card-checklist display-3 text-dark mb-3"></i>
+                <h5 class="card-title text-dark">Gestionar Tareas</h5>
                 <p class="card-text text-muted flex-grow-1">
-                  Crear, editar y organizar las categorías de los productos.
+                  Asignar, editar y eliminar tareas de todos los usuarios.
                 </p>
-                <span class="btn btn-outline-info mt-auto">Ir a Categorías</span>
+                <span class="btn btn-outline-dark mt-auto">Ir a Tareas</span>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <RouterLink to="/my-tasks" class="card-link-wrapper">
+            <div class="card text-center shadow-sm h-100">
+              <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-check2-square display-3 text-success mb-3"></i>
+                <h5 class="card-title text-success">Mis Tareas</h5>
+                <p class="card-text text-muted flex-grow-1">
+                  Ver y actualizar el estado de tus tareas asignadas.
+                </p>
+                <span class="btn btn-outline-success mt-auto">Ver Checklist</span>
               </div>
             </div>
           </RouterLink>

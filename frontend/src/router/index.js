@@ -5,6 +5,8 @@ import LoginView from '../views/LoginView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import UsersView from '../views/UsersView.vue'
 import CategoriesView from '../views/CategoriesView.vue'
+import TasksView from '../views/TasksView.vue'
+import MyTasksView from '../views/MyTasksView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +34,18 @@ const router = createRouter({
       name: 'users',
       component: UsersView,
       meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/tasks',
+      name: 'tasks',
+      component: TasksView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/my-tasks',
+      name: 'my-tasks',
+      component: MyTasksView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',

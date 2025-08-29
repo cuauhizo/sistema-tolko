@@ -14,7 +14,7 @@ const handleLogout = () => {
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-      <RouterLink class="navbar-brand" to="/">Sistema de Inventario</RouterLink>
+      <a class="navbar-brand" href="#">Sistema de Inventario</a>
       <button
         class="navbar-toggler"
         type="button"
@@ -31,6 +31,9 @@ const handleLogout = () => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/">Inicio</RouterLink>
           </li>
+          <li v-if="authStore.isAdmin" class="nav-item">
+            <RouterLink class="nav-link" to="/categories">Categorías</RouterLink>
+          </li>
           <li class="nav-item">
             <RouterLink class="nav-link" to="/products">Productos</RouterLink>
           </li>
@@ -38,7 +41,10 @@ const handleLogout = () => {
             <RouterLink class="nav-link" to="/users">Usuarios</RouterLink>
           </li>
           <li v-if="authStore.isAdmin" class="nav-item">
-            <RouterLink class="nav-link" to="/categories">Categorías</RouterLink>
+            <RouterLink class="nav-link" to="/tasks">Tareas</RouterLink>
+          </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/my-tasks">Mis Tareas</RouterLink>
           </li>
         </ul>
         <ul
