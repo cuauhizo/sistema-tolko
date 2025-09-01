@@ -32,7 +32,9 @@ const handleExportPDF = () => {
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="mb-0">{{ currentOrder.title }}</h1>
-          <p class="text-muted">Cliente: {{ currentOrder.client_name || 'N/A' }}</p>
+          <p class="text-muted">
+            Cliente: <strong>{{ currentOrder.client_name || 'N/A' }}</strong>
+          </p>
         </div>
         <div>
           <button class="btn btn-danger me-2" @click="handleExportPDF">
