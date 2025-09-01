@@ -14,7 +14,7 @@ const handleLogout = () => {
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-      <a class="navbar-brand" href="#">Sistema de Inventario</a>
+      <RouterLink class="navbar-brand" to="/">Sistema Tolko</RouterLink>
       <button
         class="navbar-toggler"
         type="button"
@@ -31,22 +31,28 @@ const handleLogout = () => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/">Inicio</RouterLink>
           </li>
-          <li v-if="authStore.isAdmin" class="nav-item">
-            <RouterLink class="nav-link" to="/categories">Categorías</RouterLink>
-          </li>
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/products">Productos</RouterLink>
-          </li>
-          <li v-if="authStore.isAdmin" class="nav-item">
-            <RouterLink class="nav-link" to="/users">Usuarios</RouterLink>
-          </li>
-          <li v-if="authStore.isAdmin" class="nav-item">
-            <RouterLink class="nav-link" to="/tasks">Tareas</RouterLink>
-          </li>
           <li class="nav-item">
             <RouterLink class="nav-link" to="/my-tasks">Mis Tareas</RouterLink>
           </li>
+
+          <div v-if="authStore.isAdmin">
+            <ul class="navbar-nav">
+              <li><RouterLink class="nav-link" to="/products">Productos</RouterLink></li>
+              <li><RouterLink class="nav-link" to="/categories">Categorías</RouterLink></li>
+              <li><RouterLink class="nav-link" to="/users">Usuarios</RouterLink></li>
+              <li><RouterLink class="nav-link" to="/tasks">Asignar Tareas</RouterLink></li>
+              <li>
+                <RouterLink class="nav-link" to="/work-orders">Órdenes de Trabajo</RouterLink>
+              </li>
+              <li>
+                <RouterLink class="nav-link" to="/inventory/movements"
+                  >Movimientos de Inventario</RouterLink
+                >
+              </li>
+            </ul>
+          </div>
         </ul>
+
         <ul
           v-if="authStore.isAuthenticated"
           class="navbar-nav ms-auto d-flex align-items-center flex-row"
@@ -64,7 +70,6 @@ const handleLogout = () => {
 </template>
 
 <style scoped>
-/* Agrega estilos si es necesario */
 .router-link-active {
   font-weight: bold;
 }

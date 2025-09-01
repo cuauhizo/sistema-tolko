@@ -8,6 +8,7 @@ export const useDashboardStore = defineStore('dashboard', {
       lowStockProducts: 0,
       inventoryValue: 0,
       totalUsers: 0,
+      activeWorkOrders: 0,
     },
     isLoading: false,
     error: null,

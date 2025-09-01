@@ -7,6 +7,9 @@ import UsersView from '../views/UsersView.vue'
 import CategoriesView from '../views/CategoriesView.vue'
 import TasksView from '../views/TasksView.vue'
 import MyTasksView from '../views/MyTasksView.vue'
+import WorkOrdersView from '../views/WorkOrdersView.vue'
+import WorkOrderDetailView from '../views/WorkOrderDetailView.vue'
+import InventoryMovementsView from '../views/InventoryMovementsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +42,24 @@ const router = createRouter({
       path: '/tasks',
       name: 'tasks',
       component: TasksView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/work-orders',
+      name: 'work-orders',
+      component: WorkOrdersView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/work-orders/:id',
+      name: 'work-order-detail',
+      component: WorkOrderDetailView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/inventory/movements',
+      name: 'inventory-movements',
+      component: InventoryMovementsView,
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {

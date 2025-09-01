@@ -14,11 +14,17 @@ export const getDashboardStats = async (req, res) => {
     // 4. Contar el total de usuarios registrados
     const [totalUsersResult] = await pool.query('SELECT COUNT(id) as total FROM users');
 
+    // 5. Contar órdenes de trabajo activas (pendientes o en progreso)
+    const [activeWorkOrdersResult] = await pool.query(
+      "SELECT COUNT(id) as total FROM work_orders WHERE status IN ('pendiente', 'en_progreso')"
+    );
+
     const stats = {
       totalProducts: totalProductsResult[0].total || 0,
       lowStockProducts: lowStockProductsResult[0].total || 0,
       inventoryValue: inventoryValueResult[0].totalValue || 0,
       totalUsers: totalUsersResult[0].total || 0,
+      activeWorkOrders: activeWorkOrdersResult[0].total || 0,
     };
 
     res.status(200).json(stats);

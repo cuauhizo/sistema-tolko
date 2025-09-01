@@ -10,6 +10,8 @@ import usersRoutes from './routes/users.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import categoriesRoutes from './routes/categories.routes.js';
 import tasksRoutes from './routes/tasks.routes.js';
+import workOrdersRoutes from './routes/workOrders.routes.js';
+import inventoryRoutes from './routes/inventory.routes.js';
 
 // Variables de entorno
 dotenv.config();
@@ -49,6 +51,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/tasks', tasksRoutes);
+app.use('/api/workorders', workOrdersRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Definir puerto
 const PORT = process.env.PORT || 4000;

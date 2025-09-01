@@ -1,0 +1,76 @@
+import { defineStore } from 'pinia'
+import apiClient from '../api/axios'
+import { useNotificationStore } from './notifications'
+
+export const useWorkOrdersStore = defineStore('workOrders', {
+  state: () => ({
+    workOrders: [],
+    currentOrder: null,
+    isLoading: false,
+    error: null,
+  }),
+
+  actions: {
+    async fetchWorkOrders() {
+      this.isLoading = true
+      this.error = null
+      try {
+        const { data } = await apiClient.get('/workorders')
+        this.workOrders = data
+      } catch (error) {
+        this.error = 'No se pudieron cargar las órdenes de trabajo.'
+        console.error('Error al obtener órdenes de trabajo:', error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async addWorkOrder(orderData) {
+      const notifications = useNotificationStore()
+      try {
+        await apiClient.post('/workorders', orderData)
+        notifications.showSuccess('¡Orden de trabajo creada exitosamente!')
+        await this.fetchWorkOrders() // Recargar la lista
+      } catch (error) {
+        notifications.showError(error.response?.data?.message || 'No se pudo crear la orden.')
+      }
+    },
+
+    async updateWorkOrder(orderId, orderData) {
+      const notifications = useNotificationStore()
+      try {
+        await apiClient.put(`/workorders/${orderId}`, orderData)
+        notifications.showSuccess('¡Orden de trabajo actualizada!')
+        await this.fetchWorkOrders()
+      } catch (error) {
+        notifications.showError(error.response?.data?.message || 'No se pudo actualizar la orden.')
+      }
+    },
+
+    async deleteWorkOrder(orderId) {
+      const notifications = useNotificationStore()
+      try {
+        await apiClient.delete(`/workorders/${orderId}`)
+        notifications.showSuccess('Orden de trabajo eliminada.')
+        await this.fetchWorkOrders() // Recargar la lista
+      } catch (error) {
+        notifications.showError('No se pudo eliminar la orden.')
+      }
+    },
+
+    async fetchWorkOrderById(orderId) {
+      this.isLoading = true
+      this.currentOrder = null
+      this.error = null
+      try {
+        const { data } = await apiClient.get(`/workorders/${orderId}`)
+        this.currentOrder = data
+      } catch (error) {
+        this.error = 'No se pudo cargar la orden de trabajo.'
+        console.error('Error al obtener la orden:', error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+  },
+})
