@@ -68,7 +68,7 @@ export const useTasksStore = defineStore('tasks', {
     },
 
     // Para la vista del Usuario: trae solo las tareas del usuario logueado
-    async fetchMyTasks() {
+    async old_fetchMyTasks() {
       this.isLoading = true
       this.error = null
       try {
@@ -79,6 +79,21 @@ export const useTasksStore = defineStore('tasks', {
         useNotificationStore().showError(this.error)
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async fetchMyTasks(statusFilter = '') { // Acepta un filtro opcional
+      this.isLoading = true;
+      this.error = null;
+      try {
+        // Añade el filtro a la URL si existe
+        const url = statusFilter ? `/tasks/mytasks?status=${statusFilter}` : '/tasks/mytasks';
+        const { data } = await apiClient.get(url);
+        this.myTasks = data;
+      } catch (error) {
+        // ... (manejo de errores)
+      } finally {
+        this.isLoading = false;
       }
     },
 

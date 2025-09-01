@@ -118,7 +118,7 @@ export const deleteTask = async (req, res) => {
 };
 
 // USUARIO: Obtener solo las tareas asignadas al usuario actual
-export const getMyTasks = async (req, res) => {
+export const old_getMyTasks = async (req, res) => {
   try {
     // Obtenemos el ID del usuario del token que ya fue verificado por el middleware
     const userId = req.userId;
@@ -135,6 +135,36 @@ export const getMyTasks = async (req, res) => {
     console.error('Error al obtener mis tareas:', error);
     return res.status(500).json({ message: 'Algo salió mal' });
   }
+};
+
+// USUARIO: Obtener solo las tareas asignadas al usuario actual
+export const getMyTasks = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const status = req.query.status; // Leemos el filtro de estado de la URL
+
+        let query = `
+            SELECT t.id, t.title, t.description, t.status, t.due_date, u.username as assigned_by
+            FROM tasks t
+            JOIN users u ON t.assigned_by_id = u.id
+            WHERE t.assigned_to_id = ?
+        `;
+        const params = [userId];
+
+        // Si se proporciona un filtro de estado, lo añadimos a la consulta
+        if (status && ['pendiente', 'en_progreso', 'completada'].includes(status)) {
+            query += ' AND t.status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY t.due_date ASC';
+
+        const [tasks] = await pool.query(query, params);
+        res.status(200).json(tasks);
+    } catch (error) {
+        console.error("Error al obtener mis tareas:", error);
+        return res.status(500).json({ message: 'Algo salió mal' });
+    }
 };
 
 // USUARIO: Actualizar el estado de una de sus tareas
