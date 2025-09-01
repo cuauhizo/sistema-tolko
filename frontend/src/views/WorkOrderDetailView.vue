@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import { storeToRefs } from 'pinia'
+import { generateWorkOrderPDF } from '../utils/pdfGenerator'
 
 const route = useRoute()
 const workOrdersStore = useWorkOrdersStore()
@@ -11,6 +12,10 @@ const { currentOrder, isLoading, error } = storeToRefs(workOrdersStore)
 onMounted(() => {
   workOrdersStore.fetchWorkOrderById(route.params.id)
 })
+
+const handleExportPDF = () => {
+  generateWorkOrderPDF(currentOrder.value)
+}
 </script>
 
 <template>
@@ -29,7 +34,12 @@ onMounted(() => {
           <h1 class="mb-0">{{ currentOrder.title }}</h1>
           <p class="text-muted">Cliente: {{ currentOrder.client_name || 'N/A' }}</p>
         </div>
-        <span class="badge bg-primary p-2">{{ currentOrder.status }}</span>
+        <div>
+          <button class="btn btn-danger me-2" @click="handleExportPDF">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
+          </button>
+          <span class="badge bg-primary p-2">{{ currentOrder.status }}</span>
+        </div>
       </div>
 
       <div class="card mb-4">
