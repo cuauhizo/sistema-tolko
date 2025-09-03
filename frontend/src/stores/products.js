@@ -33,7 +33,7 @@ export const useProductsStore = defineStore('products', {
       try {
         await apiClient.post('/products', productData)
         notifications.showSuccess('¡Producto agregado exitosamente!')
-        this.fetchProducts() // Recarga la lista
+        await this.fetchProducts() // Recarga la lista
       } catch (error) {
         notifications.showError('No se pudo agregar el producto.')
       }
@@ -45,7 +45,7 @@ export const useProductsStore = defineStore('products', {
       try {
         await apiClient.put(`/products/${productId}`, productData)
         notifications.showSuccess('¡Producto actualizado correctamente!')
-        this.fetchProducts() // Recarga la lista
+        await this.fetchProducts() // Recarga la lista
       } catch (error) {
         notifications.showError('No se pudo actualizar el producto.')
       }
@@ -57,7 +57,7 @@ export const useProductsStore = defineStore('products', {
       try {
         await apiClient.delete(`/products/${productId}`)
         notifications.showSuccess('Producto eliminado.')
-        this.fetchProducts() // Recarga la lista
+        await this.fetchProducts() // Recarga la lista
       } catch (error) {
         notifications.showError('No se pudo eliminar el producto.')
       }

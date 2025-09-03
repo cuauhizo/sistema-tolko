@@ -15,6 +15,11 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 const app = createApp(App)
 
 app.use(createPinia())
+app.use(Toast, {
+  transition: 'Vue-Toastification__bounce',
+  maxToasts: 5,
+  newestOnTop: true,
+})
 app.use(router)
 app.use(PrimeVue, {
   theme: {
@@ -24,10 +29,6 @@ app.use(PrimeVue, {
     },
   },
 })
-app.use(Toast, {
-  transition: 'Vue-Toastification__bounce',
-  maxToasts: 5,
-  newestOnTop: true,
-})
+
 
 app.mount('#app')
