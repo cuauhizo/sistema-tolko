@@ -11,7 +11,7 @@ export const useCategoriesStore = defineStore('categories', {
   }),
 
   actions: {
-    // ÚNICA FUNCIÓN PARA OBTENER LAS CATEGORÍAS
+    // obtenerCategorias
     async fetchCategories() {
       this.isLoading = true
       this.error = null
@@ -28,7 +28,7 @@ export const useCategoriesStore = defineStore('categories', {
       }
     },
 
-    // LAS ACCIONES CRUD AHORA RECARGAN LA LISTA PARA MÁXIMA CONSISTENCIA
+    // añadirCategoria
     async addCategory(categoryData) {
       const notifications = useNotificationStore()
       try {
@@ -40,6 +40,7 @@ export const useCategoriesStore = defineStore('categories', {
       }
     },
 
+    // actualizarCategoria
     async updateCategory(categoryId, categoryData) {
       const notifications = useNotificationStore()
       try {
@@ -53,6 +54,7 @@ export const useCategoriesStore = defineStore('categories', {
       }
     },
 
+    // eliminarCategoria
     async deleteCategory(categoryId) {
       const notifications = useNotificationStore()
       try {

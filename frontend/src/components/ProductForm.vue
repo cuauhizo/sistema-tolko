@@ -29,7 +29,7 @@ const formKey = ref(0);
 // --- Estado del Componente ---
 // Variables reactivas para el contenido del formulario.
 const product = ref({});
-const modalTitle = ref('Agregar Nuevo Producto');
+const modalTitle = ref('Nuevo Producto');
 
 // --- Esquema de Validación con Yup ---
 // Define las reglas que deben cumplir los campos del formulario.
@@ -47,7 +47,7 @@ const schema = yup.object({
 // Resetea el formulario a su estado inicial para crear un nuevo producto.
 const resetForm = () => {
   product.value = { name: '', description: '', stock: undefined, price: undefined, unit: 'piezas', category_id: null };
-  modalTitle.value = 'Agregar Nuevo Producto';
+  modalTitle.value = 'Nuevo Producto';
 };
 
 // Se ejecuta cuando el formulario se envía y la validación es exitosa.

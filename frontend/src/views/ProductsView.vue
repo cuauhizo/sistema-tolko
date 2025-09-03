@@ -1,89 +1,89 @@
 <script setup>
 // --- Importaciones ---
-import { onMounted, ref } from 'vue';
-import { useProductsStore } from '../stores/products';
-import { useCategoriesStore } from '../stores/categories'; // Necesario para el formulario
-import ProductForm from '../components/ProductForm.vue';
-import { Modal } from 'bootstrap';
+import { onMounted, ref } from 'vue'
+import { useProductsStore } from '../stores/products'
+import { useCategoriesStore } from '../stores/categories' // Necesario para el formulario
+import ProductForm from '../components/ProductForm.vue'
+import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue para la tabla
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import { FilterMatchMode } from '@primevue/core/api';
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import { FilterMatchMode } from '@primevue/core/api'
 
 // --- Estado del Componente ---
-const productsStore = useProductsStore();
-const categoriesStore = useCategoriesStore(); // Se necesita para pasar las categorías al formulario
+const productsStore = useProductsStore()
+const categoriesStore = useCategoriesStore() // Se necesita para pasar las categorías al formulario
 
 // Refs para controlar los datos y los modales
-const productToEdit = ref(null);
-const productToDelete = ref(null);
-const productFormRef = ref(null);      // Ref para el componente del formulario de producto
-const deleteModalInstance = ref(null); // Ref para la instancia JS del modal de borrado
+const productToEdit = ref(null)
+const productToDelete = ref(null)
+const productFormRef = ref(null) // Ref para el componente del formulario de producto
+const deleteModalInstance = ref(null) // Ref para la instancia JS del modal de borrado
 
 // Ref para los filtros de la DataTable
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-});
+})
 
 // --- Ciclo de Vida (Lifecycle) ---
 onMounted(() => {
   // Cargar datos iniciales al montar el componente
-  productsStore.fetchProducts();
-  categoriesStore.fetchCategories();
+  productsStore.fetchProducts()
+  categoriesStore.fetchCategories()
 
   // Inicializar la instancia del modal de borrado para controlarlo con JS
-  const deleteModalEl = document.getElementById('deleteProductModal');
+  const deleteModalEl = document.getElementById('deleteProductModal')
   if (deleteModalEl) {
-    deleteModalInstance.value = new Modal(deleteModalEl);
+    deleteModalInstance.value = new Modal(deleteModalEl)
   }
-});
+})
 
 // --- Métodos para Manejar Acciones ---
 
 // Abre el modal del formulario, ya sea para crear o editar
 const openProductModal = (product = null) => {
-  productToEdit.value = product; // Si `product` es null, es para crear. Si no, para editar.
+  productToEdit.value = product // Si `product` es null, es para crear. Si no, para editar.
   if (productFormRef.value) {
-    productFormRef.value.openModal();
+    productFormRef.value.openModal()
   }
-};
+}
 
 // Abre el modal de confirmación de borrado
 const openDeleteModal = (product) => {
-  productToDelete.value = product;
+  productToDelete.value = product
   if (deleteModalInstance.value) {
-    deleteModalInstance.value.show();
+    deleteModalInstance.value.show()
   }
-};
+}
 
 // Se ejecuta cuando el formulario emite el evento 'submit'
 const handleFormSubmit = async (productData) => {
   if (productData.id) {
-    await productsStore.updateProduct(productData.id, productData);
+    await productsStore.updateProduct(productData.id, productData)
   } else {
-    await productsStore.addProduct(productData);
+    await productsStore.addProduct(productData)
   }
   // El formulario se cierra a sí mismo, pero si quisiéramos cerrarlo desde aquí:
-  // if (productFormRef.value) {
-  //   productFormRef.value.closeModal();
-  // }
-};
+  if (productFormRef.value) {
+    productFormRef.value.closeModal()
+  }
+}
 
 // Confirma y ejecuta la eliminación del producto
 const confirmDeleteProduct = async () => {
   if (productToDelete.value) {
-    await productsStore.deleteProduct(productToDelete.value.id);
+    await productsStore.deleteProduct(productToDelete.value.id)
   }
   // Cierra el modal de confirmación después de borrar
   if (deleteModalInstance.value) {
-    deleteModalInstance.value.hide();
+    deleteModalInstance.value.hide()
   }
-};
+}
 </script>
 
 <template>
@@ -92,7 +92,7 @@ const confirmDeleteProduct = async () => {
       <h1>Inventario de Productos</h1>
       <button class="btn btn-success" @click="openProductModal(null)">
         <i class="pi pi-plus me-2"></i>
-        Agregar Producto
+        Nuevo Producto
       </button>
     </div>
 
@@ -100,12 +100,14 @@ const confirmDeleteProduct = async () => {
       :value="productsStore.products"
       :paginator="true"
       :rows="10"
-      v-model:filters="filters"
+      :rowsPerPageOptions="[5, 10, 20, 50]"
       :globalFilterFields="['name', 'description', 'category_name']"
-      :loading="productsStore.isLoading"
+      v-model:filters="filters"
+      size="small"
       stripedRows
       showGridlines
       responsiveLayout="scroll"
+      :loading="productsStore.isLoading"
     >
       <template #header>
         <div class="d-flex justify-content-end">
@@ -129,13 +131,25 @@ const confirmDeleteProduct = async () => {
       <Column field="unit" header="Unidades" :sortable="true"></Column>
       <Column field="price" header="Precio" :sortable="true">
         <template #body="{ data }">
-          {{ new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(data.price) }}
+          {{
+            new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
+              data.price,
+            )
+          }}
         </template>
       </Column>
       <Column header="Acciones" :exportable="false" style="width: 8rem">
         <template #body="{ data }">
-          <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning me-2" @click.stop="openProductModal(data)" />
-          <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click.stop="openDeleteModal(data)" />
+          <Button
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-warning me-2"
+            @click.stop="openProductModal(data)"
+          />
+          <Button
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-danger"
+            @click.stop="openDeleteModal(data)"
+          />
         </template>
       </Column>
     </DataTable>
@@ -148,16 +162,29 @@ const confirmDeleteProduct = async () => {
     />
   </div>
 
-  <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div
+    class="modal fade"
+    id="deleteProductModal"
+    tabindex="-1"
+    aria-labelledby="deleteModalLabel"
+    aria-hidden="true"
+  >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Cerrar"
+          ></button>
         </div>
         <div class="modal-body">
           <p v-if="productToDelete">
-            ¿Estás seguro de que deseas eliminar el producto: <strong>{{ productToDelete.name }}</strong>?
+            ¿Estás seguro de que deseas eliminar el producto:
+            <strong>{{ productToDelete.name }}</strong
+            >?
           </p>
         </div>
         <div class="modal-footer">

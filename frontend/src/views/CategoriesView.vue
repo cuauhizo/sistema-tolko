@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useCategoriesStore } from '../stores/categories'
 import CategoryForm from '../components/CategoryForm.vue'
+import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
@@ -12,34 +13,46 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import { FilterMatchMode } from '@primevue/core/api'
 
+// --- Estado del Componente ---
 const categoriesStore = useCategoriesStore()
-const categoryToEdit = ref(null)
+
+// Refs para controlar los datos y los modales
+const categoryToEdit  = ref(null)
 const categoryToDelete = ref(null)
+const categoryFormRef = ref(null) // Ref para el componente del formulario de producto
+const deleteModalInstance = ref(null) // Ref para la instancia JS del modal de borrado
 
-onMounted(() => {
-  // categoriesStore.fetchAllCategoryForDataTable()
-  categoriesStore.fetchCategories()
-})
-
+// Ref para los filtros de la DataTable
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 })
 
-const prepareNewCategory = () => {
-  categoryToEdit.value = null
+// --- Ciclo de Vida (Lifecycle) ---
+onMounted(() => {
+  categoriesStore.fetchCategories()
+
+  // Inicializar la instancia del modal de borrado para controlarlo con JS
+  const deleteModalEl = document.getElementById('deleteCategoryModal')
+  if (deleteModalEl) {
+    deleteModalInstance.value = new Modal(deleteModalEl)
+  }
+})
+
+// --- Métodos para Manejar Acciones ---
+
+// Abre el modal del formulario, ya sea para crear o editar
+const openCategoryModal = (category = null) => {
+  categoryToEdit.value = category // Si `category` es null, es para crear. Si no, para editar.
+  if (categoryFormRef.value) {
+    categoryFormRef.value.openModal()
+  }
 }
 
-const prepareEditCategory = (category) => {
-  categoryToEdit.value = category
-}
-
-const handleDeleteCategory = (category) => {
+// Abre el modal de confirmación de borrado
+const openDeleteModal = (category) => {
   categoryToDelete.value = category
-}
-
-const confirmDeleteCategory = () => {
-  if (categoryToDelete.value) {
-    categoriesStore.deleteCategory(categoryToDelete.value.id)
+  if (deleteModalInstance.value) {
+    deleteModalInstance.value.show()
   }
 }
 
@@ -51,6 +64,20 @@ const handleFormSubmit = async (categoryData) => {
     // Si no, es una creación
     await categoriesStore.addCategory(categoryData)
   }
+  if (categoryFormRef.value) {
+    categoryFormRef.value.closeModal()
+  }
+}
+
+// Confirma y ejecuta la eliminación del producto
+const confirmDeleteCategory = async () => {
+  if (categoryToDelete.value) {
+    await categoriesStore.deleteCategory(categoryToDelete.value.id)
+  }
+  // Cierra el modal de confirmación después de borrar
+  if (deleteModalInstance.value) {
+    deleteModalInstance.value.hide()
+  }
 }
 </script>
 
@@ -58,12 +85,8 @@ const handleFormSubmit = async (categoryData) => {
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Gestionar Categorías</h1>
-      <button
-        class="btn btn-success"
-        data-bs-toggle="modal"
-        data-bs-target="#categoryModal"
-        @click="prepareNewCategory"
-      >
+      <button class="btn btn-success"  @click="openCategoryModal(null)">
+        <i class="pi pi-plus me-2"></i>
         Nueva Categoría
       </button>
     </div>
@@ -105,21 +128,17 @@ const handleFormSubmit = async (categoryData) => {
           <Button
             icon="pi pi-pencil"
             class="p-button-rounded p-button-warning me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#categoryModal"
-            @click="prepareEditCategory(data)"
+            @click="openCategoryModal(data)"
           />
           <Button
             icon="pi pi-trash"
             class="p-button-rounded p-button-danger"
-            @click="handleDeleteCategory(data)"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteCategoryModal"
+            @click="openDeleteModal(data)"
           />
         </template>
       </Column>
     </DataTable>
-    <CategoryForm :category-to-edit="categoryToEdit" @submit="handleFormSubmit" />
+    <CategoryForm ref="categoryFormRef" :category-to-edit="categoryToEdit" @submit="handleFormSubmit" />
   </div>
   <div
     class="modal fade"
