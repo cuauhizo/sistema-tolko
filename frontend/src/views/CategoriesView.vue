@@ -113,8 +113,8 @@ const confirmDeleteCategory = async () => {
           </IconField>
         </div>
       </template>
-      <template #empty> No se encontraron productos. </template>
-      <template #loading> Cargando datos de productos... </template>
+      <template #empty> No se encontraron categorías. </template>
+      <template #loading> Cargando datos de categorías... </template>
 
       <Column
         field="name"

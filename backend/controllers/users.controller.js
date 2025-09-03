@@ -49,13 +49,14 @@ export const getUsers = async (req, res) => {
 
     // Luego, obtenemos solo los usuarios para la página actual
     const query = `
-            SELECT
-                u.id, u.username, u.email, u.created_at, r.name as role
-            FROM users u
-            JOIN roles r ON u.role_id = r.id
-            ORDER BY u.created_at ASC
-            LIMIT ? OFFSET ?
-        `;
+      SELECT
+        u.id, u.username, u.email, u.created_at, u.role_id,
+        r.name as role
+      FROM users u
+      JOIN roles r ON u.role_id = r.id
+      ORDER BY u.created_at ASC
+      LIMIT ? OFFSET ?
+    `;
     const [users] = await pool.query(query, [limit, offset]);
     // Enviamos una respuesta estructurada que el frontend pueda usar
     res.status(200).json({
@@ -76,18 +77,29 @@ export const getUsers = async (req, res) => {
 // ACTUALIZAR un usuario
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { username, email, role_id } = req.body;
+  const { username, email, role_id, password } = req.body;
 
   try {
     // Opcional: Manejar actualización de contraseña si se proporciona
-    // if (req.body.password) { ... hashear y agregar al UPDATE ... }
+    let query = 'UPDATE users SET username = ?, email = ?, role_id = ?';
+    const params = [username, email, role_id];
 
-    const [result] = await pool.query('UPDATE users SET username = ?, email = ?, role_id = ? WHERE id = ?', [
-      username,
-      email,
-      role_id,
-      id,
-    ]);
+    // --- LÓGICA PARA LA CONTRASEÑA ---
+    // Si el usuario envió una nueva contraseña...
+    if (password) {
+      // 1. Hashear la nueva contraseña
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      // 2. Añadirla a la consulta y a los parámetros
+      query += ', password = ?';
+      params.push(hashedPassword);
+    }
+    // --- FIN DE LA LÓGICA ---
+
+    query += ' WHERE id = ?';
+    params.push(id);
+
+    const [result] = await pool.query(query, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Usuario no encontrado.' });

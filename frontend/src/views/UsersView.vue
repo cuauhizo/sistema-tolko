@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useUsersStore } from '../stores/users'
 import UserForm from '../components/UserForm.vue'
+import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
@@ -12,34 +13,47 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import { FilterMatchMode } from '@primevue/core/api'
 
+// --- Estado del Componente ---
 const usersStore = useUsersStore()
-const userToDelete = ref(null)
+
+// Refs para controlar los datos y los modales
 const userToEdit = ref(null)
+const userToDelete = ref(null)
+const userFormRef = ref(null)
+const deleteModalInstance = ref(null)
 
-onMounted(() => {
-  // usersStore.fetchAllUsersForDataTable()
-  usersStore.fetchUsers()
-})
-
+// Ref para los filtros de la DataTable
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 })
 
-const prepareNewUser = () => {
-  userToEdit.value = null
+// --- Ciclo de Vida (Lifecycle) ---
+onMounted(() => {
+  usersStore.fetchUsers()
+
+  // Inicializar la instancia del modal de borrado para controlarlo con JS
+  const deleteModalEl = document.getElementById('deleteUserModal')
+  if (deleteModalEl) {
+    deleteModalInstance.value = new Modal(deleteModalEl)
+  }
+
+})
+
+// --- Métodos para Manejar Acciones ---
+
+// Abre el modal del formulario, ya sea para crear o editar
+const openUserModal = (user = null) => {
+  userToEdit.value = user // Si `user` es null, es para crear. Si no, para editar.
+  if (userFormRef.value) {
+    userFormRef.value.openModal()
+  }
 }
 
-const prepareEditUser = (user) => {
-  userToEdit.value = user
-}
-
-const handleDeleteUser = (user) => {
+// Abre el modal de confirmación de borrado
+const openDeleteModal = (user) => {
   userToDelete.value = user
-}
-
-const confirmDeleteUser = () => {
-  if (userToDelete.value) {
-    usersStore.deleteUser(userToDelete.value.id)
+  if (deleteModalInstance.value) {
+    deleteModalInstance.value.show()
   }
 }
 
@@ -51,20 +65,31 @@ const handleFormSubmit = async (userData) => {
     // Si no, es una creación
     await usersStore.addUser(userData)
   }
+  if (userFormRef.value) {
+    userFormRef.value.closeModal()
+  }
 }
+
+// Confirma y ejecuta la eliminación del producto
+const confirmDeleteUser = async () => {
+  if (userToDelete.value) {
+    await usersStore.deleteUser(userToDelete.value.id)
+  }
+  // Cierra el modal de confirmación después de borrar
+  if (deleteModalInstance.value) {
+    deleteModalInstance.value.hide()
+  }
+}
+
 </script>
 
 <template>
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Administración de Usuarios</h1>
-      <button
-        class="btn btn-success"
-        data-bs-toggle="modal"
-        data-bs-target="#userModal"
-        @click="prepareNewUser"
-      >
-        Agregar Usuario
+      <button class="btn btn-success" @click="openUserModal(null)">
+        <i class="pi pi-plus me-2"></i>
+        Nuevo Usuario
       </button>
     </div>
     <DataTable
@@ -90,8 +115,8 @@ const handleFormSubmit = async (userData) => {
           </IconField>
         </div>
       </template>
-      <template #empty> No se encontraron productos. </template>
-      <template #loading> Cargando datos de productos... </template>
+      <template #empty> No se encontraron usuarios. </template>
+      <template #loading> Cargando datos de usuarios... </template>
 
       <Column
         field="username"
@@ -120,21 +145,17 @@ const handleFormSubmit = async (userData) => {
           <Button
             icon="pi pi-pencil"
             class="p-button-rounded p-button-warning me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#userModal"
-            @click="prepareEditUser(data)"
+            @click="openUserModal(data)"
           />
           <Button
             icon="pi pi-trash"
             class="p-button-rounded p-button-danger"
-            @click="handleDeleteUser(data)"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteUserModal"
+            @click="openDeleteModal(data)"
           />
         </template>
       </Column>
     </DataTable>
-    <UserForm :user-to-edit="userToEdit" @submit="handleFormSubmit" />
+    <UserForm ref="userFormRef" :user-to-edit="userToEdit" @submit="handleFormSubmit" />
   </div>
   <div
     class="modal fade"
