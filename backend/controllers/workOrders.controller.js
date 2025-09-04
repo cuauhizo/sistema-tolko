@@ -198,3 +198,72 @@ export const getWorkOrderById = async (req, res) => {
     return res.status(500).json({ message: 'Algo salió mal' });
   }
 };
+
+// USUARIO: Obtener solo las órdenes asignadas al usuario actual
+export const getMyWorkOrders = async (req, res) => {
+    try {
+        const userId = req.userId; // ID del usuario logueado (del token)
+        const query = `
+            SELECT 
+                wo.id, wo.title, wo.description, wo.status, wo.client_name, wo.end_date,
+                creator.username as created_by
+            FROM work_orders wo
+            JOIN users creator ON wo.created_by_id = creator.id
+            WHERE wo.assigned_to_id = ?
+            ORDER BY wo.end_date ASC
+        `;
+        const [orders] = await pool.query(query, [userId]);
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error('Error al obtener mis órdenes de trabajo:', error);
+        return res.status(500).json({ message: 'Algo salió mal' });
+    }
+};
+
+// USUARIO: Actualizar el estado de una de sus órdenes de trabajo
+export const updateWorkOrderStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const userId = req.userId;
+
+    // Validar que el estado sea uno de los permitidos
+    if (!status || !['pendiente', 'en_progreso', 'completada', 'cancelada'].includes(status)) {
+        return res.status(400).json({ message: 'Estado no válido.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Verificar que la orden pertenezca al usuario y actualizarla
+        const [result] = await connection.query(
+            'UPDATE work_orders SET status = ? WHERE id = ? AND assigned_to_id = ?',
+            [status, id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Orden no encontrada o no tienes permiso para actualizarla.' });
+        }
+
+        // 2. Si el nuevo estado es "completada", descontar el inventario (reutilizamos la lógica)
+        if (status === 'completada') {
+            const [products] = await connection.query('SELECT product_id, quantity_used FROM work_order_products WHERE work_order_id = ?', [id]);
+            if (products.length > 0) {
+                for (const product of products) {
+                    await connection.query('UPDATE products SET stock = stock - ? WHERE id = ?', [product.quantity_used, product.product_id]);
+                    await connection.query('INSERT INTO inventory_movements (product_id, work_order_id, quantity_change, reason) VALUES (?, ?, ?, ?)', [product.product_id, id, -product.quantity_used, `Salida por Orden de Trabajo #${id}`]);
+                }
+            }
+        }
+
+        await connection.commit();
+        res.status(200).json({ message: 'Estado de la orden actualizado.' });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error al actualizar estado de la orden:', error);
+        return res.status(500).json({ message: 'Algo salió mal' });
+    } finally {
+        connection.release();
+    }
+};

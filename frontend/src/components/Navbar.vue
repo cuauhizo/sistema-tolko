@@ -49,6 +49,9 @@ const handleLogout = () => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/my-tasks">Mis Tareas</RouterLink>
           </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/my-work-orders">Mis Órdenes</RouterLink>
+          </li>
           <li v-if="authStore.isAdmin" class="nav-item">
             <RouterLink class="nav-link" to="/inventory/movements"
               >Movimientos de Inventario</RouterLink>
@@ -58,7 +61,7 @@ const handleLogout = () => {
           v-if="authStore.isAuthenticated"
           class="navbar-nav ms-auto d-flex align-items-center flex-row"
         >
-          <li class="nav-item me-3">
+          <li class="nav-item me-2">
             <span class="navbar-text"> Hola, {{ authStore.username }} </span>
           </li>
           <li class="nav-item">

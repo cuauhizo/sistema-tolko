@@ -35,7 +35,7 @@ const formatCurrency = (value) => {
         <div class="card text-white bg-primary shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Total de Productos</h5>
-            <p class="card-text display-4">{{ dashboardStore.stats.totalProducts }}</p>
+            <p class="card-text display-5 text-end">{{ dashboardStore.stats.totalProducts }}</p>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@ const formatCurrency = (value) => {
         <div class="card text-white bg-success shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-cash-stack me-2"></i>Valor del Inventario</h5>
-            <p class="card-text display-4">
+            <p class="card-text display-5 text-end">
               {{ formatCurrency(dashboardStore.stats.inventoryValue) }}
             </p>
           </div>
@@ -57,7 +57,7 @@ const formatCurrency = (value) => {
             <h5 class="card-title">
               <i class="bi bi-exclamation-triangle me-2"></i>Bajo Stock (&lt;=10)
             </h5>
-            <p class="card-text display-4">{{ dashboardStore.stats.lowStockProducts }}</p>
+            <p class="card-text display-5 text-end">{{ dashboardStore.stats.lowStockProducts }}</p>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@ const formatCurrency = (value) => {
         <div class="card text-white bg-danger shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-person-workspace me-2"></i>Órdenes Activas</h5>
-            <p class="card-text display-4">{{ dashboardStore.stats.activeWorkOrders }}</p>
+            <p class="card-text display-5 text-end">{{ dashboardStore.stats.activeWorkOrders }}</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@ const formatCurrency = (value) => {
         <div class="card text-white bg-info shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-people-fill me-2"></i>Usuarios Registrados</h5>
-            <p class="card-text display-4">{{ dashboardStore.stats.totalUsers }}</p>
+            <p class="card-text display-5 text-end">{{ dashboardStore.stats.totalUsers }}</p>
           </div>
         </div>
       </div>
@@ -154,6 +154,21 @@ const formatCurrency = (value) => {
                   Ver y actualizar el estado de tus tareas asignadas.
                 </p>
                 <span class="btn btn-outline-success mt-auto">Ver Checklist</span>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <RouterLink to="/my-work-orders" class="card-link-wrapper">
+            <div class="card text-center shadow-sm h-100">
+              <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-person-workspace display-3 text-info mb-3"></i>
+                <h5 class="card-title text-info">Mis Órdenes de Trabajo</h5>
+                <p class="card-text text-muted flex-grow-1">
+                  Revisa y actualiza el estado de tus órdenes de trabajo asignadas.
+                </p>
+                <span class="btn btn-outline-info mt-auto">Ir a Mis Órdenes</span>
               </div>
             </div>
           </RouterLink>

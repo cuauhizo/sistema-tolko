@@ -17,7 +17,7 @@ onMounted(() => {
         <div class="card text-white bg-info shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-card-checklist me-2"></i>Mis Tareas Activas</h5>
-            <p class="card-text display-4">{{ userDashboardStore.stats.activeTasks }}</p>
+            <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeTasks }}</p>
           </div>
         </div>
       </div>
@@ -27,7 +27,7 @@ onMounted(() => {
             <h5 class="card-title">
               <i class="bi bi-person-workspace me-2"></i>Mis Órdenes Activas
             </h5>
-            <p class="card-text display-4">{{ userDashboardStore.stats.activeWorkOrders }}</p>
+            <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeWorkOrders }}</p>
           </div>
         </div>
       </div>
@@ -46,6 +46,20 @@ onMounted(() => {
                   Revisa y actualiza el estado de tus tareas asignadas.
                 </p>
                 <span class="btn btn-outline-success mt-auto">Ir a Tareas</span>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <RouterLink to="/my-work-orders" class="card-link-wrapper">
+            <div class="card text-center shadow-sm h-100">
+              <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-person-workspace display-3 text-info mb-3"></i>
+                <h5 class="card-title text-info">Mis Órdenes de Trabajo</h5>
+                <p class="card-text text-muted flex-grow-1">
+                  Revisa y actualiza el estado de tus órdenes de trabajo asignadas.
+                </p>
+                <span class="btn btn-outline-info mt-auto">Ir a Mis Órdenes</span>
               </div>
             </div>
           </RouterLink>

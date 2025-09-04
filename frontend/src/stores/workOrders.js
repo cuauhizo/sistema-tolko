@@ -5,6 +5,7 @@ import { useNotificationStore } from './notifications'
 export const useWorkOrdersStore = defineStore('workOrders', {
   state: () => ({
     workOrders: [],
+    myWorkOrders: [],
     currentOrder: null,
     isLoading: false,
     error: null,
@@ -70,6 +71,35 @@ export const useWorkOrdersStore = defineStore('workOrders', {
         console.error('Error al obtener la orden:', error)
       } finally {
         this.isLoading = false
+      }
+    },
+
+    // --- ACCIONES PARA EL USUARIO ---
+    async fetchMyWorkOrders() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const { data } = await apiClient.get('/workorders/myorders');
+        this.myWorkOrders = data;
+      } catch (error) {
+        this.error = 'No se pudieron cargar tus órdenes de trabajo.';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async updateWorkOrderStatus(orderId, status) {
+      const notifications = useNotificationStore(); // Asumiendo que tienes este store
+      try {
+        await apiClient.patch(`/workorders/${orderId}/status`, { status });
+        
+        const order = this.myWorkOrders.find((o) => o.id === orderId);
+        if (order) {
+          order.status = status;
+        }
+        notifications.showSuccess('¡Estado de la orden actualizado!');
+      } catch (error) {
+        notifications.showError('No se pudo actualizar el estado.');
       }
     },
   },
