@@ -51,10 +51,6 @@ const resetForm = () => {
 }
 
 const handleSubmit = (values) => {
-  // Si estamos editando y la contraseña está vacía, no la enviamos al backend.
-  if (isEditMode.value && !values.password) {
-    delete values.password;
-  }
   const finalTask = { id: task.value.id, ...values };
   emit('submit', finalTask);
 };

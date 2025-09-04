@@ -49,6 +49,10 @@ const handleLogout = () => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/my-tasks">Mis Tareas</RouterLink>
           </li>
+          <li v-if="authStore.isAdmin" class="nav-item">
+            <RouterLink class="nav-link" to="/inventory/movements"
+              >Movimientos de Inventario</RouterLink>
+          </li>
         </ul>
         <ul
           v-if="authStore.isAuthenticated"
