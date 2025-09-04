@@ -138,21 +138,15 @@ watch(() => route.path, () => {
             </a>
             <ul class="dropdown-menu" :class="{ 'show': adminDropdownOpen }">
               <li>
-                <RouterLink class="dropdown-item" to="/products" @click="closeAllDropdowns">
-                  Productos
-                </RouterLink>
-              </li>
-              <li>
                 <RouterLink class="dropdown-item" to="/categories" @click="closeAllDropdowns">
                   Categorías
                 </RouterLink>
               </li>
               <li>
-                <RouterLink class="dropdown-item" to="/inventory/movements" @click="closeAllDropdowns">
-                  Movimientos de Inventario
+                <RouterLink class="dropdown-item" to="/products" @click="closeAllDropdowns">
+                  Productos
                 </RouterLink>
               </li>
-              <li><hr class="dropdown-divider"></li>
               <li>
                 <RouterLink class="dropdown-item" to="/users" @click="closeAllDropdowns">
                   Usuarios
@@ -169,10 +163,16 @@ watch(() => route.path, () => {
                   Órdenes de Trabajo
                 </RouterLink>
               </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <RouterLink class="dropdown-item" to="/inventory/movements" @click="closeAllDropdowns">
+                  Movimientos de Inventario
+                </RouterLink>
+              </li>
             </ul>
           </li>
         </ul>
-        
+
         <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto d-flex align-items-center">
           <li class="nav-item me-3">
             <span class="navbar-text">
@@ -191,7 +191,7 @@ watch(() => route.path, () => {
   </nav>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .dropdown-item.router-link-active {
   background-color: #0d6efd;
   color: white;
@@ -320,4 +320,4 @@ watch(() => route.path, () => {
     background-color: rgba(255,255,255,0.1);
   }
 }
-</style>
+</style> -->
