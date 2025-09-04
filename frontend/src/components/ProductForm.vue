@@ -148,11 +148,6 @@ onUnmounted(() => {
                 <ErrorMessage name="stock" class="invalid-feedback" />
               </div>
               <div class="col-md-4 mb-3">
-                <label for="price" class="form-label">Precio</label>
-                <Field type="number" class="form-control" :class="{'is-invalid': errors.price}" id="price" name="price" step="0.01" />
-                <ErrorMessage name="price" class="invalid-feedback" />
-              </div>
-              <div class="col-md-4 mb-3">
                 <label for="unit" class="form-label">Unidad</label>
                 <Field as="select" class="form-select" :class="{'is-invalid': errors.unit}" id="unit" name="unit">
                   <option value="piezas">Piezas</option>
@@ -162,6 +157,11 @@ onUnmounted(() => {
                   <option value="cajas">Cajas</option>
                 </Field>
                 <ErrorMessage name="unit" class="invalid-feedback" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="price" class="form-label">Precio</label>
+                <Field type="number" class="form-control" :class="{'is-invalid': errors.price}" id="price" name="price" step="0.01" />
+                <ErrorMessage name="price" class="invalid-feedback" />
               </div>
             </div>
           </div>
