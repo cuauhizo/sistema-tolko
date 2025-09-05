@@ -1,14 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useTasksStore } from '../stores/tasks'
+import { formatStatus } from '../utils/formatters';
 
 // Importaciones de PrimeVue
 import DataView from 'primevue/dataview'
 // import DataViewLayoutOptions from 'primevue/dataviewlayoutoptions'
 import Dropdown from 'primevue/dropdown'
-import Paginator from 'primevue/paginator'
 import Tag from 'primevue/tag'
-import Button from 'primevue/button'
 import SelectButton from 'primevue/selectbutton'
 
 const tasksStore = useTasksStore()
@@ -92,17 +91,12 @@ const handleStatusChange = (task, newStatus) => {
                 >
                   <div class="d-flex w-100 justify-content-between">
                     <h5 class="mb-1">{{ item.title }}</h5>
-                    <Tag :value="item.status" :severity="getSeverityForStatus(item.status)"></Tag>
+                    <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
                   </div>
                   <div class="my-3">
                     <p class="mb-1">{{ item.description }}</p>
                   </div>
                   <div class="d-flex flex-wrap gap-3 w-100 justify-content-between">
-                    <small class="text-muted"
-                      ><strong>Asignada por</strong>: {{ item.assigned_by }} |
-                      <strong>Fecha de entrega</strong>:
-                      {{ new Date(item.due_date).toLocaleDateString() }}</small
-                    >
                     <div class="btn-group btn-group-sm" role="group">
                       <button
                         type="button"
@@ -135,6 +129,11 @@ const handleStatusChange = (task, newStatus) => {
                         Completada
                       </button>
                     </div>
+                    <small class="text-muted"
+                      ><strong>Asignada por</strong>: {{ item.assigned_by }} |
+                      <strong>Fecha de entrega</strong>:
+                      {{ new Date(item.due_date).toLocaleDateString() }}</small
+                    >
                   </div>
                 </div>
               </div>
@@ -151,7 +150,7 @@ const handleStatusChange = (task, newStatus) => {
             >
               <div class="card h-100">
                 <div class="card-header d-flex justify-content-end">
-                  <Tag :value="item.status" :severity="getSeverityForStatus(item.status)"></Tag>
+                  <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
                 </div>
                 <div class="card-body">
                   <h5 class="card-title">{{ item.title }}</h5>

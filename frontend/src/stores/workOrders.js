@@ -75,11 +75,12 @@ export const useWorkOrdersStore = defineStore('workOrders', {
     },
 
     // --- ACCIONES PARA EL USUARIO ---
-    async fetchMyWorkOrders() {
+    async fetchMyWorkOrders(statusFilter = '') { // Acepta un filtro opcional
       this.isLoading = true;
       this.error = null;
       try {
-        const { data } = await apiClient.get('/workorders/myorders');
+        const url = statusFilter ? `/workorders/myorders?status=${statusFilter}` : '/workorders/myorders';
+        const { data } = await apiClient.get(url);
         this.myWorkOrders = data;
       } catch (error) {
         this.error = 'No se pudieron cargar tus órdenes de trabajo.';

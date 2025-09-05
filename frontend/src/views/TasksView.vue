@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useTasksStore } from '../stores/tasks'
 import TaskForm from '../components/TaskForm.vue'
 import { Modal } from 'bootstrap'
+import { formatStatus } from '@/utils/formatters'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
@@ -143,7 +144,7 @@ const getSeverityForStatus = (status) => {
       </Column>
       <Column field="status" header="Estado" :sortable="true">
         <template #body="{ data }">
-          <Tag :value="data.status" :severity="getSeverityForStatus(data.status)" />
+          <Tag :value="formatStatus(data.status)" :severity="getSeverityForStatus(data.status)"></Tag>
         </template>
       </Column>
       <Column header="Acciones" :exportable="false">

@@ -148,16 +148,26 @@ const removeProduct = (productId) => {
         <Form ref="veeForm" :key="formKey" @submit="handleSubmit" :validation-schema="schema" :initial-values="order" v-slot="{ errors }">
           <div class="modal-body">
             <div class="row">
-              <div class="mb-3 col-md-6">
+              <div class="mb-3" :class="isEditMode ? 'col-md-4' : 'col-md-6'">
                 <label for="title" class="form-label">Título de la Orden</label>
                 <Field type="text" class="form-control" :class="{'is-invalid': errors.title}" id="title" name="title" />
                 <ErrorMessage name="title" class="invalid-feedback" />
               </div>
-              <div class="mb-3 col-md-6">
+              <div class="mb-3" :class="isEditMode ? 'col-md-4' : 'col-md-6'">
                 <label for="client_name" class="form-label">Nombre del Cliente</label>
                 <Field type="text" class="form-control" :class="{'is-invalid': errors.client_name}" id="client_name" name="client_name" />
                 <ErrorMessage name="client_name" class="invalid-feedback" />
               </div>
+              <div v-if="isEditMode" class="mb-3 col-md-4">
+              <label for="status" class="form-label">Estado de la Orden</label>
+              <Field as="select" class="form-select" :class="{'is-invalid': errors.status}" id="status" name="status">
+                <option value="pendiente">Pendiente</option>
+                <option value="en_progreso">En Progreso</option>
+                <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
+              </Field>
+              <ErrorMessage name="status" class="invalid-feedback" />
+            </div>
             </div>
 
             <div class="row">
@@ -185,17 +195,6 @@ const removeProduct = (productId) => {
               <label for="description" class="form-label">Descripción</label>
               <Field as="textarea" class="form-control" :class="{'is-invalid': errors.description}" id="description" name="description" rows="3" />
               <ErrorMessage name="description" class="invalid-feedback" />
-            </div>
-
-            <div v-if="isEditMode" class="mb-3">
-              <label for="status" class="form-label">Estado de la Orden</label>
-              <Field as="select" class="form-select" :class="{'is-invalid': errors.status}" id="status" name="status">
-                <option value="pendiente">Pendiente</option>
-                <option value="en_progreso">En Progreso</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
-              </Field>
-              <ErrorMessage name="status" class="invalid-feedback" />
             </div>
 
             <hr class="my-4" />

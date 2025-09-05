@@ -191,7 +191,7 @@ watch(() => route.path, () => {
   </nav>
 </template>
 
-<!-- <style scoped>
+<style scoped>
 .dropdown-item.router-link-active {
   background-color: #0d6efd;
   color: white;
@@ -320,4 +320,4 @@ watch(() => route.path, () => {
     background-color: rgba(255,255,255,0.1);
   }
 }
-</style> -->
+</style>

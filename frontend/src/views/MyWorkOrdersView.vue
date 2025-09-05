@@ -1,14 +1,31 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useWorkOrdersStore } from '../stores/workOrders';
 import DataView from 'primevue/dataview';
+import SelectButton from 'primevue/selectbutton';
+import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
+import { formatStatus } from '../utils/formatters';
 
 const workOrdersStore = useWorkOrdersStore();
+const layout = ref('list');
+const options = ref(['list', 'grid']);
+const statusFilter = ref();
+const statusOptions = ref([
+  { name: 'Todas', code: '' },
+  { name: 'Pendientes', code: 'pendiente' },
+  { name: 'En Progreso', code: 'en_progreso' },
+  { name: 'Completada', code: 'completada' },
+  { name: 'Canceladas', code: 'cancelada' }, // <-- Incluimos las canceladas
+]);
 
 onMounted(() => {
   workOrdersStore.fetchMyWorkOrders();
 });
+
+const onFilterChange = (event) => {
+  workOrdersStore.fetchMyWorkOrders(event.value.code);
+};
 
 const handleStatusChange = (order, newStatus) => {
   if (order.status !== newStatus) {
@@ -18,7 +35,10 @@ const handleStatusChange = (order, newStatus) => {
 
 const getSeverityForStatus = (status) => {
   const statusMap = {
-    pendiente: 'warn', en_progreso: 'info', completada: 'success', cancelada: 'danger',
+    pendiente: 'warn',
+    en_progreso: 'info',
+    completada: 'success',
+    cancelada: 'danger',
   };
   return statusMap[status] || 'secondary';
 };
@@ -32,33 +52,75 @@ const getSeverityForStatus = (status) => {
       <h4 class="h2">¡Todo en orden!</h4>
       <p>No tienes órdenes de trabajo asignadas por el momento.</p>
     </div>
+  <div v-else>
+    <DataView :value="workOrdersStore.myWorkOrders" :layout="layout" :paginator="true" :rows="9">
+      <template #header>
+        <div class="d-flex justify-content-between align-items-center">
+          <SelectButton v-model="layout" :options="options" :allowEmpty="false">
+            <template #option="{ option }">
+              <i :class="[option === 'list' ? 'pi pi-bars' : 'pi pi-table']" />
+            </template>
+          </SelectButton>
+          <div class="d-flex align-items-center">
+            <Dropdown
+              v-model="statusFilter"
+              :options="statusOptions"
+              optionLabel="name"
+              placeholder="Filtrar por estado"
+              @change="onFilterChange"
+            />
+          </div>
+        </div>
+      </template>
 
-    <DataView v-else :value="workOrdersStore.myWorkOrders" layout="list">
       <template #list="slotProps">
         <div class="list-group">
           <div v-for="item in slotProps.items" :key="item.id" class="list-group-item">
             <div class="d-flex w-100 justify-content-between">
               <h5 class="mb-1">{{ item.title }} - ({{ item.client_name }})</h5>
-              <Tag :value="item.status" :severity="getSeverityForStatus(item.status)"></Tag>
+              <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
             </div>
             <p class="my-3">{{ item.description }}</p>
             <div class="d-flex flex-wrap gap-3 w-100 justify-content-between align-items-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
+                <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
+                <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
+              </div>
               <small class="text-muted">
                 <strong>Creada por:</strong> {{ item.created_by }} | 
                 <strong>Fecha Límite:</strong> {{ new Date(item.end_date).toLocaleDateString() }}
               </small>
-              <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">
-                  En Progreso
-                </button>
-                <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">
-                  Completada
-                </button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #grid="slotProps">
+        <div class="row g-3">
+          <div v-for="item in slotProps.items" :key="item.id" class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between">
+                <span>{{ item.title }}</span>
+                <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-subtitle mb-2 text-muted">{{ item.client_name }}</h6>
+                <p class="card-text flex-grow-1">{{ item.description }}</p>
+                <div class="btn-group btn-group-sm mt-auto" role="group">
+                  <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
+                  <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
+                  <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
+                </div>
+              </div>
+              <div class="card-footer text-muted">
+                Fecha Límite: {{ new Date(item.end_date).toLocaleDateString() }}
               </div>
             </div>
           </div>
         </div>
       </template>
     </DataView>
+    </div>
   </div>
 </template>

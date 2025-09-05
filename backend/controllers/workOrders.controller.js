@@ -202,23 +202,34 @@ export const getWorkOrderById = async (req, res) => {
 // USUARIO: Obtener solo las órdenes asignadas al usuario actual
 export const getMyWorkOrders = async (req, res) => {
     try {
-        const userId = req.userId; // ID del usuario logueado (del token)
-        const query = `
+        const userId = req.userId;
+        const status = req.query.status; // Leemos el filtro de estado de la URL
+
+        let query = `
             SELECT 
                 wo.id, wo.title, wo.description, wo.status, wo.client_name, wo.end_date,
                 creator.username as created_by
             FROM work_orders wo
             JOIN users creator ON wo.created_by_id = creator.id
             WHERE wo.assigned_to_id = ?
-            ORDER BY wo.end_date ASC
         `;
-        const [orders] = await pool.query(query, [userId]);
+        const params = [userId];
+
+        // Si se proporciona un filtro de estado, lo añadimos a la consulta
+        if (status && ['pendiente', 'en_progreso', 'completada', 'cancelada'].includes(status)) {
+            query += ' AND wo.status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY wo.end_date ASC';
+
+        const [orders] = await pool.query(query, params);
         res.status(200).json(orders);
     } catch (error) {
         console.error('Error al obtener mis órdenes de trabajo:', error);
         return res.status(500).json({ message: 'Algo salió mal' });
     }
-};
+};  
 
 // USUARIO: Actualizar el estado de una de sus órdenes de trabajo
 export const updateWorkOrderStatus = async (req, res) => {
