@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useTasksStore } from '../stores/tasks'
-import { formatStatus } from '../utils/formatters';
+import { formatStatus, formatTaskId } from '../utils/formatters';
 
 // Importaciones de PrimeVue
 import DataView from 'primevue/dataview'
@@ -90,7 +90,7 @@ const handleStatusChange = (task, newStatus) => {
                   :class="{ cuauhizo: index !== 0 }"
                 >
                   <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">{{ item.title }}</h5>
+                    <h5 class="mb-1">{{ formatTaskId(item.id) }} - {{ item.title }}</h5>
                     <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
                   </div>
                   <div class="my-3">
@@ -153,7 +153,7 @@ const handleStatusChange = (task, newStatus) => {
                   <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
                 </div>
                 <div class="card-body">
-                  <h5 class="card-title">{{ item.title }}</h5>
+                  <h5 class="card-title">{{ formatTaskId(item.id) }} - {{ item.title }}</h5>
                   <p class="card-text">{{ item.description }}</p>
                   <div class="btn-group btn-group-sm" role="group">
                     <button

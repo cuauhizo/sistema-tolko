@@ -47,7 +47,7 @@ export const createWorkOrder = async (req, res) => {
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: "Nueva Orden de tarbajo Asignada - Sistema Tolko", // Asunto
+          subject: `Nueva Orden de tarbajo Asignada (${workOrderFolio}) - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Se te ha asignado una nueva orden de trabajo en el Sistema Tolko:</p>

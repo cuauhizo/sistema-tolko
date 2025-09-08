@@ -38,7 +38,7 @@ export const createTask = async (req, res) => {
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: "Nueva Tarea Asignada - Sistema Tolko", // Asunto
+          subject: `Nueva Tarea Asignada (${taskFolio}) - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Un administrador te ha asignado una nueva tarea en el Sistema Tolko:</p>
