@@ -1,5 +1,6 @@
 import { pool } from '../config/db.js';
 import transporter from '../config/mailer.js'
+import { formatStatus } from '../utils/formatters';
 
 // ADMIN: Asignar una nueva tarea
 export const createTask = async (req, res) => {
@@ -142,13 +143,13 @@ export const updateTask = async (req, res) => {
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: "Tarea Actualizada - Sistema Tolko", // Asunto
+          subject: `Tarea (${taskFolio}) Actualizada - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Se ha actualizado una tarea que tienes asignada en el Sistema Tolko:</p>
             <br>
-            <h3>${title}</h3>
-            <p><strong>Nuevo estado:</strong> ${status}</p>
+            <h3>${title} - (${taskFolio})</h3>
+            <p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p>
             <p><strong>Descripción:</strong> ${description || 'Sin descripción.'}</p>
             <p><strong>Fecha de entrega:</strong> ${new Date(due_date).toLocaleDateString()}</p>
             <br>

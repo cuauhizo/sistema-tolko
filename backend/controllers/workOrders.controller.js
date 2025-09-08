@@ -1,6 +1,7 @@
 import { pool } from '../config/db.js';
 export * from './workOrders.controller.js';
 import transporter from '../config/mailer.js'
+import { formatStatus } from '../utils/formatters'
 
 // ADMIN: Crear una nueva orden de trabajo
 export const createWorkOrder = async (req, res) => {
@@ -164,13 +165,13 @@ export const updateWorkOrder = async (req, res) => {
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: "Orden Actualizada - Sistema Tolko", // Asunto
+          subject: `Orden (${workOrderFolio}) Actualizada - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Se ha actualizado una orden que tienes asignada en el Sistema Tolko:</p>
             <br>
-            <h3>${title}</h3>
-            <p><strong>Nuevo estado:</strong> ${status}</p>
+            <h3>${title} - (${workOrderFolio})</h3>
+            <p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p>
             <p><strong>Descripción:</strong> ${description || 'Sin descripción.'}</p>
             <p><strong>Fecha de entrega:</strong> ${new Date(due_date).toLocaleDateString()}</p>
             <br>
@@ -304,7 +305,7 @@ export const getMyWorkOrders = async (req, res) => {
         console.error('Error al obtener mis órdenes de trabajo:', error);
         return res.status(500).json({ message: 'Algo salió mal' });
     }
-};  
+};
 
 // USUARIO: Actualizar el estado de una de sus órdenes de trabajo
 export const updateWorkOrderStatus = async (req, res) => {
