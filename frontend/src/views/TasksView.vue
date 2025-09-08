@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useTasksStore } from '../stores/tasks'
 import TaskForm from '../components/TaskForm.vue'
 import { Modal } from 'bootstrap'
-import { formatStatus } from '@/utils/formatters'
+import { formatStatus, formatTaskId } from '@/utils/formatters'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
@@ -113,7 +113,7 @@ const getSeverityForStatus = (status) => {
       :paginator="true"
       :rows="10"
       :rowsPerPageOptions="[5, 10, 20, 50]"
-      :globalFilterFields="['title', 'assigned_to', 'assigned_by', 'due_date', 'status']"
+      :globalFilterFields="['id', 'title', 'assigned_to', 'assigned_by', 'due_date', 'status']"
       v-model:filters="filters"
       size="small"
       stripedRows
@@ -134,6 +134,11 @@ const getSeverityForStatus = (status) => {
       <template #empty> No se encontraron tareas. </template>
       <template #loading> Cargando datos de tareas... </template>
 
+      <Column field="id" header="Folio" :sortable="true">
+        <template #body="{ data }">
+          <strong>{{ formatTaskId(data.id) }}</strong>
+        </template>
+      </Column>
       <Column field="title" header="Tarea" :sortable="true"></Column>
       <Column field="assigned_to" header="Asignada a" :sortable="true"></Column>
       <Column field="assigned_by" header="Asignada por" :sortable="true"></Column>

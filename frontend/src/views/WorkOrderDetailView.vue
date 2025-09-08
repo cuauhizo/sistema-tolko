@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import { storeToRefs } from 'pinia'
 import { generateWorkOrderPDF } from '../utils/pdfGenerator'
-import { formatStatus } from '@/utils/formatters';
+import { formatStatus, formatWorkOrderId } from '@/utils/formatters';
 
 const route = useRoute()
 const workOrdersStore = useWorkOrdersStore()
@@ -32,6 +32,7 @@ const handleExportPDF = () => {
     <div v-else-if="currentOrder">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
+          <p class="h5 text-muted">{{ formatWorkOrderId(currentOrder.id) }}</p>
           <h1 class="mb-0">{{ currentOrder.title }}</h1>
           <p class="text-muted">
             Cliente: <strong>{{ currentOrder.client_name || 'N/A' }}</strong>

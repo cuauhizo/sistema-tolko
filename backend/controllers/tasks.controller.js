@@ -17,8 +17,11 @@ export const createTask = async (req, res) => {
       [title, description, due_date, assigned_to_id, assigned_by_id]
     );
 
+    const taskId = result.insertId;
+    const taskFolio = `TA-${String(taskId).padStart(4, '0')}`;
+
     // --- 2. Guardar la notificación en la base de datos ---
-    const notificationMessage = `Se te ha asignado una nueva tarea: "${title}"`;
+    const notificationMessage = `Nueva tarea (${taskFolio}) asignada: "${title}"`;
     await pool.query(
         'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
         [assigned_to_id, notificationMessage, `/my-tasks`]
@@ -121,7 +124,8 @@ export const updateTask = async (req, res) => {
     );
 
     // Notificacion
-    const notificationMessageUpdate = `La tarea "${title}" que tienes asignada ha sido actualizada.`;
+    const taskFolio = `TA-${String(id).padStart(4, '0')}`; 
+    const notificationMessageUpdate = `La tarea "${title}" (${taskFolio}) que tienes asignada ha sido actualizada.`;
     await pool.query(
         'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
         [assigned_to_id, notificationMessageUpdate, `/my-tasks`]

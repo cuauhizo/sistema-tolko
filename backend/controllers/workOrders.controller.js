@@ -20,6 +20,7 @@ export const createWorkOrder = async (req, res) => {
       [title, description, client_name, assigned_to_id, created_by_id, start_date, end_date]
     );
     const workOrderId = result.insertId;
+    const workOrderFolio = `OT-${String(workOrderId).padStart(4, '0')}`;
 
     if (products && products.length > 0) {
       const productValues = products.map((p) => [workOrderId, p.product_id, p.quantity_used]);
@@ -29,7 +30,7 @@ export const createWorkOrder = async (req, res) => {
     }
 
     // Notificaciones
-    const notificationMessage = `Nueva orden de trabajo asignada: "${title}"`;
+    const notificationMessage = `Nueva orden (${workOrderFolio}) asignada: "${title}"`;
     await connection.query(
         'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
         [assigned_to_id, notificationMessage, `/my-work-orders`]
@@ -145,7 +146,8 @@ export const updateWorkOrder = async (req, res) => {
     // --- FIN DE LÓGICA DE INVENTARIO ---
 
     // Notificaciones
-    const notificationMessageUpdate = `La orden "${title}" que tienes asignada ha sido actualizada.`;
+    const workOrderFolio = `OT-${String(id).padStart(4, '0')}`;
+    const notificationMessageUpdate = `La orden "${title}" (${workOrderFolio}) ha sido actualizada.`;
     await connection.query(
         'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
         [assigned_to_id, notificationMessageUpdate, `/my-work-orders`]

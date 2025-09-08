@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useWorkOrdersStore } from '../stores/workOrders';
 import WorkOrderForm from '../components/WorkOrderForm.vue';
 import { Modal } from 'bootstrap';
-import { formatStatus } from '@/utils/formatters';
+import { formatStatus, formatWorkOrderId } from '@/utils/formatters';
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable';
@@ -114,7 +114,7 @@ const getSeverityForStatus = (status) => {
       :rows="10"
       :rowsPerPageOptions="[5, 10, 20, 50]"
       v-model:filters="filters"
-      :globalFilterFields="['title', 'client_name', 'assigned_to', 'status']"
+      :globalFilterFields="['id', 'title', 'client_name', 'assigned_to', 'status']"
       :loading="workOrdersStore.isLoading"
       size="small"
       stripedRows
@@ -132,6 +132,11 @@ const getSeverityForStatus = (status) => {
       <template #empty>No se encontraron órdenes de trabajo.</template>
       <template #loading>Cargando datos...</template>
 
+      <Column field="id" header="Folio" :sortable="true" style="width: 8rem">
+        <template #body="{ data }">
+          <strong>{{ formatWorkOrderId(data.id) }}</strong>
+        </template>
+      </Column>
       <Column field="title" header="Título" :sortable="true"></Column>
       <Column field="client_name" header="Cliente" :sortable="true"></Column>
       <Column field="assigned_to" header="Asignada a" :sortable="true"></Column>

@@ -5,7 +5,7 @@ import DataView from 'primevue/dataview';
 import SelectButton from 'primevue/selectbutton';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
-import { formatStatus } from '../utils/formatters';
+import { formatStatus, formatWorkOrderId } from '../utils/formatters';
 
 const workOrdersStore = useWorkOrdersStore();
 const layout = ref('list');
@@ -77,7 +77,7 @@ const getSeverityForStatus = (status) => {
         <div class="list-group">
           <div v-for="item in slotProps.items" :key="item.id" class="list-group-item">
             <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">{{ item.title }} - ({{ item.client_name }})</h5>
+              <h5 class="mb-1">{{ formatWorkOrderId(item.id) }} - {{ item.title }} ({{ item.client_name }})</h5>
               <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
             </div>
             <p class="my-3">{{ item.description }}</p>
@@ -101,8 +101,10 @@ const getSeverityForStatus = (status) => {
           <div v-for="item in slotProps.items" :key="item.id" class="col-12 col-md-6 col-lg-4">
             <div class="card h-100">
               <div class="card-header d-flex justify-content-between">
-                <span>{{ item.title }}</span>
-                <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
+                <span>{{ formatWorkOrderId(item.id) }} - {{ item.title }}</span>
+                <div>
+                  <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
+                </div>
               </div>
               <div class="card-body d-flex flex-column">
                 <h6 class="card-subtitle mb-2 text-muted">{{ item.client_name }}</h6>
