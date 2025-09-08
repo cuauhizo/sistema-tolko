@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './notifications'
+import { useNotificationStore } from './toast'
 
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
@@ -68,20 +68,6 @@ export const useTasksStore = defineStore('tasks', {
     },
 
     // Para la vista del Usuario: trae solo las tareas del usuario logueado
-    async old_fetchMyTasks() {
-      this.isLoading = true
-      this.error = null
-      try {
-        const { data } = await apiClient.get('/tasks/mytasks')
-        this.myTasks = data
-      } catch (error) {
-        this.error = 'No se pudieron cargar tus tareas.'
-        useNotificationStore().showError(this.error)
-      } finally {
-        this.isLoading = false
-      }
-    },
-
     async fetchMyTasks(statusFilter = '') { // Acepta un filtro opcional
       this.isLoading = true;
       this.error = null;
@@ -91,7 +77,8 @@ export const useTasksStore = defineStore('tasks', {
         const { data } = await apiClient.get(url);
         this.myTasks = data;
       } catch (error) {
-        // ... (manejo de errores)
+        this.error = 'No se pudieron cargar tus tareas.'
+        useNotificationStore().showError(this.error)
       } finally {
         this.isLoading = false;
       }

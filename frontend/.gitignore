@@ -16,6 +16,12 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
+test.html
+/test.html
+bd_sistema_tolko.sql
+/bd_sistema_tolko.sql
+./bd_sistema_tolko.sql
+../bd_sistema_tolko.sql
 
 # Editor directories and files
 .vscode/*

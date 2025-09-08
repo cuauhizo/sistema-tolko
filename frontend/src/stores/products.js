@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './notifications'
+import { useNotificationStore } from './toast'
 
 export const useProductsStore = defineStore('products', {
   state: () => ({

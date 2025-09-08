@@ -13,6 +13,7 @@ import tasksRoutes from './routes/tasks.routes.js';
 import workOrdersRoutes from './routes/workOrders.routes.js';
 import inventoryRoutes from './routes/inventory.routes.js';
 import userDashboardRoutes from './routes/userDashboard.routes.js';
+import notificationsRoutes from './routes/notifications.routes.js';
 
 // Variables de entorno
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/workorders', workOrdersRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/user-dashboard', userDashboardRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Definir puerto
 const PORT = process.env.PORT || 4000;

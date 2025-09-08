@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import NotificationBell from './NotificationBell.vue';
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -174,6 +175,7 @@ watch(() => route.path, () => {
         </ul>
 
         <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto d-flex align-items-center">
+          <NotificationBell />
           <li class="nav-item me-3">
             <span class="navbar-text">
               <i class="bi bi-person-circle me-1"></i>

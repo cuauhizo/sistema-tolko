@@ -1,5 +1,6 @@
 import { pool } from '../config/db.js';
 export * from './workOrders.controller.js';
+import transporter from '../config/mailer.js'
 
 // ADMIN: Crear una nueva orden de trabajo
 export const createWorkOrder = async (req, res) => {
@@ -25,6 +26,42 @@ export const createWorkOrder = async (req, res) => {
       await connection.query('INSERT INTO work_order_products (work_order_id, product_id, quantity_used) VALUES ?', [
         productValues,
       ]);
+    }
+
+    // Notificaciones
+    const notificationMessage = `Nueva orden de trabajo asignada: "${title}"`;
+    await connection.query(
+        'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
+        [assigned_to_id, notificationMessage, `/my-work-orders`]
+    );
+
+    // --- 3. Enviar la notificación por correo electrónico ---
+    try {
+      // Buscamos el email y nombre del usuario asignado
+      const [users] = await pool.query('SELECT email, username FROM users WHERE id = ?', [assigned_to_id]);
+      if (users.length > 0) {
+        const user = users[0];
+        
+        // Usamos el 'transporter' para enviar el correo
+        await transporter.sendMail({
+          from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
+          to: user.email, // Destinatario
+          subject: "Nueva Orden de tarbajo Asignada - Sistema Tolko", // Asunto
+          html: `
+            <h2>Hola ${user.username},</h2>
+            <p>Se te ha asignado una nueva orden de trabajo en el Sistema Tolko:</p>
+            <br>
+            <h3>${title}</h3>
+            <p><strong>Cliente:</strong> ${client_name || 'N/A'}</p>
+            <p><strong>Fecha de finalización:</strong> ${new Date(end_date).toLocaleDateString()}</p>
+            <br>
+            <p>Puedes ver los detalles completos iniciando sesión en la plataforma.</p>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error("AVISO: La orden se creó, pero falló el envío del correo de notificación:", emailError);
+      // No devolvemos un error aquí para que la creación de la tarea no falle si el email no se puede enviar.
     }
 
     await connection.commit();
@@ -106,6 +143,42 @@ export const updateWorkOrder = async (req, res) => {
       }
     }
     // --- FIN DE LÓGICA DE INVENTARIO ---
+
+    // Notificaciones
+    const notificationMessageUpdate = `La orden "${title}" que tienes asignada ha sido actualizada.`;
+    await connection.query(
+        'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
+        [assigned_to_id, notificationMessageUpdate, `/my-work-orders`]
+    );
+
+    // --- Enviar la notificación por correo electrónico ---
+    try {
+      // Buscamos el email y nombre del usuario asignado
+      const [users] = await pool.query('SELECT email, username FROM users WHERE id = ?', [assigned_to_id]);
+      if (users.length > 0) {
+        const user = users[0];
+        
+        // Usamos el 'transporter' para enviar el correo
+        await transporter.sendMail({
+          from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
+          to: user.email, // Destinatario
+          subject: "Orden Actualizada - Sistema Tolko", // Asunto
+          html: `
+            <h2>Hola ${user.username},</h2>
+            <p>Se ha actualizado una orden que tienes asignada en el Sistema Tolko:</p>
+            <br>
+            <h3>${title}</h3>
+            <p><strong>Nuevo estado:</strong> ${status}</p>
+            <p><strong>Descripción:</strong> ${description || 'Sin descripción.'}</p>
+            <p><strong>Fecha de entrega:</strong> ${new Date(due_date).toLocaleDateString()}</p>
+            <br>
+            <p>Puedes ver los detalles completos iniciando sesión en la plataforma.</p>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error("AVISO: La orden se actualizó, pero falló el envío del correo de notificación:", emailError);
+    }
 
     await connection.commit();
     res.status(200).json({ message: 'Orden de trabajo actualizada correctamente' });
