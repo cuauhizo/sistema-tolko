@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import { storeToRefs } from 'pinia'
 import { generateWorkOrderPDF } from '../utils/pdfGenerator'
+import { formatStatus } from '@/utils/formatters';
 
 const route = useRoute()
 const workOrdersStore = useWorkOrdersStore()
@@ -40,7 +41,18 @@ const handleExportPDF = () => {
           <button class="btn btn-danger me-2" @click="handleExportPDF">
             <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
           </button>
-          <span class="badge bg-primary p-2">{{ currentOrder.status }}</span>
+          <span class="badge p-2"
+                :class="{
+                  'bg-warning text-dark': currentOrder.status === 'pendiente',
+                  'bg-info': currentOrder.status === 'en_progreso',
+                  'bg-success': currentOrder.status === 'completada',
+                  'bg-dark': currentOrder.status === 'cancelada',
+                  }">{{ formatStatus(currentOrder.status) }}
+          </span>
+          <!-- pendiente: 'warn',
+            en_progreso: 'info',
+            completada: 'success',
+            cancelada: 'danger', -->
         </div>
       </div>
 

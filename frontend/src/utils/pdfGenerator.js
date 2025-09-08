@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { formatStatus } from '@/utils/formatters';
 
 export function generateWorkOrderPDF(order) {
   if (!order) return
@@ -11,7 +12,7 @@ export function generateWorkOrderPDF(order) {
   doc.text('Orden de Trabajo', 105, 20, { align: 'center' })
   doc.setFontSize(12)
   doc.text(`ID: ${order.id}`, 20, 30)
-  doc.text(`Estado: ${order.status}`, 190, 30, { align: 'right' })
+  doc.text(`Estado: ${formatStatus(order.status)}`, 190, 30, { align: 'right' })
 
   // Tabla 1: Detalles del Cliente y Fechas
   autoTable(doc, {
