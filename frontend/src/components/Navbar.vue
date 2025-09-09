@@ -166,8 +166,13 @@ watch(() => route.path, () => {
               </li>
               <li><hr class="dropdown-divider"></li>
               <li>
+                <RouterLink class="dropdown-item" to="/inventory/adjustments" @click="closeAllDropdowns">
+                  Ajustes de Inventario
+                </RouterLink>
+              </li>
+              <li>
                 <RouterLink class="dropdown-item" to="/inventory/movements" @click="closeAllDropdowns">
-                  Movimientos de Inventario
+                  Historial de Movimientos
                 </RouterLink>
               </li>
             </ul>

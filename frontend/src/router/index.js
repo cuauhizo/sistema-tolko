@@ -11,6 +11,7 @@ import WorkOrdersView from '../views/WorkOrdersView.vue'
 import WorkOrderDetailView from '../views/WorkOrderDetailView.vue'
 import InventoryMovementsView from '../views/InventoryMovementsView.vue'
 import MyWorkOrdersView from '../views/MyWorkOrdersView.vue'
+import AdjustmentsView from '../views/AdjustmentsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,12 @@ const router = createRouter({
       path: '/inventory/movements',
       name: 'inventory-movements',
       component: InventoryMovementsView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/inventory/adjustments',
+      name: 'inventory-adjustments',
+      component: AdjustmentsView,
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
