@@ -14,8 +14,8 @@ const statusFilter = ref();
 const statusOptions = ref([
   { name: 'Todas', code: '' },
   { name: 'Pendientes', code: 'pendiente' },
-  { name: 'En Progreso', code: 'en_progreso' },
-  { name: 'Por Aprobar', code: 'por_aprobar' },
+  { name: 'En progreso', code: 'en_progreso' },
+  { name: 'Por aprobar', code: 'por_aprobar' },
   { name: 'Completada', code: 'completada' },
   { name: 'Canceladas', code: 'cancelada' }, // <-- Incluimos las canceladas
 ]);
@@ -88,11 +88,13 @@ const getSeverityForStatus = (status) => {
             </div>
             <p class="my-3">{{ item.description }}</p>
             <div class="d-flex flex-wrap gap-3 w-100 justify-content-between align-items-center">
+              <fieldset :disabled="item.status === 'completada' || item.status === 'cancelada'">
               <div class="btn-group btn-group-sm" role="group">
                 <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
                 <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
                 <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-dark' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
               </div>
+              </fieldset>
               <small class="text-muted">
                 <strong>Creada por:</strong> {{ item.created_by }} | 
                 <strong>Fecha Límite:</strong> {{ new Date(item.end_date).toLocaleDateString() }}
@@ -107,22 +109,28 @@ const getSeverityForStatus = (status) => {
           <div v-for="item in slotProps.items" :key="item.id" class="col-12 col-md-6 col-lg-4">
             <div class="card h-100">
               <div class="card-header d-flex justify-content-between">
-                <span>{{ formatWorkOrderId(item.id) }} - {{ item.title }}</span>
+                <span>{{ formatWorkOrderId(item.id) }}</span>
                 <div>
                   <Tag :value="formatStatus(item.status)" :severity="getSeverityForStatus(item.status)"></Tag>
                 </div>
               </div>
               <div class="card-body d-flex flex-column">
+                <h5 class="card-title mb-2 text-muted">{{ item.title }}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{ item.client_name }}</h6>
                 <p class="card-text flex-grow-1">{{ item.description }}</p>
-                <div class="btn-group btn-group-sm mt-auto" role="group">
-                  <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
-                  <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                  <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-dark' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
-                </div>
+                <fieldset :disabled="item.status === 'completada' || item.status === 'cancelada'">
+                  <div class="btn-group btn-group-sm mt-auto" role="group">
+                    <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
+                    <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
+                    <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-dark' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
+                  </div>
+                </fieldset>
               </div>
               <div class="card-footer text-muted">
-                Fecha Límite: {{ new Date(item.end_date).toLocaleDateString() }}
+                <small class="text-muted">
+                  <strong>Creada por:</strong> {{ item.created_by }} | 
+                  <strong>Fecha Límite:</strong> {{ new Date(item.end_date).toLocaleDateString() }}
+                </small>
               </div>
             </div>
           </div>

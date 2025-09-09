@@ -336,9 +336,47 @@ export const updateWorkOrderStatus = async (req, res) => {
 
         // Si el usuario la marca para aprobar, notificamos a los admins (opcional pero recomendado)
         if (status === 'por_aprobar') {
-            // Aquí podrías añadir una lógica para notificar a los administradores
-        }
+            const [orderData] = await connection.query('SELECT title, client_name FROM work_orders WHERE id = ?', [id]);
+            const orderTitle = orderData[0]?.title || 'N/A';
+            const clientName = orderData[0]?.client_name || 'N/A';
+            const workOrderFolio = `OT-${String(id).padStart(4, '0')}`;
 
+            // --- MODIFICACIÓN: Ahora también pedimos email y username ---
+            const [admins] = await connection.query('SELECT id, email, username FROM users WHERE role_id = 1');
+
+            if (admins.length > 0) {
+                // --- LÓGICA DE NOTIFICACIÓN EN APP (sin cambios) ---
+                const notificationMessage = `La orden "${orderTitle}" (${workOrderFolio}) requiere aprobación.`;
+                const notificationLink = '/work-orders';
+                const notificationsData = admins.map(admin => [admin.id, notificationMessage, notificationLink]);
+                await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData]);
+
+                // --- INICIO DE LA NUEVA LÓGICA DE CORREO ELECTRÓNICO ---
+                try {
+                    for (const admin of admins) {
+                        await transporter.sendMail({
+                            from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`,
+                            to: admin.email,
+                            subject: `Revisión Requerida: Orden de Trabajo ${workOrderFolio}`,
+                            html: `
+                                <h2>Hola ${admin.username},</h2>
+                                <p>Una orden de trabajo ha sido marcada como finalizada y requiere tu aprobación.</p>
+                                <br>
+                                <h3>${workOrderFolio}: ${orderTitle}</h3>
+                                <p><strong>Cliente:</strong> ${clientName}</p>
+                                <br>
+                                <p>Por favor, inicia sesión en el sistema para revisarla y cambiar su estado a "Completada".</p>
+                                <a href="${process.env.FRONTEND_URL}/work-orders">Ir a Órdenes de Trabajo</a>
+                            `,
+                        });
+                    }
+                } catch (emailError) {
+                    console.error("AVISO: La orden se actualizó y notificó en la app, pero falló el envío de correos a los admins:", emailError);
+                    // No hacemos rollback. El envío de correo es secundario.
+                }
+                // --- FIN DE LA LÓGICA DE CORREO ---
+            }
+          }
 
         await connection.commit();
         res.status(200).json({ message: 'Estado de la orden actualizado.' });

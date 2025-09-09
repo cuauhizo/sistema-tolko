@@ -17,7 +17,7 @@ const statusFilter = ref()
 const statusOptions = ref([
   { name: 'Todas', code: '' },
   { name: 'Pendientes', code: 'pendiente' },
-  { name: 'En Progreso', code: 'en_progreso' },
+  { name: 'En progreso', code: 'en_progreso' },
   { name: 'Completadas', code: 'completada' },
 ])
 
