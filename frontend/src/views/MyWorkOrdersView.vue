@@ -91,7 +91,7 @@ const getSeverityForStatus = (status) => {
               <div class="btn-group btn-group-sm" role="group">
                 <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
                 <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-primary' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
+                <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-dark' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
               </div>
               <small class="text-muted">
                 <strong>Creada por:</strong> {{ item.created_by }} | 
@@ -118,7 +118,7 @@ const getSeverityForStatus = (status) => {
                 <div class="btn-group btn-group-sm mt-auto" role="group">
                   <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
                   <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                  <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-primary' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
+                  <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-dark' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
                 </div>
               </div>
               <div class="card-footer text-muted">
