@@ -53,11 +53,11 @@ const handleStatusChange = (task, newStatus) => {
   <div class="container mt-4">
     <h1 class="mb-4">Mis Tareas Pendientes</h1>
 
-    <div v-if="tasksStore.myTasks.length === 0" class="text-center p-5">
+    <!-- <div v-if="tasksStore.myTasks.length === 0" class="text-center p-5">
       <h4 class="h2">¡Felicidades!</h4>
       <p>No tienes tareas pendientes por el momento.</p>
-    </div>
-    <div v-else>
+    </div> -->
+    <!-- <div v-else> -->
       <DataView :value="tasksStore.myTasks" :layout="layout" :paginator="true" :rows="9">
         <template #header>
           <div class="d-flex justify-content-between align-items-center">
@@ -78,6 +78,10 @@ const handleStatusChange = (task, newStatus) => {
             </div>
           </div>
         </template>
+        <template #empty>
+        <p class="text-center my-3">No se encontraron datos.</p>
+      </template>
+      <template #loading>Cargando datos tareas...</template>
 
         <template #list="slotProps">
           <div class="row g-3 mb-3">
@@ -196,6 +200,6 @@ const handleStatusChange = (task, newStatus) => {
           </div>
         </template>
       </DataView>
-    </div>
+    <!-- </div> -->
   </div>
 </template>

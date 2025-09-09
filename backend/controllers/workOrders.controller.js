@@ -1,7 +1,7 @@
 import { pool } from '../config/db.js';
 export * from './workOrders.controller.js';
 import transporter from '../config/mailer.js'
-import { formatStatus } from '../utils/formatters'
+import { formatStatus } from '../utils/formatters.js'
 
 // ADMIN: Crear una nueva orden de trabajo
 export const createWorkOrder = async (req, res) => {
@@ -173,7 +173,8 @@ export const updateWorkOrder = async (req, res) => {
             <h3>${title} - (${workOrderFolio})</h3>
             <p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p>
             <p><strong>Descripción:</strong> ${description || 'Sin descripción.'}</p>
-            <p><strong>Fecha de entrega:</strong> ${new Date(due_date).toLocaleDateString()}</p>
+            <p><strong>Fecha de inicio:</strong> ${new Date(start_date).toLocaleDateString()}</p>
+            <p><strong>Fecha de finalización:</strong> ${new Date(end_date).toLocaleDateString()}</p>
             <br>
             <p>Puedes ver los detalles completos iniciando sesión en la plataforma.</p>
           `,
@@ -292,7 +293,7 @@ export const getMyWorkOrders = async (req, res) => {
         const params = [userId];
 
         // Si se proporciona un filtro de estado, lo añadimos a la consulta
-        if (status && ['pendiente', 'en_progreso', 'completada', 'cancelada'].includes(status)) {
+        if (status && ['pendiente', 'en_progreso', 'por_aprobar', 'completada', 'cancelada'].includes(status)) {
             query += ' AND wo.status = ?';
             params.push(status);
         }
@@ -314,7 +315,7 @@ export const updateWorkOrderStatus = async (req, res) => {
     const userId = req.userId;
 
     // Validar que el estado sea uno de los permitidos
-    if (!status || !['pendiente', 'en_progreso', 'completada', 'cancelada'].includes(status)) {
+    if (!status || !['pendiente', 'en_progreso', 'por_aprobar'].includes(status)) {
         return res.status(400).json({ message: 'Estado no válido.' });
     }
 
@@ -333,16 +334,11 @@ export const updateWorkOrderStatus = async (req, res) => {
             return res.status(404).json({ message: 'Orden no encontrada o no tienes permiso para actualizarla.' });
         }
 
-        // 2. Si el nuevo estado es "completada", descontar el inventario (reutilizamos la lógica)
-        if (status === 'completada') {
-            const [products] = await connection.query('SELECT product_id, quantity_used FROM work_order_products WHERE work_order_id = ?', [id]);
-            if (products.length > 0) {
-                for (const product of products) {
-                    await connection.query('UPDATE products SET stock = stock - ? WHERE id = ?', [product.quantity_used, product.product_id]);
-                    await connection.query('INSERT INTO inventory_movements (product_id, work_order_id, quantity_change, reason) VALUES (?, ?, ?, ?)', [product.product_id, id, -product.quantity_used, `Salida por Orden de Trabajo #${id}`]);
-                }
-            }
+        // Si el usuario la marca para aprobar, notificamos a los admins (opcional pero recomendado)
+        if (status === 'por_aprobar') {
+            // Aquí podrías añadir una lógica para notificar a los administradores
         }
+
 
         await connection.commit();
         res.status(200).json({ message: 'Estado de la orden actualizado.' });

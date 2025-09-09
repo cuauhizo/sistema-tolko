@@ -15,6 +15,7 @@ const statusOptions = ref([
   { name: 'Todas', code: '' },
   { name: 'Pendientes', code: 'pendiente' },
   { name: 'En Progreso', code: 'en_progreso' },
+  { name: 'Por Aprobar', code: 'por_aprobar' },
   { name: 'Completada', code: 'completada' },
   { name: 'Canceladas', code: 'cancelada' }, // <-- Incluimos las canceladas
 ]);
@@ -37,10 +38,11 @@ const getSeverityForStatus = (status) => {
   const statusMap = {
     pendiente: 'warn',
     en_progreso: 'info',
+    por_aprobar: 'secondary',
     completada: 'success',
     cancelada: 'danger',
   };
-  return statusMap[status] || 'secondary';
+  return statusMap[status] || 'contrast';
 };
 </script>
 
@@ -48,11 +50,11 @@ const getSeverityForStatus = (status) => {
   <div class="container mt-4">
     <h1 class="mb-4">Mis Órdenes de Trabajo</h1>
 
-    <div v-if="workOrdersStore.myWorkOrders.length === 0" class="text-center p-5">
+    <!-- <div v-if="workOrdersStore.myWorkOrders.length === 0" class="text-center p-5">
       <h4 class="h2">¡Todo en orden!</h4>
       <p>No tienes órdenes de trabajo asignadas por el momento.</p>
-    </div>
-  <div v-else>
+    </div> -->
+  <!-- <div v-else> -->
     <DataView :value="workOrdersStore.myWorkOrders" :layout="layout" :paginator="true" :rows="9">
       <template #header>
         <div class="d-flex justify-content-between align-items-center">
@@ -72,6 +74,10 @@ const getSeverityForStatus = (status) => {
           </div>
         </div>
       </template>
+      <template #empty>
+        <p class="text-center my-3">No se encontraron datos.</p>
+      </template>
+      <template #loading>Cargando datos ordenes de trabajo...</template>
 
       <template #list="slotProps">
         <div class="list-group">
@@ -85,7 +91,7 @@ const getSeverityForStatus = (status) => {
               <div class="btn-group btn-group-sm" role="group">
                 <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
                 <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
+                <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-primary' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
               </div>
               <small class="text-muted">
                 <strong>Creada por:</strong> {{ item.created_by }} | 
@@ -112,7 +118,7 @@ const getSeverityForStatus = (status) => {
                 <div class="btn-group btn-group-sm mt-auto" role="group">
                   <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
                   <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                  <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
+                  <button type="button" class="btn" :class="item.status === 'por_aprobar' ? 'btn-primary' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'por_aprobar')">Enviar a Revisión</button>
                 </div>
               </div>
               <div class="card-footer text-muted">
@@ -123,6 +129,6 @@ const getSeverityForStatus = (status) => {
         </div>
       </template>
     </DataView>
-    </div>
+    <!-- </div> -->
   </div>
 </template>

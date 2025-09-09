@@ -30,7 +30,7 @@ const handleExportPDF = () => {
       {{ error }}
     </div>
     <div v-else-if="currentOrder">
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex flex-wrap justify-content-md-between align-items-center mb-4">
         <div>
           <p class="h5 text-muted">{{ formatWorkOrderId(currentOrder.id) }}</p>
           <h1 class="mb-0">{{ currentOrder.title }}</h1>
@@ -46,14 +46,11 @@ const handleExportPDF = () => {
                 :class="{
                   'bg-warning text-dark': currentOrder.status === 'pendiente',
                   'bg-info': currentOrder.status === 'en_progreso',
+                  'bg-secondary': currentOrder.status === 'por_aprobar',
                   'bg-success': currentOrder.status === 'completada',
                   'bg-dark': currentOrder.status === 'cancelada',
                   }">{{ formatStatus(currentOrder.status) }}
           </span>
-          <!-- pendiente: 'warn',
-            en_progreso: 'info',
-            completada: 'success',
-            cancelada: 'danger', -->
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { pool } from '../config/db.js';
 import transporter from '../config/mailer.js'
-import { formatStatus } from '../utils/formatters';
+import { formatStatus } from '../utils/formatters.js';
 
 // ADMIN: Asignar una nueva tarea
 export const createTask = async (req, res) => {

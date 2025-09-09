@@ -92,9 +92,9 @@ const confirmDeleteOrder = async () => {
 // Devuelve un color para el tag de estado.
 const getSeverityForStatus = (status) => {
   const statusMap = {
-    pendiente: 'warn', en_progreso: 'info', completada: 'success', cancelada: 'danger',
+    pendiente: 'warn', en_progreso: 'info', por_aprobar: 'secondary', completada: 'success', cancelada: 'danger',
   };
-  return statusMap[status] || 'secondary';
+  return statusMap[status] || 'contrast';
 };
 </script>
 

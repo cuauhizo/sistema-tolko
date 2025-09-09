@@ -163,6 +163,7 @@ const removeProduct = (productId) => {
               <Field as="select" class="form-select" :class="{'is-invalid': errors.status}" id="status" name="status">
                 <option value="pendiente">Pendiente</option>
                 <option value="en_progreso">En Progreso</option>
+                <option value="por_aprobar">Pendiente de Aprobación</option>
                 <option value="completada">Completada</option>
                 <option value="cancelada">Cancelada</option>
               </Field>

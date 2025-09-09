@@ -31,22 +31,12 @@ const formatCurrency = (value) => {
   </div>
   <div v-else>
     <div class="row g-4">
+
       <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-primary shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Total de Productos</h5>
             <p class="card-text display-5 text-end">{{ dashboardStore.stats.totalProducts }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-3">
-        <div class="card text-white bg-success shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-cash-stack me-2"></i>Valor del Inventario</h5>
-            <p class="card-text display-5 text-end">
-              {{ formatCurrency(dashboardStore.stats.inventoryValue) }}
-            </p>
           </div>
         </div>
       </div>
@@ -63,7 +53,7 @@ const formatCurrency = (value) => {
       </div>
 
       <div class="col-md-6 col-lg-3">
-        <div class="card text-white bg-danger shadow-sm h-100">
+        <div class="card text-white bg-success shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-person-workspace me-2"></i>Órdenes Activas</h5>
             <p class="card-text display-5 text-end">{{ dashboardStore.stats.activeWorkOrders }}</p>
@@ -72,10 +62,21 @@ const formatCurrency = (value) => {
       </div>
 
       <div class="col-md-6 col-lg-3">
-        <div class="card text-white bg-info shadow-sm h-100">
+        <div class="card text-white bg-secondary shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><i class="bi bi-people-fill me-2"></i>Usuarios Registrados</h5>
             <p class="card-text display-5 text-end">{{ dashboardStore.stats.totalUsers }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-dark shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-cash-stack me-2"></i>Valor del Inventario</h5>
+            <p class="card-text display-5 text-end">
+              {{ formatCurrency(dashboardStore.stats.inventoryValue) }}
+            </p>
           </div>
         </div>
       </div>
@@ -163,12 +164,12 @@ const formatCurrency = (value) => {
           <RouterLink to="/my-work-orders" class="card-link-wrapper">
             <div class="card text-center shadow-sm h-100">
               <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <i class="bi bi-person-workspace display-3 text-info mb-3"></i>
-                <h5 class="card-title text-info">Mis Órdenes de Trabajo</h5>
+                <i class="bi bi-person-workspace display-3 text-warning mb-3"></i>
+                <h5 class="card-title text-warning">Mis Órdenes de Trabajo</h5>
                 <p class="card-text text-muted flex-grow-1">
                   Revisa y actualiza el estado de tus órdenes de trabajo asignadas.
                 </p>
-                <span class="btn btn-outline-info mt-auto">Ir a Mis Órdenes</span>
+                <span class="btn btn-outline-warning mt-auto">Ir a Mis Órdenes</span>
               </div>
             </div>
           </RouterLink>
