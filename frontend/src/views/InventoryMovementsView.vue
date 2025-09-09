@@ -34,10 +34,12 @@ const formatDate = (value) => {
     <DataTable
       :value="inventoryStore.movements"
       :paginator="true"
-      :rows="15"
+      :rows="10"
       v-model:filters="filters"
+      :rowsPerPageOptions="[5, 10, 20, 50]"
       :globalFilterFields="['product_name', 'reason', 'work_order_title']"
       :loading="inventoryStore.isLoading"
+      size="small"
       stripedRows
       showGridlines
       responsiveLayout="scroll"

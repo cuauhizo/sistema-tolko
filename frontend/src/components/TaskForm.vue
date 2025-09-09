@@ -111,10 +111,21 @@ onUnmounted(() => {
         </div>
         <Form ref="veeForm" :key="formKey" @submit="handleSubmit" :validation-schema="schema" :initial-values="task" v-slot="{ errors }">
           <div class="modal-body">
-            <div class="mb-3">
+            <div class="row">
+            <div class="mb-3" :class="isEditMode ? 'col-md-8' : 'col-md-12'">
               <label for="title" class="form-label">Título de la Tarea</label>
               <Field type="text" class="form-control" :class="{'is-invalid': errors.title}" id="title" name="title" />
               <ErrorMessage name="title" class="invalid-feedback" />
+            </div>
+            <div v-if="isEditMode" class="mb-3 col-md-4">
+              <label for="status" class="form-label">Estado</label>
+              <Field as="select" class="form-select" :class="{'is-invalid': errors.status}" id="status" name="status">
+                <option value="pendiente">Pendiente</option>
+                <option value="en_progreso">En Progreso</option>
+                <option value="completada">Completada</option>
+              </Field>
+              <ErrorMessage name="status" class="invalid-feedback" />
+            </div>
             </div>
             <div class="mb-3">
               <label for="description" class="form-label">Descripción y Comentarios</label>
@@ -137,15 +148,6 @@ onUnmounted(() => {
                 <Field type="date" class="form-control" :class="{'is-invalid': errors.due_date}" id="due_date" name="due_date" />
                 <ErrorMessage name="due_date" class="invalid-feedback" />
               </div>
-            </div>
-            <div v-if="isEditMode" class="mb-3">
-              <label for="status" class="form-label">Estado</label>
-              <Field as="select" class="form-select" :class="{'is-invalid': errors.status}" id="status" name="status">
-                <option value="pendiente">Pendiente</option>
-                <option value="en_progreso">En Progreso</option>
-                <option value="completada">Completada</option>
-              </Field>
-              <ErrorMessage name="status" class="invalid-feedback" />
             </div>
           </div>
           <div class="modal-footer">
