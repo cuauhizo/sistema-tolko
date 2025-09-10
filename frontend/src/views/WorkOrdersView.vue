@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import WorkOrderForm from '../components/WorkOrderForm.vue'
 import { Modal } from 'bootstrap'
@@ -24,6 +24,15 @@ const orderToDelete = ref(null)
 const orderFormRef = ref(null)
 const deleteModalInstance = ref(null)
 const isSaving = ref(false)
+
+// --- 1. CREAR LA PROPIEDAD COMPUTADA ---
+// Esta propiedad toma las órdenes del store y les añade el campo 'folio'
+const formattedWorkOrders = computed(() => {
+  return workOrdersStore.workOrders.map((order) => ({
+    ...order,
+    folio: formatWorkOrderId(order.id),
+  }))
+})
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -116,14 +125,14 @@ const getSeverityForStatus = (status) => {
         Nueva Orden de Trabajo
       </button>
     </div>
-
+    <!-- :value="workOrdersStore.workOrders" -->
     <DataTable
-      :value="workOrdersStore.workOrders"
+      :value="formattedWorkOrders"
       :paginator="true"
       :rows="10"
       :rowsPerPageOptions="[5, 10, 20, 50]"
       v-model:filters="filters"
-      :globalFilterFields="['id', 'title', 'client_name', 'assigned_to', 'status']"
+      :globalFilterFields="['folio', 'title', 'client_name', 'assigned_to', 'status']"
       :loading="workOrdersStore.isLoading"
       size="small"
       stripedRows
@@ -141,9 +150,9 @@ const getSeverityForStatus = (status) => {
       <template #empty>No se encontraron órdenes de trabajo.</template>
       <template #loading>Cargando datos...</template>
 
-      <Column field="id" header="Folio" :sortable="true" style="width: 8rem">
+      <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
         <template #body="{ data }">
-          <strong>{{ formatWorkOrderId(data.id) }}</strong>
+          <strong>{{ data.folio }}</strong>
         </template>
       </Column>
       <Column field="title" header="Título" :sortable="true"></Column>
@@ -156,10 +165,7 @@ const getSeverityForStatus = (status) => {
       </Column>
       <Column field="status" header="Estado" :sortable="true">
         <template #body="{ data }">
-          <Tag
-            :value="formatStatus(data.status)"
-            :severity="getSeverityForStatus(data.status)"
-          ></Tag>
+          <Tag :value="formatStatus(data.status)" :severity="getSeverityForStatus(data.status)"></Tag>
         </template>
       </Column>
       <Column header="Acciones" style="width: 11rem">
@@ -167,26 +173,13 @@ const getSeverityForStatus = (status) => {
           <RouterLink :to="{ name: 'work-order-detail', params: { id: data.id } }">
             <Button icon="pi pi-eye" class="p-button-rounded p-button-info me-2" />
           </RouterLink>
-          <Button
-            icon="pi pi-pencil"
-            class="p-button-rounded p-button-warning me-2"
-            @click="openModalForEdit(data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            class="p-button-rounded p-button-danger"
-            @click="openDeleteModal(data)"
-          />
+          <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning me-2" @click="openModalForEdit(data)" />
+          <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="openDeleteModal(data)" />
         </template>
       </Column>
     </DataTable>
 
-    <WorkOrderForm
-      ref="orderFormRef"
-      :order-to-edit="orderToEdit"
-      :is-saving="isSaving"
-      @submit="handleFormSubmit"
-    />
+    <WorkOrderForm ref="orderFormRef" :order-to-edit="orderToEdit" :is-saving="isSaving" @submit="handleFormSubmit" />
 
     <div class="modal fade" id="deleteWorkOrderModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
@@ -204,12 +197,8 @@ const getSeverityForStatus = (status) => {
             <p class="text-danger">Esta acción no se puede deshacer.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Cancelar
-            </button>
-            <button type="button" class="btn btn-danger" @click="confirmDeleteOrder">
-              Sí, Eliminar
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" @click="confirmDeleteOrder">Sí, Eliminar</button>
           </div>
         </div>
       </div>

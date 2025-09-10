@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useTasksStore } from '../stores/tasks'
 import TaskForm from '../components/TaskForm.vue'
 import { Modal } from 'bootstrap'
@@ -25,6 +25,15 @@ const taskFormRef = ref(null)
 const deleteModalInstance = ref(null)
 const isSaving = ref(false)
 
+// --- 1. CREAR LA PROPIEDAD COMPUTADA ---
+// Esta propiedad toma las órdenes del store y les añade el campo 'folio'
+const formattedTasks = computed(() => {
+  return tasksStore.tasks.map((task) => ({
+    ...task,
+    folio: formatTaskId(task.id),
+  }))
+})
+
 // Ref para los filtros de la DataTable
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -34,12 +43,11 @@ const filters = ref({
 onMounted(() => {
   tasksStore.fetchTasks()
 
-    // Inicializar la instancia del modal de borrado para controlarlo con JS
+  // Inicializar la instancia del modal de borrado para controlarlo con JS
   const deleteModalEl = document.getElementById('deleteTaskModal')
   if (deleteModalEl) {
     deleteModalInstance.value = new Modal(deleteModalEl)
   }
-
 })
 
 // --- Métodos para Manejar Acciones ---
@@ -64,8 +72,8 @@ const handleFormSubmit = async (taskData) => {
   isSaving.value = true
   try {
     if (taskData.id) {
-    // Si tiene ID, es una actualización
-    await tasksStore.updateTask(taskData.id, taskData)
+      // Si tiene ID, es una actualización
+      await tasksStore.updateTask(taskData.id, taskData)
     } else {
       // Si no, es una creación
       await tasksStore.addTask(taskData)
@@ -106,19 +114,19 @@ const getSeverityForStatus = (status) => {
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Gestión de Tareas</h1>
-      <button class="btn btn-success" @click="openTaskModal(null)"
-      >
-      <i class="pi pi-plus me-2"></i>
+      <button class="btn btn-success" @click="openTaskModal(null)">
+        <i class="pi pi-plus me-2"></i>
         Nueva Tarea
       </button>
     </div>
+    <!-- :value="tasksStore.tasks" -->
     <DataTable
-      :value="tasksStore.tasks"
+      :value="formattedTasks"
       :paginator="true"
       :rows="10"
       :rowsPerPageOptions="[5, 10, 20, 50]"
-      :globalFilterFields="['id', 'title', 'assigned_to', 'assigned_by', 'due_date', 'status']"
       v-model:filters="filters"
+      :globalFilterFields="['folio', 'title', 'assigned_to', 'assigned_by', 'due_date', 'status']"
       size="small"
       stripedRows
       showGridlines
@@ -138,9 +146,9 @@ const getSeverityForStatus = (status) => {
       <template #empty> No se encontraron tareas. </template>
       <template #loading> Cargando datos de tareas... </template>
 
-      <Column field="id" header="Folio" :sortable="true">
+      <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
         <template #body="{ data }">
-          <strong>{{ formatTaskId(data.id) }}</strong>
+          <strong>{{ data.folio }}</strong>
         </template>
       </Column>
       <Column field="title" header="Tarea" :sortable="true"></Column>
@@ -158,38 +166,19 @@ const getSeverityForStatus = (status) => {
       </Column>
       <Column header="Acciones" :exportable="false">
         <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            class="p-button-rounded p-button-warning me-2"
-            @click="openTaskModal(data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            class="p-button-rounded p-button-danger"
-            @click="openDeleteModal(data)"
-          />
+          <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning me-2" @click="openTaskModal(data)" />
+          <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="openDeleteModal(data)" />
         </template>
       </Column>
     </DataTable>
     <TaskForm ref="taskFormRef" :task-to-edit="taskToEdit" :is-saving="isSaving" @submit="handleFormSubmit" />
   </div>
-  <div
-    class="modal fade"
-    id="deleteTaskModal"
-    tabindex="-1"
-    aria-labelledby="deleteTaskModalLabel"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-labelledby="deleteTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="deleteTaskModalLabel">Confirmar Eliminación</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Cerrar"
-          ></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
           ¿Estás seguro de que deseas eliminar la tarea "<strong>{{ taskToDelete?.title }}</strong
@@ -197,12 +186,7 @@ const getSeverityForStatus = (status) => {
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-dismiss="modal"
-            @click="confirmDeleteTask"
-          >
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="confirmDeleteTask">
             Eliminar
           </button>
         </div>
