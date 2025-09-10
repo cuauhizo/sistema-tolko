@@ -16,6 +16,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  isSaving: { // <-- Aceptamos la nueva prop
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits(['submit']);
 
@@ -167,7 +171,10 @@ onUnmounted(() => {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="submit" class="btn btn-primary" :disabled="isSaving">
+              <span v-if="isSaving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span>{{ isSaving ? 'Guardando...' : 'Guardar' }}</span>
+            </button>
           </div>
         </Form>
       </div>

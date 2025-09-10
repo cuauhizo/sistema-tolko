@@ -21,6 +21,7 @@ const userToEdit = ref(null)
 const userToDelete = ref(null)
 const userFormRef = ref(null)
 const deleteModalInstance = ref(null)
+const isSaving = ref(false)
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -36,7 +37,6 @@ onMounted(() => {
   if (deleteModalEl) {
     deleteModalInstance.value = new Modal(deleteModalEl)
   }
-
 })
 
 // --- Métodos para Manejar Acciones ---
@@ -58,15 +58,18 @@ const openDeleteModal = (user) => {
 }
 
 const handleFormSubmit = async (userData) => {
-  if (userData.id) {
-    // Si tiene ID, es una actualización
-    await usersStore.updateUser(userData.id, userData)
-  } else {
-    // Si no, es una creación
-    await usersStore.addUser(userData)
-  }
-  if (userFormRef.value) {
+  isSaving.value = true
+  try {
+    if (userData.id) {
+      // Si tiene ID, es una actualización
+      await usersStore.updateUser(userData.id, userData)
+    } else {
+      // Si no, es una creación
+      await usersStore.addUser(userData)
+    }
     userFormRef.value.closeModal()
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -80,7 +83,6 @@ const confirmDeleteUser = async () => {
     deleteModalInstance.value.hide()
   }
 }
-
 </script>
 
 <template>
@@ -155,7 +157,12 @@ const confirmDeleteUser = async () => {
         </template>
       </Column>
     </DataTable>
-    <UserForm ref="userFormRef" :user-to-edit="userToEdit" @submit="handleFormSubmit" />
+    <UserForm
+      ref="userFormRef"
+      :user-to-edit="userToEdit"
+      :is-saving="isSaving"
+      @submit="handleFormSubmit"
+    />
   </div>
   <div
     class="modal fade"

@@ -17,10 +17,11 @@ import { FilterMatchMode } from '@primevue/core/api'
 const categoriesStore = useCategoriesStore()
 
 // Refs para controlar los datos y los modales
-const categoryToEdit  = ref(null)
+const categoryToEdit = ref(null)
 const categoryToDelete = ref(null)
 const categoryFormRef = ref(null) // Ref para el componente del formulario de producto
 const deleteModalInstance = ref(null) // Ref para la instancia JS del modal de borrado
+const isSaving = ref(false)
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -57,15 +58,18 @@ const openDeleteModal = (category) => {
 }
 
 const handleFormSubmit = async (categoryData) => {
-  if (categoryData.id) {
-    // Si tiene ID, es una actualización
-    await categoriesStore.updateCategory(categoryData.id, categoryData)
-  } else {
-    // Si no, es una creación
-    await categoriesStore.addCategory(categoryData)
-  }
-  if (categoryFormRef.value) {
+  isSaving.value = true
+  try {
+    if (categoryData.id) {
+      // Si tiene ID, es una actualización
+      await categoriesStore.updateCategory(categoryData.id, categoryData)
+    } else {
+      // Si no, es una creación
+      await categoriesStore.addCategory(categoryData)
+    }
     categoryFormRef.value.closeModal()
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -85,7 +89,7 @@ const confirmDeleteCategory = async () => {
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Gestionar Categorías</h1>
-      <button class="btn btn-success"  @click="openCategoryModal(null)">
+      <button class="btn btn-success" @click="openCategoryModal(null)">
         <i class="pi pi-plus me-2"></i>
         Nueva Categoría
       </button>
@@ -138,7 +142,12 @@ const confirmDeleteCategory = async () => {
         </template>
       </Column>
     </DataTable>
-    <CategoryForm ref="categoryFormRef" :category-to-edit="categoryToEdit" @submit="handleFormSubmit" />
+    <CategoryForm
+      ref="categoryFormRef"
+      :category-to-edit="categoryToEdit"
+      :is-saving="isSaving"
+      @submit="handleFormSubmit"
+    />
   </div>
   <div
     class="modal fade"

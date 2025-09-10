@@ -24,6 +24,7 @@ const productToEdit = ref(null)
 const productToDelete = ref(null)
 const productFormRef = ref(null) // Ref para el componente del formulario de producto
 const deleteModalInstance = ref(null) // Ref para la instancia JS del modal de borrado
+const isSaving = ref(false)
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -63,14 +64,16 @@ const openDeleteModal = (product) => {
 
 // Se ejecuta cuando el formulario emite el evento 'submit'
 const handleFormSubmit = async (productData) => {
-  if (productData.id) {
-    await productsStore.updateProduct(productData.id, productData)
-  } else {
-    await productsStore.addProduct(productData)
-  }
-  // El formulario se cierra a sí mismo, pero si quisiéramos cerrarlo desde aquí:
-  if (productFormRef.value) {
-    productFormRef.value.closeModal()
+  isSaving.value = true // Activar estado de carga
+  try {
+    if (productData.id) {
+      await productsStore.updateProduct(productData.id, productData)
+    } else {
+      await productsStore.addProduct(productData)
+    }
+    productFormRef.value.closeModal() // Cierra el modal solo si tiene éxito
+  } finally {
+    isSaving.value = false // Desactivar estado de carga
   }
 }
 
@@ -158,6 +161,7 @@ const confirmDeleteProduct = async () => {
       ref="productFormRef"
       :product-to-edit="productToEdit"
       :categories="categoriesStore.categories"
+      :is-saving="isSaving"
       @submit="handleFormSubmit"
     />
   </div>

@@ -23,6 +23,7 @@ const taskToEdit = ref(null)
 const taskToDelete = ref(null)
 const taskFormRef = ref(null)
 const deleteModalInstance = ref(null)
+const isSaving = ref(false)
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -60,15 +61,18 @@ const openDeleteModal = (task) => {
 }
 
 const handleFormSubmit = async (taskData) => {
-  if (taskData.id) {
+  isSaving.value = true
+  try {
+    if (taskData.id) {
     // Si tiene ID, es una actualización
     await tasksStore.updateTask(taskData.id, taskData)
-  } else {
-    // Si no, es una creación
-    await tasksStore.addTask(taskData)
-  }
-  if (taskFormRef.value) {
+    } else {
+      // Si no, es una creación
+      await tasksStore.addTask(taskData)
+    }
     taskFormRef.value.closeModal()
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -167,7 +171,7 @@ const getSeverityForStatus = (status) => {
         </template>
       </Column>
     </DataTable>
-    <TaskForm ref="taskFormRef" :task-to-edit="taskToEdit" @submit="handleFormSubmit" />
+    <TaskForm ref="taskFormRef" :task-to-edit="taskToEdit" :is-saving="isSaving" @submit="handleFormSubmit" />
   </div>
   <div
     class="modal fade"
