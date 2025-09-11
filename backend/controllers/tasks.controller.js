@@ -1,6 +1,6 @@
 import { pool } from '../config/db.js';
-import transporter from '../config/mailer.js'
-import { formatStatus } from '../utils/formatters.js';
+import transporter from '../config/mailer.js';
+import { formatStatus, formatTaskId } from '../utils/formatters.js';
 
 // ADMIN: Asignar una nueva tarea
 export const createTask = async (req, res) => {
@@ -19,14 +19,13 @@ export const createTask = async (req, res) => {
     );
 
     const taskId = result.insertId;
-    const taskFolio = `TA-${String(taskId).padStart(4, '0')}`;
-
     // --- 2. Guardar la notificación en la base de datos ---
-    const notificationMessage = `Nueva tarea (${taskFolio}) asignada: "${title}"`;
-    await pool.query(
-        'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
-        [assigned_to_id, notificationMessage, `/my-tasks`]
-    );
+    const notificationMessage = `Nueva tarea (${formatTaskId(taskId)}) asignada: "${title}"`;
+    await pool.query('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)', [
+      assigned_to_id,
+      notificationMessage,
+      `/my-tasks`,
+    ]);
 
     // --- 3. Enviar la notificación por correo electrónico ---
     try {
@@ -34,12 +33,12 @@ export const createTask = async (req, res) => {
       const [users] = await pool.query('SELECT email, username FROM users WHERE id = ?', [assigned_to_id]);
       if (users.length > 0) {
         const user = users[0];
-        
+
         // Usamos el 'transporter' para enviar el correo
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: `Nueva Tarea Asignada (${taskFolio}) - Sistema Tolko`, // Asunto
+          subject: `Nueva Tarea Asignada (${formatTaskId(taskId)}) - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Un administrador te ha asignado una nueva tarea en el Sistema Tolko:</p>
@@ -53,13 +52,12 @@ export const createTask = async (req, res) => {
         });
       }
     } catch (emailError) {
-      console.error("AVISO: La tarea se creó, pero falló el envío del correo de notificación:", emailError);
+      console.error('AVISO: La tarea se creó, pero falló el envío del correo de notificación:', emailError);
       // No devolvemos un error aquí para que la creación de la tarea no falle si el email no se puede enviar.
     }
 
     // --- 4. Enviar respuesta exitosa ---
     res.status(201).json({ id: result.insertId, ...req.body });
-
   } catch (error) {
     console.error('Error al crear la tarea:', error);
     return res.status(500).json({ message: 'Algo salió mal' });
@@ -78,7 +76,6 @@ export const getTasks = async (req, res) => {
     const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM tasks');
     const totalTasks = totalRows[0].total;
 
-    
     const query = `
             SELECT 
             t.id, t.title, t.description, t.status, t.due_date, t.assigned_to_id,
@@ -100,7 +97,7 @@ export const getTasks = async (req, res) => {
         limit: limit,
         totalPages: Math.ceil(totalTasks / limit),
       },
-    })
+    });
     // const [tasks] = await pool.query(query);
     // res.status(200).json(tasks);
   } catch (error) {
@@ -125,12 +122,14 @@ export const updateTask = async (req, res) => {
     );
 
     // Notificacion
-    const taskFolio = `TA-${String(id).padStart(4, '0')}`; 
-    const notificationMessageUpdate = `La tarea "${title}" (${taskFolio}) que tienes asignada ha sido actualizada.`;
-    await pool.query(
-        'INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)',
-        [assigned_to_id, notificationMessageUpdate, `/my-tasks`]
-    );
+    const notificationMessageUpdate = `La tarea "${title}" (${formatTaskId(
+      id
+    )}) que tienes asignada ha sido actualizada.`;
+    await pool.query('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)', [
+      assigned_to_id,
+      notificationMessageUpdate,
+      `/my-tasks`,
+    ]);
 
     // --- Enviar la notificación por correo electrónico ---
     try {
@@ -138,17 +137,17 @@ export const updateTask = async (req, res) => {
       const [users] = await pool.query('SELECT email, username FROM users WHERE id = ?', [assigned_to_id]);
       if (users.length > 0) {
         const user = users[0];
-        
+
         // Usamos el 'transporter' para enviar el correo
         await transporter.sendMail({
           from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`, // Remitente
           to: user.email, // Destinatario
-          subject: `Tarea (${taskFolio}) Actualizada - Sistema Tolko`, // Asunto
+          subject: `Tarea Actualizada (${formatTaskId(id)}) - Sistema Tolko`, // Asunto
           html: `
             <h2>Hola ${user.username},</h2>
             <p>Se ha actualizado una tarea que tienes asignada en el Sistema Tolko:</p>
             <br>
-            <h3>${title} - (${taskFolio})</h3>
+            <h3>${title} - (${formatTaskId(id)})</h3>
             <p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p>
             <p><strong>Descripción:</strong> ${description || 'Sin descripción.'}</p>
             <p><strong>Fecha de entrega:</strong> ${new Date(due_date).toLocaleDateString()}</p>
@@ -158,7 +157,7 @@ export const updateTask = async (req, res) => {
         });
       }
     } catch (emailError) {
-      console.error("AVISO: La tarea se actualizó, pero falló el envío del correo de notificación:", emailError);
+      console.error('AVISO: La tarea se actualizó, pero falló el envío del correo de notificación:', emailError);
     }
 
     // --- Devolver la tarea actualizada como respuesta ---
@@ -201,32 +200,32 @@ export const deleteTask = async (req, res) => {
 
 // USUARIO: Obtener solo las tareas asignadas al usuario actual
 export const getMyTasks = async (req, res) => {
-    try {
-        const userId = req.userId;
-        const status = req.query.status; // Leemos el filtro de estado de la URL
+  try {
+    const userId = req.userId;
+    const status = req.query.status; // Leemos el filtro de estado de la URL
 
-        let query = `
+    let query = `
             SELECT t.id, t.title, t.description, t.status, t.due_date, u.username as assigned_by
             FROM tasks t
             JOIN users u ON t.assigned_by_id = u.id
             WHERE t.assigned_to_id = ?
         `;
-        const params = [userId];
+    const params = [userId];
 
-        // Si se proporciona un filtro de estado, lo añadimos a la consulta
-        if (status && ['pendiente', 'en_progreso', 'completada'].includes(status)) {
-            query += ' AND t.status = ?';
-            params.push(status);
-        }
-
-        query += ' ORDER BY t.due_date ASC';
-
-        const [tasks] = await pool.query(query, params);
-        res.status(200).json(tasks);
-    } catch (error) {
-        console.error("Error al obtener mis tareas:", error);
-        return res.status(500).json({ message: 'Algo salió mal' });
+    // Si se proporciona un filtro de estado, lo añadimos a la consulta
+    if (status && ['pendiente', 'en_progreso', 'completada'].includes(status)) {
+      query += ' AND t.status = ?';
+      params.push(status);
     }
+
+    query += ' ORDER BY t.due_date ASC';
+
+    const [tasks] = await pool.query(query, params);
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error('Error al obtener mis tareas:', error);
+    return res.status(500).json({ message: 'Algo salió mal' });
+  }
 };
 
 // USUARIO: Actualizar el estado de una de sus tareas
@@ -239,19 +238,79 @@ export const updateTaskStatus = async (req, res) => {
     return res.status(400).json({ message: 'Estado no válido.' });
   }
 
+  const connection = await pool.getConnection(); // Usamos una conexión para transacciones
   try {
-    // Verificamos que la tarea pertenezca al usuario para evitar que actualice tareas ajenas
-    const [result] = await pool.query('UPDATE tasks SET status = ? WHERE id = ? AND assigned_to_id = ?', [
+    await connection.beginTransaction();
+
+    const [result] = await connection.query('UPDATE tasks SET status = ? WHERE id = ? AND assigned_to_id = ?', [
       status,
       id,
       userId,
     ]);
+
     if (result.affectedRows === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'Tarea no encontrada o no tienes permiso para actualizarla.' });
     }
+
+    // --- INICIO DE LA LÓGICA DE NOTIFICACIÓN A ADMINS ---
+    // 1. Obtener la información de la tarea y del usuario que la actualizó
+    const [taskData] = await connection.query('SELECT title FROM tasks WHERE id = ?', [id]);
+    const [userData] = await connection.query('SELECT username FROM users WHERE id = ?', [userId]);
+    const taskTitle = taskData[0]?.title || 'N/A';
+    const userName = userData[0]?.username || 'Usuario';
+    // formatTaskId;
+
+    // 2. Buscar a todos los administradores
+    const [allAdmins] = await connection.query('SELECT id, email, username FROM users WHERE role_id = 1');
+
+    // 3. Filtrar para no notificar al usuario que realizó la acción
+    const adminsToNotify = allAdmins.filter((admin) => admin.id !== userId);
+
+    if (adminsToNotify.length > 0) {
+      const notificationMessage = `El usuario ${userName} actualizó la tarea "${taskTitle}" (${formatTaskId(
+        id
+      )}) al estado: ${formatStatus(status)}.`;
+      const notificationLink = '/tasks';
+
+      // 4. Preparar y enviar notificaciones en la app
+      const notificationsData = adminsToNotify.map((admin) => [admin.id, notificationMessage, notificationLink]);
+      await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData]);
+
+      // 5. Enviar notificaciones por correo
+      for (const admin of adminsToNotify) {
+        try {
+          await transporter.sendMail({
+            from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`,
+            to: admin.email,
+            subject: `Actualización de Tarea (${formatTaskId(id)})`,
+            html: `
+              <h2>Hola ${admin.username},</h2>
+              <p>El usuario <strong>${userName}</strong> ha actualizado el estado de una tarea.</p>
+              <br>
+              <h3>${formatTaskId(id)}: ${taskTitle}</h3>
+              <p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p>
+              <br>
+              <p>Puedes revisar el tablero de tareas en la plataforma.</p>
+            `,
+          });
+        } catch (emailError) {
+          console.error(
+            `AVISO: Falló el envío del correo de actualización de tarea para el admin ${admin.id}:`,
+            emailError
+          );
+        }
+      }
+    }
+    // --- FIN DE LA LÓGICA DE NOTIFICACIÓN ---
+
+    await connection.commit();
     res.status(200).json({ message: 'Estado de la tarea actualizado.' });
   } catch (error) {
+    await connection.rollback();
     console.error('Error al actualizar estado de la tarea:', error);
     return res.status(500).json({ message: 'Algo salió mal' });
+  } finally {
+    connection.release();
   }
 };

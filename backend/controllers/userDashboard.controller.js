@@ -12,7 +12,7 @@ export const getUserDashboardStats = async (req, res) => {
 
     // 2. Contar órdenes de trabajo pendientes o en progreso asignadas al usuario
     const [activeWorkOrdersResult] = await pool.query(
-      "SELECT COUNT(id) as total FROM work_orders WHERE assigned_to_id = ? AND status IN ('pendiente', 'en_progreso')",
+      `SELECT COUNT(wo.id) as total FROM work_orders wo JOIN work_order_assignees woa ON wo.id = woa.work_order_id WHERE woa.user_id = ? AND wo.status IN ('pendiente', 'en_progreso', 'por_aprobar')`,
       [userId]
     );
 
