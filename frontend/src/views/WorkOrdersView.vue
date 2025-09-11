@@ -53,6 +53,10 @@ onMounted(() => {
 // Abre el modal para crear una NUEVA orden.
 const openModalForNew = () => {
   orderToEdit.value = null // Limpiamos los datos de edición.
+  // ¡Llamada explícita para asegurar que el formulario se limpie!
+  if (orderFormRef.value) {
+    orderFormRef.value.resetForm();
+  }
   orderFormRef.value?.openModal()
 }
 

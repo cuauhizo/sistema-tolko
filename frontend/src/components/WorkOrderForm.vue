@@ -29,6 +29,11 @@ const formKey = ref(0);
 const usersStore = useUsersStore();
 const productsStore = useProductsStore();
 
+const getProductStock = (productId) => {
+  const product = productsStore.products.find(p => p.id === productId);
+  return product ? product.stock : 0;
+};
+
 // --- Estado del Componente ---
 const order = ref({});
 const modalTitle = ref('Nueva Orden de Trabajo');
@@ -83,7 +88,7 @@ const cleanupValidation = () => {
 const openModal = () => modalInstance.value?.show();
 const closeModal = () => modalInstance.value?.hide();
 
-defineExpose({ openModal, closeModal });
+defineExpose({ openModal, closeModal, resetForm });
 
 // --- Watchers y Lifecycle Hooks ---
 watch(() => props.orderToEdit, (newOrder) => {
@@ -238,14 +243,20 @@ const removeProduct = (productId) => {
                     </td>
                   </tr>
                   <tr v-for="item in order.products" :key="item.product_id">
-                    <td>{{ item.name }}</td>
+                    <td>
+                      {{ item.name }}
+                      <div v-if="item.quantity_used > getProductStock(item.product_id)" class="invalid-feedback d-block mt-1">
+                        Advertencia: Stock insuficiente. Disponible: {{ getProductStock(item.product_id) }}
+                      </div>
+                    </td>
                     <td>
                       <input
-                        type="number"
-                        class="form-control form-control-sm"
-                        v-model.number="item.quantity_used"
-                        min="1"
-                      />
+                    type="number"
+                    class="form-control form-control-sm"
+                    v-model.number="item.quantity_used"
+                    min="1"
+                    :class="{ 'is-invalid': item.quantity_used > getProductStock(item.product_id) }"
+                  />
                     </td>
                     <td>
                       <button
