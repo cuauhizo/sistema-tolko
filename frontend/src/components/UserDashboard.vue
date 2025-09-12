@@ -1,13 +1,15 @@
 <script setup>
-import { onMounted } from 'vue'
-import { useUserDashboardStore } from '../stores/userDashboard'
-import { RouterLink } from 'vue-router'
+  import { onMounted } from 'vue'
+  import { useUserDashboardStore } from '../stores/userDashboard'
+  import { RouterLink } from 'vue-router'
 
-const userDashboardStore = useUserDashboardStore()
+  const userDashboardStore = useUserDashboardStore()
 
-onMounted(() => {
-  userDashboardStore.fetchUserStats()
-})
+  onMounted(() => {
+    userDashboardStore.fetchUserStats()
+    // Opcional: Refrescar las notificaciones cada cierto tiempo.
+    setInterval(() => userDashboardStore.fetchUserStats(), 60000) // Cada minuto
+  })
 </script>
 
 <template>
@@ -16,7 +18,10 @@ onMounted(() => {
       <div class="col-md-6">
         <div class="card text-white bg-success shadow-sm h-100">
           <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-card-checklist me-2"></i>Mis Tareas Activas</h5>
+            <h5 class="card-title">
+              <i class="bi bi-card-checklist me-2"></i>
+              Mis Tareas Activas
+            </h5>
             <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeTasks }}</p>
           </div>
         </div>
@@ -25,7 +30,8 @@ onMounted(() => {
         <div class="card text-white bg-warning shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title">
-              <i class="bi bi-person-workspace me-2"></i>Mis Órdenes Activas
+              <i class="bi bi-person-workspace me-2"></i>
+              Mis Órdenes Activas
             </h5>
             <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeWorkOrders }}</p>
           </div>
@@ -42,9 +48,7 @@ onMounted(() => {
               <div class="card-body d-flex flex-column justify-content-center align-items-center">
                 <i class="bi bi-check2-square display-3 text-success mb-3"></i>
                 <h5 class="card-title text-success">Ver Mis Tareas</h5>
-                <p class="card-text text-muted flex-grow-1">
-                  Revisa y actualiza el estado de tus tareas asignadas.
-                </p>
+                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus tareas asignadas.</p>
                 <span class="btn btn-outline-success mt-auto">Ir a Tareas</span>
               </div>
             </div>
@@ -56,9 +60,7 @@ onMounted(() => {
               <div class="card-body d-flex flex-column justify-content-center align-items-center">
                 <i class="bi bi-person-workspace display-3 text-warning mb-3"></i>
                 <h5 class="card-title text-warning">Mis Órdenes de Trabajo</h5>
-                <p class="card-text text-muted flex-grow-1">
-                  Revisa y actualiza el estado de tus órdenes de trabajo asignadas.
-                </p>
+                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus órdenes de trabajo asignadas.</p>
                 <span class="btn btn-outline-warning mt-auto">Ir a Mis Órdenes</span>
               </div>
             </div>
@@ -70,19 +72,19 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Puedes copiar los estilos de HomeView.vue para .card-link-wrapper si es necesario */
-.card-link-wrapper {
-  text-decoration: none;
-  color: inherit;
-}
-.card-link-wrapper .card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  cursor: pointer;
-}
-.card-link-wrapper .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
+  /* Puedes copiar los estilos de HomeView.vue para .card-link-wrapper si es necesario */
+  .card-link-wrapper {
+    text-decoration: none;
+    color: inherit;
+  }
+  .card-link-wrapper .card {
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  .card-link-wrapper .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
 </style>
