@@ -47,9 +47,7 @@ export const useUsersStore = defineStore('users', {
         notifications.showSuccess('¡Usuario actualizado correctamente!')
         await this.fetchUsers() // Recarga la lista completa
       } catch (error) {
-        notifications.showError(
-          error.response?.data?.message || 'No se pudo actualizar el usuario.',
-        )
+        notifications.showError(error.response?.data?.message || 'No se pudo actualizar el usuario.')
       }
     },
 
@@ -61,6 +59,17 @@ export const useUsersStore = defineStore('users', {
         await this.fetchUsers() // Recarga la lista completa
       } catch (error) {
         notifications.showError('No se pudo eliminar el usuario.')
+      }
+    },
+
+    async changePassword(passwordData) {
+      const notifications = useNotificationStore()
+      try {
+        await apiClient.post('/users/change-password', passwordData)
+        notifications.showSuccess('¡Contraseña actualizada correctamente!')
+      } catch (error) {
+        // El error ya lo maneja el interceptor, pero puedes dejar el log si quieres
+        console.error('Error al cambiar la contraseña:', error)
       }
     },
   },

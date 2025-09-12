@@ -12,6 +12,7 @@ import WorkOrderDetailView from '../views/WorkOrderDetailView.vue'
 import InventoryMovementsView from '../views/InventoryMovementsView.vue'
 import MyWorkOrdersView from '../views/MyWorkOrdersView.vue'
 import AdjustmentsView from '../views/AdjustmentsView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,6 +81,12 @@ const router = createRouter({
       path: '/my-work-orders',
       name: 'my-work-orders',
       component: MyWorkOrdersView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
       meta: { requiresAuth: true },
     },
     {

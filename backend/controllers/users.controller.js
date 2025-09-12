@@ -131,3 +131,40 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: 'Algo salió mal.' });
   }
 };
+
+// USUARIO LOGUEADO: Cambiar su propia contraseña
+export const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.userId; // Obtenido del token gracias al middleware verifyToken
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Todos los campos son requeridos.' });
+  }
+
+  try {
+    // 1. Obtener el usuario y su hash de contraseña actual de la BD
+    const [users] = await pool.query('SELECT password FROM users WHERE id = ?', [userId]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    const user = users[0];
+
+    // 2. Comparar la contraseña actual proporcionada con la de la BD
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+    }
+
+    // 3. Hashear la nueva contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // 4. Actualizar la contraseña en la base de datos
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, userId]);
+
+    res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
+  } catch (error) {
+    console.error('Error al cambiar la contraseña:', error);
+    return res.status(500).json({ message: 'Algo salió mal.' });
+  }
+};
