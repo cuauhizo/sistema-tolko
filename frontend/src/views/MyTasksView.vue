@@ -20,6 +20,7 @@
     { name: 'En progreso', code: 'en_progreso' },
     { name: 'Completadas', code: 'completada' },
   ])
+  const updatingState = ref({ taskId: null, status: null })
 
   onMounted(() => {
     tasksStore.fetchMyTasks()
@@ -41,10 +42,18 @@
         return 'secondary'
     }
   }
-  const handleStatusChange = (task, newStatus) => {
-    // Solo actualizamos si el estado es diferente
-    if (task.status !== newStatus) {
-      tasksStore.updateTaskStatus(task.id, newStatus)
+
+  const handleStatusChange = async (task, newStatus) => {
+    // Prevenir clics si ya hay una actualización en curso
+    if (updatingState.value.taskId) return
+    // No hacer nada si se hace clic en el estado actual
+    if (task.status === newStatus) return
+
+    updatingState.value = { taskId: task.id, status: newStatus }
+    try {
+      await tasksStore.updateTaskStatus(task.id, newStatus)
+    } finally {
+      updatingState.value = { taskId: null, status: null }
     }
   }
 </script>
@@ -89,11 +98,22 @@
                   <p class="mb-1">{{ item.description }}</p>
                 </div>
                 <div class="d-flex flex-wrap gap-3 w-100 justify-content-between">
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
-                    <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                    <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
-                  </div>
+                  <fieldset :disabled="updatingState.taskId === item.id">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">
+                        <span>Pendiente</span>
+                        <span v-if="updatingState.taskId === item.id && updatingState.status === 'pendiente'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">
+                        <span>En Progreso</span>
+                        <span v-if="updatingState.taskId === item.id && updatingState.status === 'en_progreso'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">
+                        <span>Completada</span>
+                        <span v-if="updatingState.taskId === item.id && updatingState.status === 'completada'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </fieldset>
                   <small class="text-muted">
                     <strong>Asignada por</strong>
                     : {{ item.assigned_by }} |
@@ -118,11 +138,22 @@
               <div class="card-body">
                 <h5 class="card-title">{{ item.title }}</h5>
                 <p class="card-text">{{ item.description }}</p>
-                <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">Pendiente</button>
-                  <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">En Progreso</button>
-                  <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">Completada</button>
-                </div>
+                <fieldset :disabled="updatingState.taskId === item.id">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn" :class="item.status === 'pendiente' ? 'btn-warning' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'pendiente')">
+                      <span>Pendiente</span>
+                      <span v-if="updatingState.taskId === item.id && updatingState.status === 'pendiente'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="btn" :class="item.status === 'en_progreso' ? 'btn-info' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'en_progreso')">
+                      <span>En Progreso</span>
+                      <span v-if="updatingState.taskId === item.id && updatingState.status === 'en_progreso'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="btn" :class="item.status === 'completada' ? 'btn-success' : 'btn-outline-secondary'" @click="handleStatusChange(item, 'completada')">
+                      <span>Completada</span>
+                      <span v-if="updatingState.taskId === item.id && updatingState.status === 'completada'" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </fieldset>
               </div>
               <div class="card-footer text-muted">
                 <small class="text-muted">

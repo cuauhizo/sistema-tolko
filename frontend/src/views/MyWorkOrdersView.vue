@@ -29,12 +29,6 @@
     workOrdersStore.fetchMyWorkOrders(event.value.code)
   }
 
-  const old_handleStatusChange = (order, newStatus) => {
-    if (order.status !== newStatus) {
-      workOrdersStore.updateWorkOrderStatus(order.id, newStatus)
-    }
-  }
-
   const handleStatusChange = async (order, newStatus) => {
     // Prevenir clics si ya hay una actualización en curso para cualquier orden
     if (updatingState.value.orderId) return
