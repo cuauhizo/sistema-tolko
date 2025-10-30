@@ -1,15 +1,19 @@
 <script setup>
-  import { onMounted } from 'vue'
-  import { useUserDashboardStore } from '../stores/userDashboard'
-  import { RouterLink } from 'vue-router'
+import { onMounted } from 'vue'
+import { useUserDashboardStore } from '../stores/userDashboard'
+import { useAuthStore } from '../stores/auth'
+import { RouterLink } from 'vue-router'
 
-  const userDashboardStore = useUserDashboardStore()
+const userDashboardStore = useUserDashboardStore()
+const authStore = useAuthStore()
 
-  onMounted(() => {
+onMounted(() => {
+  if (authStore.isAuthenticated) {
     userDashboardStore.fetchUserStats()
     // Opcional: Refrescar las notificaciones cada cierto tiempo.
     setInterval(() => userDashboardStore.fetchUserStats(), 60000) // Cada minuto
-  })
+  }
+})
 </script>
 
 <template>
@@ -60,7 +64,8 @@
               <div class="card-body d-flex flex-column justify-content-center align-items-center">
                 <i class="bi bi-person-workspace display-3 text-warning mb-3"></i>
                 <h5 class="card-title text-warning">Mis Órdenes de Trabajo</h5>
-                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus órdenes de trabajo asignadas.</p>
+                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus órdenes de trabajo
+                  asignadas.</p>
                 <span class="btn btn-outline-warning mt-auto">Ir a Mis Órdenes</span>
               </div>
             </div>
@@ -72,19 +77,21 @@
 </template>
 
 <style scoped>
-  /* Puedes copiar los estilos de HomeView.vue para .card-link-wrapper si es necesario */
-  .card-link-wrapper {
-    text-decoration: none;
-    color: inherit;
-  }
-  .card-link-wrapper .card {
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-    cursor: pointer;
-  }
-  .card-link-wrapper .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-  }
+/* Puedes copiar los estilos de HomeView.vue para .card-link-wrapper si es necesario */
+.card-link-wrapper {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card-link-wrapper .card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.card-link-wrapper .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
 </style>

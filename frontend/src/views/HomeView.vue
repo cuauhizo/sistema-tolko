@@ -7,7 +7,7 @@ const authStore = useAuthStore()
 </script>
 
 <template>
-  <div class="container my-4">
+  <div class="container my-4" v-if="authStore.isAuthenticated">
     <h1 class="mb-4">Dashboard</h1>
     <h4 class="text-muted mb-4">Bienvenido, {{ authStore.username }}</h4>
 
@@ -27,8 +27,10 @@ const authStore = useAuthStore()
 
 /* Estilos para las tarjetas de acceso rápido */
 .card-link-wrapper {
-  text-decoration: none; /* Quita el subrayado del enlace */
-  color: inherit; /* Hereda el color del texto */
+  text-decoration: none;
+  /* Quita el subrayado del enlace */
+  color: inherit;
+  /* Hereda el color del texto */
 }
 
 .card-link-wrapper .card {
@@ -44,6 +46,7 @@ const authStore = useAuthStore()
 }
 
 .card-body.d-flex {
-  padding-bottom: 1.5rem; /* Ajuste para el botón en la parte inferior */
+  padding-bottom: 1.5rem;
+  /* Ajuste para el botón en la parte inferior */
 }
 </style>

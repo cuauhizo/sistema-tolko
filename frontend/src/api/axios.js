@@ -3,7 +3,8 @@ import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/toast'
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:4000/api',
+  // baseURL: 'http://localhost:4000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,8 +18,8 @@ if (token) {
 
 // --- INTERCEPTOR DE RESPUESTAS MEJORADO ---
 apiClient.interceptors.response.use(
-  (response) => response, // Si la respuesta es exitosa, la dejamos pasar
-  (error) => {
+  response => response, // Si la respuesta es exitosa, la dejamos pasar
+  error => {
     // Si la respuesta es un error, lo manejamos aquí
     const authStore = useAuthStore()
     const notificationStore = useNotificationStore()
@@ -40,7 +41,7 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error)
-  }
+  },
 )
 
 export default apiClient

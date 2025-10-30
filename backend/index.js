@@ -42,10 +42,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Definir una ruta
-// app.use('/', (req, res) => {
-//   res.send('Servidor sistema tolko funcionando');
-// });
-
 // Rutas de la API
 app.use('/api/products', productsRoutes);
 app.use('/api/auth', authRoutes);
@@ -57,6 +53,10 @@ app.use('/api/workorders', workOrdersRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/user-dashboard', userDashboardRoutes);
 app.use('/api/notifications', notificationsRoutes);
+
+app.use('/', (req, res) => {
+  res.send('Servidor sistema tolko funcionando');
+});
 
 // Definir puerto
 const PORT = process.env.PORT || 4000;
