@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './toast'
+import { useToastStore } from './toast'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -23,16 +23,16 @@ export const useInventoryStore = defineStore('inventory', {
       }
     },
     async makeAdjustment(adjustmentData) {
-      const notifications = useNotificationStore();
-      this.isLoading = true;
+      const notifications = useToastStore()
+      this.isLoading = true
       try {
-        await apiClient.post('/inventory/adjustments', adjustmentData);
-        notifications.showSuccess('¡Ajuste de inventario realizado con éxito!');
+        await apiClient.post('/inventory/adjustments', adjustmentData)
+        notifications.showSuccess('¡Ajuste de inventario realizado con éxito!')
       } catch (error) {
         // El error ya es manejado por el interceptor de Axios, pero puedes añadir lógica extra si quieres
-        console.error('Fallo al realizar el ajuste:', error);
+        console.error('Fallo al realizar el ajuste:', error)
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
   },

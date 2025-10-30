@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './toast'
+import { useToastStore } from './toast'
 
 export const useProductsStore = defineStore('products', {
   state: () => ({
@@ -29,7 +29,7 @@ export const useProductsStore = defineStore('products', {
 
     // añadirProducto
     async addProduct(productData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.post('/products', productData)
         notifications.showSuccess('¡Producto agregado exitosamente!')
@@ -41,7 +41,7 @@ export const useProductsStore = defineStore('products', {
 
     // actualizarProducto
     async updateProduct(productId, productData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.put(`/products/${productId}`, productData)
         notifications.showSuccess('¡Producto actualizado correctamente!')
@@ -53,7 +53,7 @@ export const useProductsStore = defineStore('products', {
 
     // eliminarProducto
     async deleteProduct(productId) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.delete(`/products/${productId}`)
         notifications.showSuccess('Producto eliminado.')

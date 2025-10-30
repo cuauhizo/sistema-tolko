@@ -3,7 +3,7 @@ import { useToast } from 'vue-toastification'
 
 const toast = useToast()
 
-export const useNotificationStore = defineStore('notification', {
+export const useToastStore = defineStore('notification', {
   actions: {
     showSuccess(message) {
       toast.success(message)

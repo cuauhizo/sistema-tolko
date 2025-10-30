@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './toast'
+import { useToastStore } from './toast'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
@@ -30,7 +30,7 @@ export const useUsersStore = defineStore('users', {
 
     // LAS ACCIONES CRUD AHORA RECARGAN LA LISTA PARA MANTENER LA CONSISTENCIA
     async addUser(userData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.post('/users', userData)
         notifications.showSuccess('¡Usuario agregado exitosamente!')
@@ -41,7 +41,7 @@ export const useUsersStore = defineStore('users', {
     },
 
     async updateUser(userId, userData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.put(`/users/${userId}`, userData)
         notifications.showSuccess('¡Usuario actualizado correctamente!')
@@ -52,7 +52,7 @@ export const useUsersStore = defineStore('users', {
     },
 
     async deleteUser(userId) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.delete(`/users/${userId}`)
         notifications.showSuccess('Usuario eliminado.')
@@ -63,7 +63,7 @@ export const useUsersStore = defineStore('users', {
     },
 
     async changePassword(passwordData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.post('/users/change-password', passwordData)
         notifications.showSuccess('¡Contraseña actualizada correctamente!')

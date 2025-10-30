@@ -1,17 +1,25 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useUserDashboardStore } from '../stores/userDashboard'
 import { useAuthStore } from '../stores/auth'
 import { RouterLink } from 'vue-router'
 
 const userDashboardStore = useUserDashboardStore()
 const authStore = useAuthStore()
+const pollInterval = ref(null)
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
     userDashboardStore.fetchUserStats()
-    // Opcional: Refrescar las notificaciones cada cierto tiempo.
-    setInterval(() => userDashboardStore.fetchUserStats(), 60000) // Cada minuto
+    pollInterval.value = setInterval(() => {
+      userDashboardStore.fetchUserStats()
+    }, 60000)
+  }
+})
+
+onUnmounted(() => {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value)
   }
 })
 </script>

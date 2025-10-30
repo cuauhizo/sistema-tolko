@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './toast'
+import { useToastStore } from './toast'
 
 export const useWorkOrdersStore = defineStore('workOrders', {
   state: () => ({
@@ -27,7 +27,7 @@ export const useWorkOrdersStore = defineStore('workOrders', {
     },
 
     async addWorkOrder(orderData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.post('/workorders', orderData)
         notifications.showSuccess('¡Orden de trabajo creada exitosamente!')
@@ -38,7 +38,7 @@ export const useWorkOrdersStore = defineStore('workOrders', {
     },
 
     async updateWorkOrder(orderId, orderData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.put(`/workorders/${orderId}`, orderData)
         notifications.showSuccess('¡Orden de trabajo actualizada!')
@@ -49,7 +49,7 @@ export const useWorkOrdersStore = defineStore('workOrders', {
     },
 
     async deleteWorkOrder(orderId) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.delete(`/workorders/${orderId}`)
         notifications.showSuccess('Orden de trabajo eliminada.')
@@ -75,32 +75,33 @@ export const useWorkOrdersStore = defineStore('workOrders', {
     },
 
     // --- ACCIONES PARA EL USUARIO ---
-    async fetchMyWorkOrders(statusFilter = '') { // Acepta un filtro opcional
-      this.isLoading = true;
-      this.error = null;
+    async fetchMyWorkOrders(statusFilter = '') {
+      // Acepta un filtro opcional
+      this.isLoading = true
+      this.error = null
       try {
-        const url = statusFilter ? `/workorders/myorders?status=${statusFilter}` : '/workorders/myorders';
-        const { data } = await apiClient.get(url);
-        this.myWorkOrders = data;
+        const url = statusFilter ? `/workorders/myorders?status=${statusFilter}` : '/workorders/myorders'
+        const { data } = await apiClient.get(url)
+        this.myWorkOrders = data
       } catch (error) {
-        this.error = 'No se pudieron cargar tus órdenes de trabajo.';
+        this.error = 'No se pudieron cargar tus órdenes de trabajo.'
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async updateWorkOrderStatus(orderId, status) {
-      const notifications = useNotificationStore(); // Asumiendo que tienes este store
+      const notifications = useToastStore() // Asumiendo que tienes este store
       try {
-        await apiClient.patch(`/workorders/${orderId}/status`, { status });
-        
-        const order = this.myWorkOrders.find((o) => o.id === orderId);
+        await apiClient.patch(`/workorders/${orderId}/status`, { status })
+
+        const order = this.myWorkOrders.find(o => o.id === orderId)
         if (order) {
-          order.status = status;
+          order.status = status
         }
-        notifications.showSuccess('¡Estado de la orden actualizado!');
+        notifications.showSuccess('¡Estado de la orden actualizado!')
       } catch (error) {
-        notifications.showError('No se pudo actualizar el estado.');
+        notifications.showError('No se pudo actualizar el estado.')
       }
     },
   },

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
-import { useNotificationStore } from '../stores/toast'
+import { useToastStore } from '../stores/toast'
 
 const apiClient = axios.create({
   // baseURL: 'http://localhost:4000/api',
@@ -22,7 +22,7 @@ apiClient.interceptors.response.use(
   error => {
     // Si la respuesta es un error, lo manejamos aquí
     const authStore = useAuthStore()
-    const notificationStore = useNotificationStore()
+    const notificationStore = useToastStore()
 
     // Verificamos si el error es un 401 (No autorizado)
     if (error.response && error.response.status === 401) {

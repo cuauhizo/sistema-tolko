@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/axios'
-import { useNotificationStore } from './toast'
+import { useToastStore } from './toast'
 
 export const useCategoriesStore = defineStore('categories', {
   state: () => ({
@@ -30,7 +30,7 @@ export const useCategoriesStore = defineStore('categories', {
 
     // añadirCategoria
     async addCategory(categoryData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.post('/categories', categoryData)
         notifications.showSuccess('¡Categoría creada exitosamente!')
@@ -42,21 +42,19 @@ export const useCategoriesStore = defineStore('categories', {
 
     // actualizarCategoria
     async updateCategory(categoryId, categoryData) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.put(`/categories/${categoryId}`, categoryData)
         notifications.showSuccess('¡Categoría actualizada correctamente!')
         await this.fetchCategories() // Recarga la lista completa
       } catch (error) {
-        notifications.showError(
-          error.response?.data?.message || 'No se pudo actualizar la categoría.',
-        )
+        notifications.showError(error.response?.data?.message || 'No se pudo actualizar la categoría.')
       }
     },
 
     // eliminarCategoria
     async deleteCategory(categoryId) {
-      const notifications = useNotificationStore()
+      const notifications = useToastStore()
       try {
         await apiClient.delete(`/categories/${categoryId}`)
         notifications.showSuccess('Categoría eliminada.')
