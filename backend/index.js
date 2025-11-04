@@ -14,6 +14,7 @@ import workOrdersRoutes from './routes/workOrders.routes.js';
 import inventoryRoutes from './routes/inventory.routes.js';
 import userDashboardRoutes from './routes/userDashboard.routes.js';
 import notificationsRoutes from './routes/notifications.routes.js';
+import publicRoutes from './routes/public.routes.js';
 
 // Variables de entorno
 dotenv.config();
@@ -22,14 +23,13 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-// Leer datos via body
-app.use(express.json());
+
 // Configurar CORS
-const whiteList = [process.env.FRONTEND_URL, undefined];
+const whiteList = [process.env.FRONTEND_URL, 'http://localhost:5173', 'https://www.tolkogroup.com', 'https://tolkogroup.com'];
 const corsOptions = {
   origin: function (origin, callback) {
     // console.log(origin);
-    if (whiteList.includes(origin)) {
+    if (whiteList.includes(origin) || !origin) {
       //Permitir la conexión
       callback(null, true);
     } else {
@@ -41,11 +41,17 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Leer datos via body
+app.use(express.json());
+
+// --- RUTAS PÚBLICAS ---
+app.use('/api/public', publicRoutes);
+
 // Definir una ruta
 // Rutas de la API
-app.use('/api/products', productsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/products', productsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/tasks', tasksRoutes);
