@@ -218,7 +218,7 @@ export const getMyTasks = async (req, res) => {
       params.push(status);
     }
 
-    query += ' ORDER BY t.due_date ASC';
+    query += ' ORDER BY t.due_date DESC';
 
     const [tasks] = await pool.query(query, params);
     res.status(200).json(tasks);
