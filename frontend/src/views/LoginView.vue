@@ -35,6 +35,7 @@ const handleSubmit = async (values) => {
 <template>
   <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow-sm" style="width: 100%; max-width: 400px;">
+      <img src="@/assets/img/logo-tolko.png" alt="Tolko Logo" class="w-24 mx-auto mb-4" />
       <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
       
       <Form @submit="handleSubmit" :validation-schema="schema" v-slot="{ errors }">
