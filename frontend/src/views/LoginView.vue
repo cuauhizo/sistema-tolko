@@ -75,9 +75,4 @@ const handleSubmit = async (values) => {
   </div>
 </template>
 
-<style scoped>
-body{
-  background-color: black;
-  color: white;
-}
-</style>
+<style scoped></style>

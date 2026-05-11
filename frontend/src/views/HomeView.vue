@@ -8,7 +8,7 @@ const authStore = useAuthStore()
 
 <template>
   <div class="container my-4" v-if="authStore.isAuthenticated">
-    <h1 class="mb-4">Dashboard</h1>
+    <h1 class="mb-4 cuauhizo">Dashboard</h1>
     <h4 class="text-muted mb-4">Bienvenido, {{ authStore.username }}</h4>
 
     <AdminDashboard v-if="authStore.isAdmin" />
@@ -48,5 +48,9 @@ const authStore = useAuthStore()
 .card-body.d-flex {
   padding-bottom: 1.5rem;
   /* Ajuste para el botón en la parte inferior */
+}
+
+.cuauhizo{
+  background-color: red;
 }
 </style>

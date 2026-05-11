@@ -47,6 +47,11 @@
 <style>
   /* Puedes agregar estilos globales aquí si lo deseas */
   body {
-    background-color: #f8f9fa;
+    /* background-color: #f8f9fa; */
   }
+
+  body{
+  background-color: black;
+  color: white;
+}
 </style>
