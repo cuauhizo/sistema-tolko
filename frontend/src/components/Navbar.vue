@@ -12,6 +12,7 @@ const route = useRoute()
 const mobileMenuOpen = ref(false)
 const workDropdownOpen = ref(false)
 const adminDropdownOpen = ref(false)
+const profileDropdownOpen = ref(false) // <- ¡Aquí está la variable nueva!
 
 // Referencias para los elementos del navbar
 const navbarRef = ref(null)
@@ -28,17 +29,27 @@ const toggleMobileMenu = () => {
 
 const toggleWorkDropdown = () => {
   workDropdownOpen.value = !workDropdownOpen.value
-  adminDropdownOpen.value = false // Cerrar el otro
+  adminDropdownOpen.value = false 
+  profileDropdownOpen.value = false
 }
 
 const toggleAdminDropdown = () => {
   adminDropdownOpen.value = !adminDropdownOpen.value
-  workDropdownOpen.value = false // Cerrar el otro
+  workDropdownOpen.value = false 
+  profileDropdownOpen.value = false
+}
+
+// Nueva función para el menú del usuario
+const toggleProfileDropdown = () => {
+  profileDropdownOpen.value = !profileDropdownOpen.value
+  workDropdownOpen.value = false
+  adminDropdownOpen.value = false
 }
 
 const closeAllDropdowns = () => {
   workDropdownOpen.value = false
   adminDropdownOpen.value = false
+  profileDropdownOpen.value = false
 }
 
 // Función para cerrar dropdowns al hacer click fuera
@@ -57,7 +68,6 @@ const handleEscapeKey = event => {
   }
 }
 
-// Agregar y remover event listeners
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
@@ -68,7 +78,6 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey)
 })
 
-// Cerrar dropdowns cuando cambie la ruta
 watch(
   () => route.path,
   () => {
@@ -79,238 +88,106 @@ watch(
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" ref="navbarRef">
-    <div class="container">
-      <RouterLink class="navbar-brand" to="/">
-        <i class="bi bi-box-seam me-2"></i>
-        Sistema Tolko
-      </RouterLink>
+  <nav class="bg-blue-600 shadow-sm w-full z-50" ref="navbarRef">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center h-16">
+        
+        <RouterLink class="flex items-center text-white text-lg font-bold hover:text-blue-100 transition-colors" to="/">
+          <i class="pi pi-box mr-2 text-xl"></i>
+          Sistema Tolko
+        </RouterLink>
 
-      <button class="navbar-toggler" type="button" @click="toggleMobileMenu" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        <button 
+          class="lg:hidden text-white hover:text-blue-200 focus:outline-none" 
+          type="button" 
+          @click="toggleMobileMenu"
+        >
+          <i class="pi pi-bars text-2xl"></i>
+        </button>
 
-      <div class="navbar-collapse" :class="{ show: mobileMenuOpen }">
-        <ul v-if="authStore.isAuthenticated" class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/" @click="closeAllDropdowns">Inicio</RouterLink>
-          </li>
+        <div class="hidden lg:flex lg:items-center lg:w-full lg:justify-between ml-8">
+          
+          <ul v-if="authStore.isAuthenticated" class="flex space-x-1 items-center">
+            <li>
+              <RouterLink 
+                class="px-3 py-2 rounded-md text-white/80 hover:text-white font-medium hover:bg-blue-500 transition-colors" 
+                active-class="bg-blue-700 text-white font-bold"
+                to="/" 
+                @click="closeAllDropdowns">
+                Inicio
+              </RouterLink>
+            </li>
 
-          <!-- Dropdown Mi Trabajo -->
-          <li class="nav-item dropdown" :class="{ show: workDropdownOpen }">
-            <a class="nav-link dropdown-toggle" href="#" @click.prevent="toggleWorkDropdown">Mi Trabajo</a>
-            <ul class="dropdown-menu" :class="{ show: workDropdownOpen }">
-              <li>
-                <RouterLink class="dropdown-item" to="/my-tasks" @click="closeAllDropdowns">Mis Tareas</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/my-work-orders" @click="closeAllDropdowns">Mis Órdenes
+            <li class="relative">
+              <button @click.prevent="toggleWorkDropdown" class="px-3 py-2 rounded-md text-white/80 hover:text-white font-medium hover:bg-blue-500 transition-colors flex items-center">
+                Mi Trabajo <i class="pi pi-angle-down ml-1 text-sm"></i>
+              </button>
+              <div v-show="workDropdownOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/my-tasks" @click="closeAllDropdowns">Mis Tareas</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/my-work-orders" @click="closeAllDropdowns">Mis Órdenes</RouterLink>
+              </div>
+            </li>
+
+            <li v-if="authStore.isAdmin" class="relative">
+              <button @click.prevent="toggleAdminDropdown" class="px-3 py-2 rounded-md text-white/80 hover:text-white font-medium hover:bg-blue-500 transition-colors flex items-center">
+                Gestión (Admin) <i class="pi pi-angle-down ml-1 text-sm"></i>
+              </button>
+              <div v-show="adminDropdownOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/categories" @click="closeAllDropdowns">Categorías</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/products" @click="closeAllDropdowns">Productos</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/users" @click="closeAllDropdowns">Usuarios</RouterLink>
+                <hr class="border-gray-200 my-1" />
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/tasks" @click="closeAllDropdowns">Asignar Tareas</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/work-orders" @click="closeAllDropdowns">Órdenes de Trabajo</RouterLink>
+                <hr class="border-gray-200 my-1" />
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/adjustments" @click="closeAllDropdowns">Ajustes de Inventario</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/movements" @click="closeAllDropdowns">Historial de Mov.</RouterLink>
+              </div>
+            </li>
+          </ul>
+
+          <ul v-if="authStore.isAuthenticated" class="flex items-center space-x-2">
+            <NotificationBell />
+            
+            <li class="relative">
+              <button @click.prevent="toggleProfileDropdown" class="px-3 py-2 rounded-md text-white font-medium flex items-center hover:bg-blue-500 transition-colors">
+                <i class="pi pi-user mr-2"></i>
+                Hola, {{ authStore.username }}
+                <i class="pi pi-angle-down ml-1 text-sm"></i>
+              </button>
+              
+              <div v-show="profileDropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/profile" @click="closeAllDropdowns">
+                  <i class="pi pi-key mr-2 text-gray-400"></i> Cambiar Contraseña
                 </RouterLink>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Dropdown Admin -->
-          <li v-if="authStore.isAdmin" class="nav-item dropdown" :class="{ show: adminDropdownOpen }">
-            <a class="nav-link dropdown-toggle" href="#" @click.prevent="toggleAdminDropdown">Gestión (Admin)</a>
-            <ul class="dropdown-menu" :class="{ show: adminDropdownOpen }">
-              <li>
-                <RouterLink class="dropdown-item" to="/categories" @click="closeAllDropdowns">Categorías</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/products" @click="closeAllDropdowns">Productos</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/users" @click="closeAllDropdowns">Usuarios</RouterLink>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/tasks" @click="closeAllDropdowns">Asignar Tareas</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/work-orders" @click="closeAllDropdowns">Órdenes de Trabajo
-                </RouterLink>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/inventory/adjustments" @click="closeAllDropdowns">Ajustes de
-                  Inventario</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/inventory/movements" @click="closeAllDropdowns">Historial de
-                  Movimientos</RouterLink>
-              </li>
-            </ul>
-          </li>
-        </ul>
-
-        <ul v-if="authStore.isAuthenticated" class="navbar-nav ms-auto d-flex align-items-center">
-          <NotificationBell />
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-person-circle me-1"></i>
-              Hola, {{ authStore.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <RouterLink class="dropdown-item" to="/profile">Cambiar Contraseña</RouterLink>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="handleLogout">Cerrar Sesión</a>
-              </li>
-            </ul>
-          </li>
-          <!-- <li class="nav-item">
-            <a class="nav-link" href="#" @click="handleLogout">
-              <i class="bi bi-box-arrow-right"></i>
-            </a>
-          </li> -->
-          <!-- <li class="nav-item">
-            <button @click="handleLogout" class="btn btn-outline-light btn-sm">
-              <i class="bi bi-box-arrow-right me-1"></i>
-              Cerrar Sesión
-            </button>
-          </li> -->
-        </ul>
+                <hr class="border-gray-200 my-1" />
+                <a href="#" @click.prevent="handleLogout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <i class="pi pi-sign-out mr-2"></i> Cerrar Sesión
+                </a>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
+    </div>
+
+    <div v-show="mobileMenuOpen" class="lg:hidden bg-blue-700 px-2 pt-2 pb-3 space-y-1 shadow-inner">
+      <RouterLink class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800 font-bold" to="/" @click="toggleMobileMenu">Inicio</RouterLink>
+      
+      <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Mi Trabajo</div>
+      <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/my-tasks" @click="toggleMobileMenu">Mis Tareas</RouterLink>
+      <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/my-work-orders" @click="toggleMobileMenu">Mis Órdenes</RouterLink>
+      
+      <template v-if="authStore.isAdmin">
+        <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Gestión</div>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/categories" @click="toggleMobileMenu">Categorías</RouterLink>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/products" @click="toggleMobileMenu">Productos</RouterLink>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/users" @click="toggleMobileMenu">Usuarios</RouterLink>
+      </template>
+
+      <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2 border-t border-blue-500 pt-3">Mi Cuenta</div>
+      <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/profile" @click="toggleMobileMenu">Cambiar Contraseña</RouterLink>
+      <a href="#" @click.prevent="handleLogout" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-red-200 hover:bg-blue-600 hover:text-white">Cerrar Sesión</a>
     </div>
   </nav>
 </template>
-
-<style scoped>
-.dropdown-item.router-link-active {
-  background-color: #0d6efd;
-  color: white;
-}
-
-.nav-link.router-link-active {
-  font-weight: bold;
-  color: white !important;
-}
-
-/* Navbar collapse */
-.navbar-collapse {
-  display: none;
-}
-
-.navbar-collapse.show {
-  display: block;
-}
-
-/* Dropdown styles */
-.dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1000;
-  display: none;
-  min-width: 10rem;
-  padding: 0.5rem 0;
-  margin: 0.125rem 0 0;
-  font-size: 1rem;
-  color: #212529;
-  text-align: left;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.375rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
-}
-
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 0.25rem 1rem;
-  clear: both;
-  font-weight: 400;
-  color: #212529;
-  text-align: inherit;
-  text-decoration: none;
-  white-space: nowrap;
-  background-color: transparent;
-  border: 0;
-  transition: all 0.15s ease-in-out;
-}
-
-.dropdown-item:hover,
-.dropdown-item:focus {
-  color: #1e2125;
-  background-color: #e9ecef;
-  text-decoration: none;
-}
-
-.dropdown-divider {
-  height: 0;
-  margin: 0.5rem 0;
-  overflow: hidden;
-  border-top: 1px solid #e9ecef;
-}
-
-.dropdown-toggle::after {
-  display: inline-block;
-  margin-left: 0.255em;
-  vertical-align: 0.255em;
-  content: '';
-  border-top: 0.3em solid;
-  border-right: 0.3em solid transparent;
-  border-bottom: 0;
-  border-left: 0.3em solid transparent;
-}
-
-/* Responsive design */
-@media (min-width: 992px) {
-  .navbar-collapse {
-    display: flex !important;
-  }
-
-  .navbar-nav.ms-auto {
-    flex-direction: row !important;
-    align-items: center !important;
-  }
-}
-
-@media (max-width: 991.98px) {
-  .navbar-nav.ms-auto {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-  }
-
-  .navbar-nav.ms-auto .nav-item {
-    margin-bottom: 0.5rem;
-  }
-
-  .dropdown-menu {
-    position: static;
-    display: none;
-    width: 100%;
-    margin-top: 0;
-    border: 0;
-    box-shadow: none;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .dropdown-item {
-    color: rgba(255, 255, 255, 0.75);
-  }
-
-  .dropdown-item:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-}
-</style>

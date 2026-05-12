@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue'
 import { useProductsStore } from '../stores/products'
 import { useCategoriesStore } from '../stores/categories' // Necesario para el formulario
 import ProductForm from '../components/ProductForm.vue'
-import { Modal } from 'bootstrap'
+// import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue para la tabla
 import DataTable from 'primevue/datatable'

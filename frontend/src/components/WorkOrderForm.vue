@@ -4,7 +4,7 @@
   import { useProductsStore } from '../stores/products'
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
-  import { Modal } from 'bootstrap'
+  // import { Modal } from 'bootstrap'
   import MultiSelect from 'primevue/multiselect'
 
   // --- Props y Emits ---

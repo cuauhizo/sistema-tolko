@@ -10,10 +10,6 @@ import './assets/main.css';
 import App from './App.vue'
 import router from './router'
 
-// Importar Bootstrap CSS
-import 'bootstrap/dist/css/bootstrap.min.css'
-// Importar Bootstrap Icons
-import 'bootstrap-icons/font/bootstrap-icons.css'
 
 const app = createApp(App)
 

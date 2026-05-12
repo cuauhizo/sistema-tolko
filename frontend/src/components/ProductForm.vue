@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import * as yup from 'yup';
-import { Modal } from 'bootstrap';
+// import { Modal } from 'bootstrap';
 
 // --- Props y Emits ---
 // Este componente recibe datos a través de "props" y comunica eventos al padre con "emits".

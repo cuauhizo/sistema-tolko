@@ -4,7 +4,7 @@ import { useUsersStore } from '../stores/users'
 
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import * as yup from 'yup';
-import { Modal } from 'bootstrap';
+// import { Modal } from 'bootstrap';
 
 // --- Props y Emits ---
 const props = defineProps({

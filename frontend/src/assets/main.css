@@ -1,8 +1,5 @@
-:root {
-  --p-button-icon-only-width: 2rem !important;
-  --p-dataview-content-padding: 1rem 0 !important;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-body > div.p-multiselect-overlay.p-component {
-  z-index: 1055 !important;
-}
+/* Aquí abajo dejas cualquier otro CSS personalizado que ya tuvieras */

@@ -38,15 +38,11 @@
 <template>
   <Navbar v-if="authStore.isAuthenticated" />
 
-  <main>
+  <main class="min-h-screen bg-gray-50">
     <RouterView />
   </main>
   <Toast />
 </template>
 
 <style>
-  /* Puedes agregar estilos globales aquí si lo deseas */
-  body {
-    background-color: #f8f9fa;
-  }
 </style>

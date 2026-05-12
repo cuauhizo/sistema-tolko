@@ -2,7 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import WorkOrderForm from '../components/WorkOrderForm.vue'
-import { Modal } from 'bootstrap'
+// import { Modal } from 'bootstrap'
 import { formatStatus, formatWorkOrderId } from '@/utils/formatters'
 
 // Importaciones de PrimeVue

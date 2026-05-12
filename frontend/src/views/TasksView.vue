@@ -2,7 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useTasksStore } from '../stores/tasks'
 import TaskForm from '../components/TaskForm.vue'
-import { Modal } from 'bootstrap'
+// import { Modal } from 'bootstrap'
 import { formatStatus, formatTaskId } from '@/utils/formatters'
 
 // Importaciones de PrimeVue

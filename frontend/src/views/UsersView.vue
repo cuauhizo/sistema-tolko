@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useUsersStore } from '../stores/users'
 import UserForm from '../components/UserForm.vue'
-import { Modal } from 'bootstrap'
+// import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
