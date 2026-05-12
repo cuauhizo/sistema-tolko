@@ -1,8 +1,7 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
-// import { Modal } from 'bootstrap'
 
 // --- Props y Emits ---
 const props = defineProps({
@@ -17,19 +16,20 @@ const props = defineProps({
 })
 const emit = defineEmits(['submit'])
 
-// --- Refs para el DOM y la instancia de Bootstrap ---
-const modalElement = ref(null)
-const modalInstance = ref(null)
+// --- Refs y Estado ---
 const veeForm = ref(null)
 const formKey = ref(0)
-
-// --- Estado del Componente ---
+const isOpen = ref(false) // Nuestro control nativo del modal
 const user = ref({})
 const modalTitle = ref('Nuevo Usuario')
 const isEditMode = ref(false)
+const showPassword = ref(false) // El "ojito" para la contraseña
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
 
 // --- Esquema de Validación Dinámico ---
-// Usamos 'computed' para que las reglas de validación cambien según si estamos editando o creando.
 const schema = computed(() => {
   return yup.object({
     username: yup.string().required('El nombre es obligatorio').trim(),
@@ -38,16 +38,10 @@ const schema = computed(() => {
       .required('El email es obligatorio')
       .email('El email no tiene un formato válido')
       .trim(),
-    // La validación de la contraseña es condicional
     password: yup.string().when([], {
-      is: () => !isEditMode.value, // Si NO estamos en modo edición (es nuevo)
-      then: (schema) =>
-        schema.required('La contraseña es obligatoria').min(6, 'Mínimo 6 caracteres'),
-      otherwise: (schema) =>
-        schema
-          .min(6, 'Mínimo 6 caracteres')
-          .nullable()
-          .transform((value) => value || null), // Si estamos editando, es opcional
+      is: () => !isEditMode.value,
+      then: (schema) => schema.required('La contraseña es obligatoria').min(6, 'Mínimo 6 caracteres'),
+      otherwise: (schema) => schema.min(6, 'Mínimo 6 caracteres').nullable().transform((value) => value || null),
     }),
     role_id: yup.number().required('El rol es obligatorio').typeError('Debe seleccionar un rol'),
   })
@@ -55,13 +49,13 @@ const schema = computed(() => {
 
 // --- Funciones del Componente ---
 const resetForm = () => {
-  user.value = { username: '', email: '', password: '', role_id: 2 } // User por defecto
+  user.value = { username: '', email: '', password: '', role_id: 2 } 
   modalTitle.value = 'Nuevo Usuario'
   isEditMode.value = false
+  showPassword.value = false
 }
 
 const handleSubmit = (values) => {
-  // Si estamos editando y la contraseña está vacía, no la enviamos al backend.
   if (isEditMode.value && !values.password) {
     delete values.password
   }
@@ -75,137 +69,166 @@ const cleanupValidation = () => {
   }
 }
 
-const openModal = () => modalInstance.value?.show()
-const closeModal = () => modalInstance.value?.hide()
+const openModal = () => {
+  isOpen.value = true
+}
+
+const closeModal = () => {
+  isOpen.value = false
+  cleanupValidation()
+}
 
 defineExpose({ openModal, closeModal })
 
-// --- Watchers y Lifecycle Hooks ---
+// --- Watchers ---
 watch(
   () => props.userToEdit,
   (newUser) => {
     if (newUser) {
-      user.value = { ...newUser, password: '' } // No precargamos la contraseña por seguridad
+      user.value = { ...newUser, password: '' } 
       modalTitle.value = 'Editar Usuario'
       isEditMode.value = true
     } else {
       resetForm()
     }
-    formKey.value += 1 // Forzar reinicio del formulario
+    showPassword.value = false
+    formKey.value += 1 
   },
   { immediate: true },
 )
-
-onMounted(() => {
-  if (modalElement.value) {
-    modalInstance.value = new Modal(modalElement.value)
-    modalElement.value.addEventListener('hidden.bs.modal', cleanupValidation)
-  }
-})
-
-onUnmounted(() => {
-  if (modalElement.value) {
-    modalElement.value.removeEventListener('hidden.bs.modal', cleanupValidation)
-  }
-})
 </script>
 
 <template>
-  <div
-    ref="modalElement"
-    class="modal fade"
-    id="userModal"
-    tabindex="-1"
-    aria-labelledby="userModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="userModalLabel">{{ modalTitle }}</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Cerrar"
-          ></button>
+  <div v-if="isOpen" class="fixed inset-0 z-[60] flex items-center justify-center overflow-x-hidden overflow-y-auto px-4">
+    
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="closeModal"></div>
+
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg z-50 transform transition-all flex flex-col max-h-[90vh]">
+      
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <div class="flex items-center">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-blue-600">
+            <i :class="isEditMode ? 'pi pi-user-edit' : 'pi pi-user-plus'" class="text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900">{{ modalTitle }}</h3>
         </div>
-        <Form
-          ref="veeForm"
-          :key="formKey"
-          @submit="handleSubmit"
-          :validation-schema="schema"
-          :initial-values="user"
-          v-slot="{ errors }"
-        >
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="username" class="form-label">Nombre de Usuario</label>
+        <button @click="closeModal" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 ml-auto inline-flex items-center transition-colors">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <Form
+        ref="veeForm"
+        :key="formKey"
+        @submit="handleSubmit"
+        :validation-schema="schema"
+        :initial-values="user"
+        v-slot="{ errors }"
+        class="flex flex-col overflow-hidden"
+      >
+        <div class="px-6 py-5 overflow-y-auto flex-grow space-y-4">
+          
+          <div>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <i class="pi pi-user"></i>
+              </span>
               <Field
                 type="text"
-                class="form-control"
-                :class="{ 'is-invalid': errors.username }"
                 id="username"
                 name="username"
+                class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+                :class="errors.username ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                placeholder="Ej. juanperez"
               />
-              <ErrorMessage name="username" class="invalid-feedback" />
             </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Correo Electrónico</label>
+            <ErrorMessage name="username" class="text-red-500 text-xs mt-1 block font-medium" />
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <i class="pi pi-envelope"></i>
+              </span>
               <Field
                 type="email"
-                class="form-control"
-                :class="{ 'is-invalid': errors.email }"
                 id="email"
                 name="email"
+                class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+                :class="errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                placeholder="juan@ejemplo.com"
               />
-              <ErrorMessage name="email" class="invalid-feedback" />
             </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">Contraseña</label>
-              <Field
-                type="password"
-                class="form-control"
-                :class="{ 'is-invalid': errors.password }"
-                id="password"
-                name="password"
-              />
-              <ErrorMessage name="password" class="invalid-feedback" />
-              <small v-if="isEditMode" class="form-text text-muted"
-                >Dejar en blanco para no cambiar la contraseña.</small
-              >
-            </div>
-            <div class="mb-3">
-              <label for="role" class="form-label">Rol</label>
+            <ErrorMessage name="email" class="text-red-500 text-xs mt-1 block font-medium" />
+          </div>
+
+          <div>
+            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Rol del Sistema</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <i class="pi pi-id-card"></i>
+              </span>
               <Field
                 as="select"
-                class="form-select"
-                :class="{ 'is-invalid': errors.role_id }"
                 id="role"
                 name="role_id"
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
+                :class="errors.role_id ? 'border-red-500 bg-red-50' : 'border-gray-300'"
               >
-                <option value="1">Admin</option>
-                <option value="2">User</option>
+                <option value="1">Administrador</option>
+                <option value="2">Usuario Estándar</option>
               </Field>
-              <ErrorMessage name="role_id" class="invalid-feedback" />
+            </div>
+            <ErrorMessage name="role_id" class="text-red-500 text-xs mt-1 block font-medium" />
+          </div>
+
+          <div class="pt-2">
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <i class="pi pi-lock"></i>
+              </span>
+              <Field
+                :type="showPassword ? 'text' : 'password'"
+                id="password"
+                name="password"
+                class="block w-full pl-10 pr-12 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+                :class="errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                placeholder="••••••••"
+              />
+              <button 
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600 focus:outline-none transition-colors"
+                tabindex="-1"
+              >
+                <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-lg"></i>
+              </button>
+            </div>
+            <ErrorMessage name="password" class="text-red-500 text-xs mt-1 block font-medium" />
+            
+            <div v-if="isEditMode" class="mt-2 flex items-start text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
+              <i class="pi pi-info-circle mr-1.5 mt-0.5"></i>
+              <span>Deja la contraseña en blanco si no deseas cambiarla. Solo llénala si quieres asignarle una nueva a este usuario.</span>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary" :disabled="isSaving">
-              <span
-                v-if="isSaving"
-                class="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              <span>{{ isSaving ? 'Guardando...' : 'Guardar' }}</span>
-            </button>
-          </div>
-        </Form>
-      </div>
+
+        </div>
+
+        <div class="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0 space-x-3 rounded-b-xl">
+          <button type="button" @click="closeModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" :disabled="isSaving" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
+            <i v-if="isSaving" class="pi pi-spin pi-spinner mr-2"></i>
+            <i v-else class="pi pi-save mr-2"></i>
+            <span>{{ isSaving ? 'Guardando...' : 'Guardar' }}</span>
+          </button>
+        </div>
+      </Form>
+      
     </div>
   </div>
 </template>

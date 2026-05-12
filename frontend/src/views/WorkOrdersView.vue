@@ -2,7 +2,6 @@
 import { onMounted, ref, computed } from 'vue'
 import { useWorkOrdersStore } from '../stores/workOrders'
 import WorkOrderForm from '../components/WorkOrderForm.vue'
-// import { Modal } from 'bootstrap'
 import { formatStatus, formatWorkOrderId } from '@/utils/formatters'
 
 // Importaciones de PrimeVue
@@ -22,11 +21,12 @@ const workOrdersStore = useWorkOrdersStore()
 const orderToEdit = ref(null)
 const orderToDelete = ref(null)
 const orderFormRef = ref(null)
-const deleteModalInstance = ref(null)
 const isSaving = ref(false)
 
-// --- 1. CREAR LA PROPIEDAD COMPUTADA ---
-// Esta propiedad toma las órdenes del store y les añade el campo 'folio'
+// NUEVO: Control nativo del modal de borrado
+const showDeleteModal = ref(false)
+
+// Propiedad computada para añadir el folio
 const formattedWorkOrders = computed(() => {
   return workOrdersStore.workOrders.map((order) => ({
     ...order,
@@ -34,54 +34,35 @@ const formattedWorkOrders = computed(() => {
   }))
 })
 
-// Ref para los filtros de la DataTable
+// Filtros de la DataTable
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 })
 
-// --- Ciclo de Vida (Lifecycle) ---
 onMounted(() => {
   workOrdersStore.fetchWorkOrders()
-  const deleteModalEl = document.getElementById('deleteWorkOrderModal')
-  if (deleteModalEl) {
-    deleteModalInstance.value = new Modal(deleteModalEl)
-  }
 })
-
-// --- Métodos para Manejar Acciones ---
 
 // Abre el modal para crear una NUEVA orden.
 const openModalForNew = () => {
-  orderToEdit.value = null // Limpiamos los datos de edición.
-  // ¡Llamada explícita para asegurar que el formulario se limpie!
+  orderToEdit.value = null
   if (orderFormRef.value) {
-    orderFormRef.value.resetForm();
+    orderFormRef.value.resetForm()
   }
   orderFormRef.value?.openModal()
 }
 
 // Abre el modal para EDITAR una orden existente.
 const openModalForEdit = async (order) => {
-  // 1. Pide al store que busque los datos completos de la orden.
   await workOrdersStore.fetchWorkOrderById(order.id)
-  // 2. Una vez cargados, pasa el objeto completo (currentOrder) al formulario.
   orderToEdit.value = workOrdersStore.currentOrder
-  // 3. Abre el modal.
   orderFormRef.value?.openModal()
 }
 
 // Abre el modal de confirmación de borrado.
 const openDeleteModal = (order) => {
   orderToDelete.value = order
-  deleteModalInstance.value?.show()
-}
-
-// Abre el modal del formulario, ya sea para crear (order = null) o editar.
-const openOrderModal = (order = null) => {
-  orderToEdit.value = order
-  if (orderFormRef.value) {
-    orderFormRef.value.openModal()
-  }
+  showDeleteModal.value = true
 }
 
 // Se ejecuta cuando el formulario emite 'submit'.
@@ -104,7 +85,8 @@ const confirmDeleteOrder = async () => {
   if (orderToDelete.value) {
     await workOrdersStore.deleteWorkOrder(orderToDelete.value.id)
   }
-  deleteModalInstance.value?.hide()
+  showDeleteModal.value = false
+  orderToDelete.value = null
 }
 
 // Devuelve un color para el tag de estado.
@@ -121,91 +103,125 @@ const getSeverityForStatus = (status) => {
 </script>
 
 <template>
-  <div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h1>Gestión de Órdenes de Trabajo</h1>
-      <button class="btn btn-success" @click="openModalForNew">
-        <i class="pi pi-plus me-2"></i>
-        Nueva Orden de Trabajo
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-gray-800">Órdenes de Trabajo</h1>
+      <button 
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" 
+        @click="openModalForNew"
+      >
+        <i class="pi pi-plus mr-2"></i>
+        Nueva Orden
       </button>
     </div>
-    <!-- :value="workOrdersStore.workOrders" -->
-    <DataTable
-      :value="formattedWorkOrders"
-      :paginator="true"
-      :rows="10"
-      :rowsPerPageOptions="[5, 10, 20, 50]"
-      v-model:filters="filters"
-      :globalFilterFields="['folio', 'title', 'client_name', 'assigned_to', 'status']"
-      :loading="workOrdersStore.isLoading"
-      size="small"
-      stripedRows
-      showGridlines
-      responsiveLayout="scroll"
-    >
-      <template #header>
-        <div class="d-flex justify-content-end">
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText v-model="filters.global.value" placeholder="Buscar..." />
-          </IconField>
-        </div>
-      </template>
-      <template #empty>No se encontraron órdenes de trabajo.</template>
-      <template #loading>Cargando datos...</template>
 
-      <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
-        <template #body="{ data }">
-          <strong>{{ data.folio }}</strong>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <DataTable
+        :value="formattedWorkOrders"
+        :paginator="true"
+        :rows="10"
+        :rowsPerPageOptions="[5, 10, 20, 50]"
+        v-model:filters="filters"
+        :globalFilterFields="['folio', 'title', 'client_name', 'assigned_to', 'status']"
+        :loading="workOrdersStore.isLoading"
+        size="small"
+        stripedRows
+        showGridlines
+        responsiveLayout="scroll"
+        class="border-none"
+      >
+        <template #header>
+          <div class="flex justify-end p-2">
+            <IconField>
+              <InputIcon><i class="pi pi-search text-gray-400" /></InputIcon>
+              <InputText v-model="filters.global.value" placeholder="Buscar orden..." class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+            </IconField>
+          </div>
         </template>
-      </Column>
-      <Column field="title" header="Título" :sortable="true"></Column>
-      <Column field="client_name" header="Cliente" :sortable="true"></Column>
-      <Column field="assigned_to" header="Asignada a" :sortable="true"></Column>
-      <Column field="end_date" header="Fecha Límite" :sortable="true">
-        <template #body="{ data }">
-          {{ new Date(data.end_date).toLocaleDateString() }}
+        <template #empty>
+          <div class="text-center py-4 text-gray-500">No se encontraron órdenes de trabajo.</div>
         </template>
-      </Column>
-      <Column field="status" header="Estado" :sortable="true">
-        <template #body="{ data }">
-          <Tag :value="formatStatus(data.status)" :severity="getSeverityForStatus(data.status)"></Tag>
+        <template #loading>
+          <div class="text-center py-4 text-gray-500"><i class="pi pi-spin pi-spinner mr-2"></i> Cargando órdenes...</div>
         </template>
-      </Column>
-      <Column header="Acciones" style="width: 11rem">
-        <template #body="{ data }">
-          <RouterLink :to="{ name: 'work-order-detail', params: { id: data.id } }">
-            <Button icon="pi pi-eye" class="p-button-rounded p-button-info me-2" />
-          </RouterLink>
-          <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning me-2" @click="openModalForEdit(data)" />
-          <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="openDeleteModal(data)" />
-        </template>
-      </Column>
-    </DataTable>
+
+        <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
+          <template #body="{ data }">
+            <span class="font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{{ data.folio }}</span>
+          </template>
+        </Column>
+        <Column field="title" header="Título" :sortable="true" style="min-width: 14rem"></Column>
+        <Column field="client_name" header="Cliente" :sortable="true"></Column>
+        <Column field="assigned_to" header="Asignada a" :sortable="true">
+          <template #body="{ data }">
+             <span class="text-gray-600 truncate block max-w-[150px]" :title="data.assigned_to">{{ data.assigned_to }}</span>
+          </template>
+        </Column>
+        <Column field="end_date" header="Fecha Límite" :sortable="true">
+          <template #body="{ data }">
+            <span class="text-gray-600">
+              <i class="pi pi-calendar text-[10px] mr-1"></i>
+              {{ new Date(data.end_date).toLocaleDateString() }}
+            </span>
+          </template>
+        </Column>
+        <Column field="status" header="Estado" :sortable="true">
+          <template #body="{ data }">
+            <Tag :value="formatStatus(data.status)" :severity="getSeverityForStatus(data.status)" class="uppercase text-[10px] font-bold px-2 py-1"></Tag>
+          </template>
+        </Column>
+        
+        <Column header="Acciones" style="width: 12rem" :exportable="false">
+          <template #body="{ data }">
+            <div class="flex space-x-2">
+              <RouterLink :to="{ name: 'work-order-detail', params: { id: data.id } }">
+                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-outlined p-button-sm" />
+              </RouterLink>
+              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openModalForEdit(data)" />
+              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
 
     <WorkOrderForm ref="orderFormRef" :order-to-edit="orderToEdit" :is-saving="isSaving" @submit="handleFormSubmit" />
 
-    <div class="modal fade" id="deleteWorkOrderModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Confirmar Eliminación</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto">
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showDeleteModal = false"></div>
+      
+      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-50 transform transition-all">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-bold text-gray-900">Confirmar Eliminación</h3>
+          <button @click="showDeleteModal = false" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 ml-auto inline-flex items-center transition-colors">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+        
+        <div class="px-6 py-4">
+          <div class="flex items-start">
+            <i class="pi pi-exclamation-triangle text-red-500 text-2xl mr-3 mt-1"></i>
+            <div>
+              <p class="text-gray-600 mb-2" v-if="orderToDelete">
+                ¿Estás seguro de que deseas eliminar la orden: 
+                <strong class="text-gray-900">{{ orderToDelete.title }}</strong>?
+              </p>
+              <p class="text-sm font-medium text-red-500">Esta acción no se puede deshacer.</p>
+            </div>
           </div>
-          <div class="modal-body">
-            <p v-if="orderToDelete">
-              ¿Estás seguro de que deseas eliminar la orden:
-              <strong>{{ orderToDelete.title }}</strong
-              >?
-            </p>
-            <p class="text-danger">Esta acción no se puede deshacer.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger" @click="confirmDeleteOrder">Sí, Eliminar</button>
-          </div>
+        </div>
+        
+        <div class="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl space-x-3">
+          <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+            Cancelar
+          </button>
+          <button @click="confirmDeleteOrder" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center">
+            <i class="pi pi-trash mr-2"></i> Sí, Eliminar
+          </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>

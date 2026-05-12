@@ -2,7 +2,6 @@
 import { onMounted, ref } from 'vue'
 import { useUsersStore } from '../stores/users'
 import UserForm from '../components/UserForm.vue'
-// import { Modal } from 'bootstrap'
 
 // Importaciones de PrimeVue
 import DataTable from 'primevue/datatable'
@@ -20,8 +19,10 @@ const usersStore = useUsersStore()
 const userToEdit = ref(null)
 const userToDelete = ref(null)
 const userFormRef = ref(null)
-const deleteModalInstance = ref(null)
 const isSaving = ref(false)
+
+// NUEVO: Control nativo del modal de borrado en Vue
+const showDeleteModal = ref(false)
 
 // Ref para los filtros de la DataTable
 const filters = ref({
@@ -31,19 +32,13 @@ const filters = ref({
 // --- Ciclo de Vida (Lifecycle) ---
 onMounted(() => {
   usersStore.fetchUsers()
-
-  // Inicializar la instancia del modal de borrado para controlarlo con JS
-  const deleteModalEl = document.getElementById('deleteUserModal')
-  if (deleteModalEl) {
-    deleteModalInstance.value = new Modal(deleteModalEl)
-  }
 })
 
 // --- Métodos para Manejar Acciones ---
 
 // Abre el modal del formulario, ya sea para crear o editar
 const openUserModal = (user = null) => {
-  userToEdit.value = user // Si `user` es null, es para crear. Si no, para editar.
+  userToEdit.value = user 
   if (userFormRef.value) {
     userFormRef.value.openModal()
   }
@@ -52,19 +47,15 @@ const openUserModal = (user = null) => {
 // Abre el modal de confirmación de borrado
 const openDeleteModal = (user) => {
   userToDelete.value = user
-  if (deleteModalInstance.value) {
-    deleteModalInstance.value.show()
-  }
+  showDeleteModal.value = true // Mostrar el modal Tailwind
 }
 
 const handleFormSubmit = async (userData) => {
   isSaving.value = true
   try {
     if (userData.id) {
-      // Si tiene ID, es una actualización
       await usersStore.updateUser(userData.id, userData)
     } else {
-      // Si no, es una creación
       await usersStore.addUser(userData)
     }
     userFormRef.value.closeModal()
@@ -73,135 +64,152 @@ const handleFormSubmit = async (userData) => {
   }
 }
 
-// Confirma y ejecuta la eliminación del producto
+// Confirma y ejecuta la eliminación del usuario
 const confirmDeleteUser = async () => {
   if (userToDelete.value) {
     await usersStore.deleteUser(userToDelete.value.id)
   }
-  // Cierra el modal de confirmación después de borrar
-  if (deleteModalInstance.value) {
-    deleteModalInstance.value.hide()
-  }
+  showDeleteModal.value = false
+  userToDelete.value = null
 }
 </script>
 
 <template>
-  <div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h1>Administración de Usuarios</h1>
-      <button class="btn btn-success" @click="openUserModal(null)">
-        <i class="pi pi-plus me-2"></i>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-gray-800">Administración de Usuarios</h1>
+      <button 
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" 
+        @click="openUserModal(null)"
+      >
+        <i class="pi pi-user-plus mr-2"></i>
         Nuevo Usuario
       </button>
     </div>
-    <DataTable
-      :value="usersStore.users"
-      :paginator="true"
-      :rows="10"
-      :rowsPerPageOptions="[5, 10, 20, 50]"
-      :globalFilterFields="['username', 'email', 'role']"
-      v-model:filters="filters"
-      size="small"
-      stripedRows
-      showGridlines
-      responsiveLayout="scroll"
-      :loading="usersStore.isLoading"
-    >
-      <template #header>
-        <div class="d-flex justify-content-end">
-          <IconField>
-            <InputIcon>
-              <i class="pi pi-search" />
-            </InputIcon>
-            <InputText v-model="filters.global.value" placeholder="Buscar..." />
-          </IconField>
-        </div>
-      </template>
-      <template #empty> No se encontraron usuarios. </template>
-      <template #loading> Cargando datos de usuarios... </template>
 
-      <Column
-        field="username"
-        header="Nombre de Usuario"
-        :sortable="true"
-        style="min-width: 14rem"
-      ></Column>
-      <Column
-        field="email"
-        header="Correo Electrónico"
-        :sortable="true"
-        style="min-width: 14rem"
-      ></Column>
-      <Column field="role" header="Rol" :sortable="true" style="min-width: 10rem">
-        <template #body="{ data }">
-          <span
-            class="badge"
-            :class="{ 'bg-success': data.role === 'admin', 'bg-info': data.role === 'user' }"
-          >
-            {{ data.role }}
-          </span>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <DataTable
+        :value="usersStore.users"
+        :paginator="true"
+        :rows="10"
+        :rowsPerPageOptions="[5, 10, 20, 50]"
+        :globalFilterFields="['username', 'email', 'role']"
+        v-model:filters="filters"
+        size="small"
+        stripedRows
+        showGridlines
+        responsiveLayout="scroll"
+        :loading="usersStore.isLoading"
+        class="border-none"
+      >
+        <template #header>
+          <div class="flex justify-end p-2">
+            <IconField>
+              <InputIcon><i class="pi pi-search text-gray-400" /></InputIcon>
+              <InputText v-model="filters.global.value" placeholder="Buscar usuario..." class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+            </IconField>
+          </div>
         </template>
-      </Column>
-      <Column header="Acciones" style="width: 10rem" :exportable="false">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            class="p-button-rounded p-button-warning me-2"
-            @click="openUserModal(data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            class="p-button-rounded p-button-danger"
-            @click="openDeleteModal(data)"
-          />
+        <template #empty>
+          <div class="text-center py-4 text-gray-500">No se encontraron usuarios.</div>
         </template>
-      </Column>
-    </DataTable>
+        <template #loading>
+          <div class="text-center py-4 text-gray-500"><i class="pi pi-spin pi-spinner mr-2"></i> Cargando usuarios...</div>
+        </template>
+
+        <Column field="username" header="Nombre de Usuario" :sortable="true" style="min-width: 14rem">
+          <template #body="{ data }">
+            <div class="flex items-center">
+              <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3 uppercase">
+                {{ data.username.charAt(0) }}
+              </div>
+              <span class="font-medium text-gray-900">{{ data.username }}</span>
+            </div>
+          </template>
+        </Column>
+
+        <Column field="email" header="Correo Electrónico" :sortable="true" style="min-width: 14rem">
+          <template #body="{ data }">
+            <span class="text-gray-600">{{ data.email }}</span>
+          </template>
+        </Column>
+
+        <Column field="role" header="Rol" :sortable="true" style="min-width: 10rem">
+          <template #body="{ data }">
+            <span 
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider"
+              :class="{ 
+                'bg-emerald-100 text-emerald-800 border border-emerald-200': data.role === 'admin', 
+                'bg-slate-100 text-slate-800 border border-slate-200': data.role === 'user' || data.role !== 'admin'
+              }"
+            >
+              <i class="pi mr-1 text-[10px]" :class="data.role === 'admin' ? 'pi-shield' : 'pi-user'"></i>
+              {{ data.role }}
+            </span>
+          </template>
+        </Column>
+
+        <Column header="Acciones" style="width: 10rem" :exportable="false">
+          <template #body="{ data }">
+            <div class="flex space-x-2">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-warning p-button-outlined p-button-sm"
+                @click="openUserModal(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger p-button-outlined p-button-sm"
+                @click="openDeleteModal(data)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
     <UserForm
       ref="userFormRef"
       :user-to-edit="userToEdit"
       :is-saving="isSaving"
       @submit="handleFormSubmit"
     />
-  </div>
-  <div
-    class="modal fade"
-    id="deleteUserModal"
-    tabindex="-1"
-    aria-labelledby="deleteUserModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteUserModalLabel">Confirmar Eliminación</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Cerrar"
-          ></button>
+
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto">
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showDeleteModal = false"></div>
+      
+      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-50 transform transition-all">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-bold text-gray-900">Confirmar Eliminación</h3>
+          <button @click="showDeleteModal = false" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 ml-auto inline-flex items-center transition-colors">
+            <i class="pi pi-times"></i>
+          </button>
         </div>
-        <div class="modal-body">
-          <p v-if="userToDelete">
-            ¿Estás seguro de que deseas eliminar al usuario:
-            <strong>{{ userToDelete.username }}</strong
-            >?
-          </p>
-          <p class="text-danger">Esta acción no se puede deshacer.</p>
+        
+        <div class="px-6 py-4">
+          <div class="flex items-start">
+            <i class="pi pi-exclamation-triangle text-red-500 text-2xl mr-3 mt-1"></i>
+            <div>
+              <p class="text-gray-600 mb-2" v-if="userToDelete">
+                ¿Estás seguro de que deseas eliminar al usuario: 
+                <strong class="text-gray-900">{{ userToDelete.username }}</strong>?
+              </p>
+              <p class="text-sm font-medium text-red-500">Esta acción no se puede deshacer.</p>
+            </div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-dismiss="modal"
-            @click="confirmDeleteUser"
-          >
-            Sí, Eliminar
+        
+        <div class="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl space-x-3">
+          <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+            Cancelar
+          </button>
+          <button @click="confirmDeleteUser" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center">
+            <i class="pi pi-trash mr-2"></i> Sí, Eliminar
           </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>

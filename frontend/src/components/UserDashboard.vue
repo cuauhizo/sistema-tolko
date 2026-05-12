@@ -1,105 +1,79 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useUserDashboardStore } from '../stores/userDashboard'
-import { useAuthStore } from '../stores/auth'
-import { RouterLink } from 'vue-router'
+  import { onMounted, onUnmounted, ref } from 'vue'
+  import { useUserDashboardStore } from '../stores/userDashboard'
+  import { useAuthStore } from '../stores/auth'
+  import { RouterLink } from 'vue-router'
 
-const userDashboardStore = useUserDashboardStore()
-const authStore = useAuthStore()
-const pollInterval = ref(null)
+  const userDashboardStore = useUserDashboardStore()
+  const authStore = useAuthStore()
+  const pollInterval = ref(null)
 
-onMounted(() => {
-  if (authStore.isAuthenticated) {
-    userDashboardStore.fetchUserStats()
-    pollInterval.value = setInterval(() => {
+  onMounted(() => {
+    if (authStore.isAuthenticated) {
       userDashboardStore.fetchUserStats()
-    }, 60000)
-  }
-})
+      pollInterval.value = setInterval(() => {
+        userDashboardStore.fetchUserStats()
+      }, 60000)
+    }
+  })
 
-onUnmounted(() => {
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value)
-  }
-})
+  onUnmounted(() => {
+    if (pollInterval.value) {
+      clearInterval(pollInterval.value)
+    }
+  })
 </script>
 
 <template>
-  <div>
-    <div class="row g-4">
-      <div class="col-md-6">
-        <div class="card text-white bg-success shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title">
-              <i class="bi bi-card-checklist me-2"></i>
-              Mis Tareas Activas
-            </h5>
-            <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeTasks }}</p>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl shadow-sm text-white p-6 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-emerald-100 text-sm font-medium mb-1">Mis Tareas Activas</p>
+            <h3 class="text-4xl font-bold">{{ userDashboardStore.stats.activeTasks || 0 }}</h3>
+          </div>
+          <div class="bg-white/20 p-3 rounded-lg">
+            <i class="pi pi-check-square !text-2xl"></i>
           </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card text-white bg-warning shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title">
-              <i class="bi bi-person-workspace me-2"></i>
-              Mis Órdenes Activas
-            </h5>
-            <p class="card-text display-5 text-end">{{ userDashboardStore.stats.activeWorkOrders }}</p>
+
+      <div class="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl shadow-sm text-white p-6 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-amber-100 text-sm font-medium mb-1">Mis Órdenes Activas</p>
+            <h3 class="text-4xl font-bold">{{ userDashboardStore.stats.activeWorkOrders || 0 }}</h3>
+          </div>
+          <div class="bg-white/20 p-3 rounded-lg">
+            <i class="pi pi-briefcase !text-2xl"></i>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mt-5">
-      <h2 class="mb-3">Accesos Rápidos</h2>
-      <div class="row g-4">
-        <div class="col-md-6 col-lg-4">
-          <RouterLink to="/my-tasks" class="card-link-wrapper">
-            <div class="card text-center shadow-sm h-100">
-              <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <i class="bi bi-check2-square display-3 text-success mb-3"></i>
-                <h5 class="card-title text-success">Ver Mis Tareas</h5>
-                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus tareas asignadas.</p>
-                <span class="btn btn-outline-success mt-auto">Ir a Tareas</span>
-              </div>
-            </div>
-          </RouterLink>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <RouterLink to="/my-work-orders" class="card-link-wrapper">
-            <div class="card text-center shadow-sm h-100">
-              <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <i class="bi bi-person-workspace display-3 text-warning mb-3"></i>
-                <h5 class="card-title text-warning">Mis Órdenes de Trabajo</h5>
-                <p class="card-text text-muted flex-grow-1">Revisa y actualiza el estado de tus órdenes de trabajo
-                  asignadas.</p>
-                <span class="btn btn-outline-warning mt-auto">Ir a Mis Órdenes</span>
-              </div>
-            </div>
-          </RouterLink>
-        </div>
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Accesos Rápidos</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RouterLink to="/my-tasks" class="group bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+            <i class="pi pi-check-square !text-3xl text-emerald-500"></i>
+          </div>
+          <h5 class="text-lg font-bold text-gray-800 mb-2">Ver Mis Tareas</h5>
+          <p class="text-sm text-gray-500 flex-grow mb-6">Revisa y actualiza el estado de tus tareas asignadas.</p>
+          <span class="mt-auto px-4 py-2 border border-emerald-500 text-emerald-600 font-medium rounded-md group-hover:bg-emerald-500 group-hover:text-white transition-colors w-full sm:w-auto">Ir a Tareas</span>
+        </RouterLink>
+
+        <RouterLink to="/my-work-orders" class="group bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center text-center shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+            <i class="pi pi-briefcase !text-3xl text-amber-500"></i>
+          </div>
+          <h5 class="text-lg font-bold text-gray-800 mb-2">Mis Órdenes de Trabajo</h5>
+          <p class="text-sm text-gray-500 flex-grow mb-6">Revisa y actualiza el estado de tus órdenes de trabajo asignadas.</p>
+          <span class="mt-auto px-4 py-2 border border-amber-500 text-amber-600 font-medium rounded-md group-hover:bg-amber-500 group-hover:text-white transition-colors w-full sm:w-auto">Ir a Mis Órdenes</span>
+        </RouterLink>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Puedes copiar los estilos de HomeView.vue para .card-link-wrapper si es necesario */
-.card-link-wrapper {
-  text-decoration: none;
-  color: inherit;
-}
-
-.card-link-wrapper .card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  cursor: pointer;
-}
-
-.card-link-wrapper .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-</style>
