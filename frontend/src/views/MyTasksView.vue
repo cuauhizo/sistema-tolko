@@ -60,7 +60,7 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center mb-6">
-      <i class="pi pi-check-square text-3xl text-emerald-600 mr-3"></i>
+      <i class="pi pi-check-square !text-3xl text-emerald-600 mr-3"></i>
       <h1 class="text-2xl font-bold text-gray-800">Mis Tareas Pendientes</h1>
     </div>
 
@@ -82,7 +82,7 @@
 
         <template #empty>
           <div class="text-center py-10 text-gray-500 flex flex-col items-center">
-            <i class="pi pi-inbox text-5xl text-gray-300 mb-3"></i>
+            <i class="pi pi-inbox !text-5xl text-gray-300 mb-3"></i>
             <p>No se encontraron tareas con estos filtros.</p>
           </div>
         </template>
