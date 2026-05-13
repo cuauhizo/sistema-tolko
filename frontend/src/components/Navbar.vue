@@ -146,7 +146,7 @@
                 <i class="pi pi-angle-down ml-1 text-sm"></i>
               </button>
 
-              <div v-show="profileDropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+              <div v-show="profileDropdownOpen" class="absolute right-0 mt-2 w-52 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
                 <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/profile" @click="closeAllDropdowns">
                   <i class="pi pi-key mr-2 text-gray-400"></i>
                   Cambiar Contraseña
