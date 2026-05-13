@@ -2,6 +2,8 @@ import express from 'express'
 import dotenv from 'dotenv'
 import colors from 'colors'
 import cors from 'cors'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 // Importar rutas
 import productsRoutes from './routes/products.routes.js'
@@ -22,10 +24,48 @@ dotenv.config()
 // Configurar la app
 const app = express()
 
+// --- CONFIGURAR EL SERVIDOR HTTP Y SOCKET.IO ---
+const httpServer = createServer(app)
+const whiteList = [process.env.FRONTEND_URL, 'http://localhost:5174', 'https://www.tolkogroup.com', 'https://tolkogroup.com']
+
+// Inicializamos Socket.io aplicándole tu misma lista blanca de CORS
+const io = new Server(httpServer, {
+  cors: {
+    origin: whiteList,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+})
+
+// Exportamos 'io' para que los controladores puedan enviar notificaciones
+export { io }
+
+// Escuchamos cuando un usuario se conecta o desconecta
+io.on('connection', socket => {
+  console.log(colors.magenta('Un usuario se ha conectado al WebSocket:'), socket.id)
+
+  // NUEVO: Escuchamos cuando el frontend nos manda los datos del usuario
+  socket.on('register', userData => {
+    // Lo metemos a su sala privada (ej. "user-5")
+    if (userData.id) {
+      socket.join(`user-${userData.id}`)
+      console.log(colors.cyan(`Usuario ${userData.id} unido a la sala: user-${userData.id}`))
+    }
+
+    // Si es administrador, lo metemos a la sala general de admins
+    if (userData.isAdmin) {
+      socket.join('admins')
+      console.log(colors.yellow(`Usuario ${userData.id} unido a la sala: admins`))
+    }
+  })
+
+  socket.on('disconnect', () => {
+    console.log(colors.gray('Usuario desconectado del WebSocket:'), socket.id)
+  })
+})
+
 // Middlewares
 
-// Configurar CORS
-const whiteList = [process.env.FRONTEND_URL, 'http://localhost:5174', 'https://www.tolkogroup.com', 'https://tolkogroup.com']
+// Configurar CORS para las peticiones normales de Express (Axios)
 const corsOptions = {
   origin: function (origin, callback) {
     // console.log(origin);
@@ -67,9 +107,7 @@ app.use('/', (req, res) => {
 // Definir puerto
 const PORT = process.env.PORT || 4000
 
-// Arrancar la app
-app.listen(PORT, () => {
-  console.log(colors.blue(`El servidor se esta ejecutando en el puerto: ${PORT}`))
+// --- ARRANCAR LA APP (Usando httpServer en lugar de app) ---
+httpServer.listen(PORT, () => {
+  console.log(colors.blue(`El servidor HTTP y WebSockets se están ejecutando en el puerto: ${PORT}`))
 })
-
-// Comentario de prueba para ver si se actualiza el código en el repositorio correctamente fix.

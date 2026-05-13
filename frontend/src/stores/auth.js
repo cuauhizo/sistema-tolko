@@ -1,33 +1,41 @@
 import { defineStore } from 'pinia'
-import apiClient from '../api/axios' // Crearemos este archivo a continuación
+import apiClient from '../api/axios'
 import { jwtDecode } from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || null,
-    user: null, // Podrías guardar aquí info del usuario si la API la devuelve
+    user: null,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
-    // --- AÑADE ESTE GETTER ---
-    isAdmin: (state) => {
+    isAuthenticated: state => !!state.token,
+    isAdmin: state => {
       if (!state.token) return false
       try {
         const decodedToken = jwtDecode(state.token)
-        // Asumiendo que guardas el rol en el token. Si no, necesitarías otra llamada a la API
-        // Por ahora, asumiremos que el rol '1' es admin
         return decodedToken.role_id === 1
       } catch (error) {
         console.error('Error decodificando el token:', error)
         return false
       }
     },
-    username: (state) => {
+    username: state => {
       if (!state.token) return null
       try {
         const decodedToken = jwtDecode(state.token)
-        return decodedToken.username // Devuelve el username del token
+        return decodedToken.username
+      } catch (error) {
+        console.error('Error decodificando el token:', error)
+        return null
+      }
+    },
+    // --- NUEVO GETTER AÑADIDO PARA WEBSOCKETS ---
+    userId: state => {
+      if (!state.token) return null
+      try {
+        const decodedToken = jwtDecode(state.token)
+        return decodedToken.id // Asumiendo que el payload de tu JWT guarda el ID como 'id'
       } catch (error) {
         console.error('Error decodificando el token:', error)
         return null
@@ -41,13 +49,11 @@ export const useAuthStore = defineStore('auth', {
         const { data } = await apiClient.post('/auth/signin', { email, password })
         this.token = data.token
         localStorage.setItem('token', data.token)
-        // Para que el token se use en futuras peticiones
         apiClient.defaults.headers.common['x-access-token'] = data.token
       } catch (error) {
-        // Limpiar en caso de error
         localStorage.removeItem('token')
         this.token = null
-        throw error // Lanzamos el error para que el componente lo capture
+        throw error
       }
     },
 
