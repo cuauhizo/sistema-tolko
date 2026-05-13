@@ -13,9 +13,12 @@ dist
 dist-ssr
 coverage
 *.local
+# Variables de entorno
 .env
-.env.*
-.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 /cypress/videos/
 /cypress/screenshots/
