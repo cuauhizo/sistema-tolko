@@ -1,7 +1,9 @@
 import { pool } from '../config/db.js'
-export * from './workOrders.controller.js'
 import transporter from '../config/mailer.js'
 import { formatStatus, formatWorkOrderId } from '../utils/formatters.js'
+
+// --- WEBSOCKETS (Paso 1: Importar la instancia) ---
+import { io } from '../index.js'
 
 // ADMIN: Crear una nueva orden de trabajo para múltiples usuarios
 export const createWorkOrder = async (req, res) => {
@@ -38,6 +40,14 @@ export const createWorkOrder = async (req, res) => {
       const notificationMessage = `Nueva orden de trabajo asignada: "${title}"`
       const notificationsData = users.map(user => [user.id, notificationMessage, '/my-work-orders'])
       await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData])
+
+      // --- WEBSOCKETS (Paso 2: Emitir a múltiples usuarios) ---
+      users.forEach(user => {
+        io.to(`user-${user.id}`).emit('new-notification', {
+          message: notificationMessage,
+          workOrderId: workOrderId,
+        })
+      })
 
       // Enviar correos a cada usuario asignado
       for (const user of users) {
@@ -148,6 +158,14 @@ export const updateWorkOrder = async (req, res) => {
         // 2. Preparar los datos para una inserción múltiple de notificaciones en la app
         const notificationsData = users.map(user => [user.id, notificationMessageUpdate, '/my-work-orders'])
         await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData])
+
+        // --- WEBSOCKETS (Paso 3: Emitir a los usuarios al actualizar) ---
+        users.forEach(user => {
+          io.to(`user-${user.id}`).emit('new-notification', {
+            message: notificationMessageUpdate,
+            workOrderId: id,
+          })
+        })
 
         // 3. Recorrer los usuarios para enviar un correo a cada uno
         for (const user of users) {
@@ -330,6 +348,11 @@ export const updateWorkOrderStatus = async (req, res) => {
         // const notificationsData = admins.map(admin => [admin.id, notificationMessage, notificationLink]);
         const notificationsData = adminsToNotify.map(admin => [admin.id, notificationMessage, notificationLink])
         await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData])
+
+        // --- WEBSOCKETS (Paso 4: Emitir a los administradores para que aprueben) ---
+        io.to('admins').emit('new-notification', {
+          message: notificationMessage,
+        })
 
         // --- INICIO DE LA NUEVA LÓGICA DE CORREO ELECTRÓNICO ---
         try {

@@ -26,7 +26,8 @@
 
         // 2. Conectamos al servidor de WebSockets
         // Ajusta la URL si tu API corre en un puerto distinto a 4000
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+        // const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
         socket = io(backendUrl)
 
         // 3. Nos registramos en el servidor una vez conectados
