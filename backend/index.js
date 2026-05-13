@@ -26,7 +26,7 @@ const app = express()
 
 // --- CONFIGURAR EL SERVIDOR HTTP Y SOCKET.IO ---
 const httpServer = createServer(app)
-const whiteList = [process.env.FRONTEND_URL, 'http://localhost:5174', 'https://www.tolkogroup.com', 'https://tolkogroup.com']
+const whiteList = [process.env.FRONTEND_URL, 'http://localhost:5174', 'https://www.tolkogroup.com', 'https://tolkogroup.com', 'https://sistema.tolkogroup.com']
 
 // Inicializamos Socket.io aplicándole tu misma lista blanca de CORS
 const io = new Server(httpServer, {
