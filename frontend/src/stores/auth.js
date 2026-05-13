@@ -30,6 +30,26 @@ export const useAuthStore = defineStore('auth', {
         return null
       }
     },
+    userEmail: state => {
+      if (!state.token) return null
+      try {
+        const decodedToken = jwtDecode(state.token)
+        return decodedToken.email // Extrae el email del token
+      } catch (error) {
+        return null
+      }
+    },
+    memberSince: state => {
+      if (!state.token) return null
+      try {
+        const decodedToken = jwtDecode(state.token)
+        // Retornamos la fecha formateada (ej. "enero de 2024")
+        const date = new Date(decodedToken.createdAt)
+        return date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long' })
+      } catch (error) {
+        return 'N/A'
+      }
+    },
     // --- NUEVO GETTER AÑADIDO PARA WEBSOCKETS ---
     userId: state => {
       if (!state.token) return null
