@@ -74,20 +74,22 @@ export const getTasks = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10
     const offset = (page - 1) * limit
 
-    const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM tasks')
+    // Contar solo las tareas activas
+    const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM tasks WHERE is_active = TRUE')
     const totalTasks = totalRows[0].total
 
     const query = `
-            SELECT 
+        SELECT 
             t.id, t.title, t.description, t.status, t.due_date, t.assigned_to_id,
             assignee.username as assigned_to,
             assigner.username as assigned_by
         FROM tasks t
         JOIN users assignee ON t.assigned_to_id = assignee.id
         JOIN users assigner ON t.assigned_by_id = assigner.id
+        WHERE t.is_active = TRUE
         ORDER BY t.request_date DESC
         LIMIT ? OFFSET ?
-        `
+    `
 
     const [tasks] = await pool.query(query, [limit, offset])
     res.status(200).json({
@@ -184,14 +186,12 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   const { id } = req.params
   try {
-    const [result] = await pool.query('DELETE FROM tasks WHERE id = ?', [id])
+    // Cambiamos DELETE por UPDATE
+    const [result] = await pool.query('UPDATE tasks SET is_active = FALSE WHERE id = ?', [id])
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Tarea no encontrada.' })
     }
-
-    // Opcional: Emitir por WebSockets si el dashboard de los admins necesita refrescarse
-    // io.to('admins').emit('task-deleted', { taskId: id });
-
     res.sendStatus(204)
   } catch (error) {
     console.error('Error al eliminar la tarea:', error)
@@ -205,12 +205,13 @@ export const getMyTasks = async (req, res) => {
     const userId = req.userId
     const status = req.query.status
 
+    // Añadimos la condición AND t.is_active = TRUE
     let query = `
-            SELECT t.id, t.title, t.description, t.status, t.due_date, u.username as assigned_by
-            FROM tasks t
-            JOIN users u ON t.assigned_by_id = u.id
-            WHERE t.assigned_to_id = ?
-        `
+        SELECT t.id, t.title, t.description, t.status, t.due_date, u.username as assigned_by
+        FROM tasks t
+        JOIN users u ON t.assigned_by_id = u.id
+        WHERE t.assigned_to_id = ? AND t.is_active = TRUE
+    `
     const params = [userId]
 
     if (status && ['pendiente', 'en_progreso', 'completada'].includes(status)) {

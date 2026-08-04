@@ -41,10 +41,10 @@ export const signIn = async (req, res) => {
   const { email, password } = req.body
 
   try {
-    // 1. Buscar al usuario por email
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
+    // 1. Buscar al usuario por email y que esté ACTIVO
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ? AND is_active = TRUE', [email])
     if (users.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' })
+      return res.status(404).json({ message: 'Usuario no encontrado o dado de baja' })
     }
     const user = users[0]
 

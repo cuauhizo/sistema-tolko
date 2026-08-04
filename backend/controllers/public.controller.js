@@ -29,7 +29,8 @@ export const handleContactForm = async (req, res) => {
     // 3. Usamos el transporter de 'sistema-tolko' para enviar el correo
     await transporter.sendMail({
       from: `"Formulario Web Tolko" <${process.env.EMAIL_USER}>`, // El 'from' debe ser el correo de Google
-      to: 'clazcano@tolkogroup.com, frodriguez@tolkogroup.com', // El correo que recibe (configurado en el .env de este backend)
+      // to: 'clazcano@tolkogroup.com, frodriguez@tolkogroup.com', // El correo que recibe (configurado en el .env de este backend)
+      to: 'frodriguez@tolkogroup.com', // El correo que recibe (configurado en el .env de este backend)
       subject: 'Nuevo Mensaje del Formulario de Contacto',
       html: contentHTML,
       replyTo: email, // ¡Importante! Para que al 'Responder' se le conteste al cliente
