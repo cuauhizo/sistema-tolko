@@ -1,7 +1,11 @@
 <script setup>
-  import { ref, watch } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
+
+  // --- Importamos el store de proveedores ---
+  import { useSuppliersStore } from '../stores/suppliers'
+  import { storeToRefs } from 'pinia'
 
   // --- Props y Emits ---
   const props = defineProps({
@@ -23,14 +27,24 @@
   // --- Refs y Estado ---
   const veeForm = ref(null)
   const formKey = ref(0)
-  const isOpen = ref(false) // Nuestro control nativo del modal
+  const isOpen = ref(false)
   const product = ref({})
   const modalTitle = ref('Nuevo Producto')
+
+  // --- Inicialización del Store de Proveedores ---
+  const suppliersStore = useSuppliersStore()
+  const { suppliers } = storeToRefs(suppliersStore)
+
+  // Cargamos los proveedores al montar el componente
+  onMounted(() => {
+    suppliersStore.fetchSuppliers()
+  })
 
   // --- Esquema de Validación con Yup ---
   const schema = yup.object({
     name: yup.string().required('El nombre es obligatorio').trim(),
     category_id: yup.number().nullable(),
+    supplier_id: yup.number().nullable(),
     description: yup.string().nullable(),
     stock: yup.number().required('El stock es obligatorio').min(0, 'El stock no puede ser negativo').typeError('El stock debe ser un número'),
     price: yup.number().required('El precio es obligatorio').min(0, 'El precio no puede ser negativo').typeError('El precio debe ser un número'),
@@ -39,7 +53,15 @@
 
   // --- Funciones del Componente ---
   const resetForm = () => {
-    product.value = { name: '', description: '', stock: undefined, price: undefined, unit: 'piezas', category_id: null }
+    product.value = {
+      name: '',
+      description: '',
+      stock: undefined,
+      price: undefined,
+      unit: 'piezas',
+      category_id: null,
+      supplier_id: null, // Reseteamos el proveedor
+    }
     modalTitle.value = 'Nuevo Producto'
   }
 
@@ -113,6 +135,7 @@
               <ErrorMessage name="name" class="text-red-500 text-xs mt-1 block font-medium" />
             </div>
 
+            <!-- Campo Categoría (Original) -->
             <div class="md:col-span-4">
               <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
               <div class="relative">
@@ -140,9 +163,28 @@
               placeholder="Detalles adicionales del producto..." />
           </div>
 
+          <!-- Fila para Proveedor -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
+            <div class="md:col-span-12">
+              <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">Proveedor (Opcional)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                  <i class="pi pi-truck"></i>
+                </span>
+                <Field as="select" id="supplier" name="supplier_id" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                  <option :value="null">Ninguno / Producción Interna</option>
+                  <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                    {{ supplier.name }}
+                  </option>
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila de Stock, Unidad y Precio -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
             <div class="md:col-span-4">
-              <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
               <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                   <i class="pi pi-hashtag"></i>

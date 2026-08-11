@@ -40,3 +40,7 @@ bd_sistema_tolko.sql
 *.sw?
 
 *.tsbuildinfo
+
+# Custom
+*_old.*
+*-copy*.*

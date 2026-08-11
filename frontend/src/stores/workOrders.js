@@ -74,7 +74,16 @@ export const useWorkOrdersStore = defineStore('workOrders', {
       }
     },
 
-    // --- ACCIONES PARA EL USUARIO ---
+    async addProductToOrder(orderId, productData) {
+      try {
+        await apiClient.post(`/workorders/${orderId}/products`, productData)
+        // No mostramos notificación aquí porque ya la muestra la vista de Vue
+      } catch (error) {
+        console.error('Error al agregar producto a la orden:', error)
+        throw error // Importante lanzar el error para que la vista lo atrape
+      }
+    },
+
     async fetchMyWorkOrders(statusFilter = '') {
       // Acepta un filtro opcional
       this.isLoading = true

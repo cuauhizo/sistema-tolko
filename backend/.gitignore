@@ -93,3 +93,7 @@ ehthumbs.db
 *.swp
 *.swo
 *~
+
+# Custom
+*_old.*
+*-copy*.*

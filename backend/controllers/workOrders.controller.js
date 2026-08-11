@@ -139,8 +139,12 @@ export const updateWorkOrder = async (req, res) => {
         for (const product of products) {
           // Restar el stock del producto
           await connection.query('UPDATE products SET stock = stock - ? WHERE id = ?', [product.quantity_used, product.product_id])
-          // Registrar el movimiento en el historial
-          await connection.query('INSERT INTO inventory_movements (product_id, work_order_id, quantity_change, reason) VALUES (?, ?, ?, ?)', [product.product_id, id, -product.quantity_used, `Salida por Orden de Trabajo #${formatWorkOrderId(id)}`])
+          await connection.query(
+            `INSERT INTO inventory_movements 
+            (product_id, work_order_id, movement_type, user_id, quantity_change, reason) 
+            VALUES (?, ?, 'SALIDA', ?, ?, ?)`,
+            [product.product_id, id, req.userId, -product.quantity_used, `Salida por Orden de Trabajo #${formatWorkOrderId(id)}`],
+          )
         }
       }
     }
@@ -306,88 +310,90 @@ export const getMyWorkOrders = async (req, res) => {
 
 // USUARIO: Actualizar el estado de una de sus órdenes de trabajo
 export const updateWorkOrderStatus = async (req, res) => {
-  const { id } = req.params
-  const { status } = req.body
-  const userId = req.userId
+  const { id } = req.params // ID de la orden de trabajo
+  const { status } = req.body // 'pendiente', 'en_progreso', 'completada', etc.
+  const user_id = req.userId // Quién hace el cambio (del token JWT)
 
-  // Validar que el estado sea uno de los permitidos
-  if (!status || !['pendiente', 'en_progreso', 'por_aprobar'].includes(status)) {
-    return res.status(400).json({ message: 'Estado no válido.' })
+  if (!status) {
+    return res.status(400).json({ message: 'El estado es obligatorio' })
   }
 
   const connection = await pool.getConnection()
+
   try {
-    await connection.beginTransaction()
+    await connection.beginTransaction() // INICIAMOS TRANSACCIÓN
 
-    // 1. Verificar que la orden pertenezca al usuario y actualizarla
-    const [result] = await connection.query(`UPDATE work_orders SET status = ? WHERE id = ? AND EXISTS (SELECT 1 FROM work_order_assignees WHERE work_order_id = ? AND user_id = ? )`, [status, id, id, userId])
+    // 1. Actualizar el estado de la Orden de Trabajo
+    const [updateResult] = await connection.query('UPDATE work_orders SET status = ? WHERE id = ?', [status, id])
 
-    if (result.affectedRows === 0) {
-      await connection.rollback()
-      return res.status(404).json({ message: 'Orden no encontrada o no tienes permiso para actualizarla.' })
+    if (updateResult.affectedRows === 0) {
+      throw new Error('Orden de trabajo no encontrada')
     }
 
-    // Si el usuario la marca para aprobar, notificamos a los admins (opcional pero recomendado)
-    if (status === 'por_aprobar') {
-      const [orderData] = await connection.query('SELECT title, client_name FROM work_orders WHERE id = ?', [id])
-      const orderTitle = orderData[0]?.title || 'N/A'
-      const clientName = orderData[0]?.client_name || 'N/A'
-      const workOrderFolio = `OT-${String(id).padStart(4, '0')}`
+    // 2. MAGIA: Si el nuevo estado es 'completada', descontamos el inventario
+    if (status === 'completada') {
+      // A. Buscar qué productos y qué cantidades se usaron en esta orden
+      const [usedProducts] = await connection.query('SELECT product_id, quantity_used FROM work_order_products WHERE work_order_id = ?', [id])
 
-      // --- MODIFICACIÓN: Ahora también pedimos email y username ---
-      // 1. Buscamos a todos los administradores
-      const [allAdmins] = await connection.query('SELECT id, email, username FROM users WHERE role_id = 1')
+      // B. Recorrer cada producto para descontarlo y registrar el movimiento
+      for (const item of usedProducts) {
+        // Restar el stock
+        const [stockResult] = await connection.query('UPDATE products SET stock = stock - ? WHERE id = ?', [item.quantity_used, item.product_id])
 
-      // --- 2. LÓGICA MEJORADA: Filtramos para no notificar al usuario que realizó la acción ---
-      const adminsToNotify = allAdmins.filter(admin => admin.id !== userId)
-
-      if (adminsToNotify.length > 0) {
-        // --- LÓGICA DE NOTIFICACIÓN EN APP (sin cambios) ---
-        const notificationMessage = `La orden "${orderTitle}" (${workOrderFolio}) requiere aprobación.`
-        const notificationLink = '/work-orders'
-        // const notificationsData = admins.map(admin => [admin.id, notificationMessage, notificationLink]);
-        const notificationsData = adminsToNotify.map(admin => [admin.id, notificationMessage, notificationLink])
-        await connection.query('INSERT INTO notifications (user_id, message, link) VALUES ?', [notificationsData])
-
-        // --- WEBSOCKETS (Paso 4: Emitir a los administradores para que aprueben) ---
-        io.to('admins').emit('new-notification', {
-          message: notificationMessage,
-        })
-
-        // --- INICIO DE LA NUEVA LÓGICA DE CORREO ELECTRÓNICO ---
-        try {
-          for (const admin of adminsToNotify) {
-            await transporter.sendMail({
-              from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`,
-              to: admin.email,
-              subject: `Revisión Requerida: Orden de Trabajo ${workOrderFolio}`,
-              html: `
-                    <h2>Hola ${admin.username},</h2>
-                    <p>Una orden de trabajo ha sido marcada como finalizada y requiere tu aprobación.</p>
-                    <br>
-                    <h3>${workOrderFolio}: ${orderTitle}</h3>
-                    <p><strong>Cliente:</strong> ${clientName}</p>
-                    <br>
-                    <p>Por favor, inicia sesión en el sistema para revisarla y cambiar su estado a "Completada".</p>
-                    <a href="${process.env.FRONTEND_URL}/work-orders">Ir a Órdenes de Trabajo</a>
-                `,
-            })
-          }
-        } catch (emailError) {
-          console.error('AVISO: La orden se actualizó y notificó en la app, pero falló el envío de correos a los admins:', emailError)
-          // No hacemos rollback. El envío de correo es secundario.
+        if (stockResult.affectedRows === 0) {
+          throw new Error(`Error al actualizar el stock del producto ID: ${item.product_id}`)
         }
-        // --- FIN DE LA LÓGICA DE CORREO ---
+
+        // Registrar en el Kardex como SALIDA y vincularlo a la orden
+        await connection.query(
+          `
+                    INSERT INTO inventory_movements 
+                    (product_id, work_order_id, movement_type, user_id, quantity_change, reason) 
+                    VALUES (?, ?, 'SALIDA', ?, ?, 'Consumo automático por Orden completada')
+                `,
+          [
+            item.product_id,
+            id,
+            user_id,
+            -item.quantity_used, // Lo guardamos en negativo
+          ],
+        )
       }
     }
 
-    await connection.commit()
-    res.status(200).json({ message: 'Estado de la orden actualizado.' })
+    await connection.commit() // GUARDAMOS TODOS LOS CAMBIOS
+    res.status(200).json({ message: `Orden actualizada a ${status} con éxito` })
   } catch (error) {
-    await connection.rollback()
-    console.error('Error al actualizar estado de la orden:', error)
-    return res.status(500).json({ message: 'Algo salió mal' })
+    await connection.rollback() // REVERTIMOS SI ALGO FALLA
+    console.error('Error en updateWorkOrderStatus:', error)
+    // Si el error fue nuestro (lanzado arriba), enviamos ese mensaje, si no, uno genérico
+    res.status(500).json({ message: error.message || 'Error interno del servidor al actualizar la orden' })
   } finally {
-    connection.release()
+    connection.release() // LIBERAMOS CONEXIÓN
+  }
+}
+
+// Agregar un producto a una orden de trabajo existente
+export const addProductToOrder = async (req, res) => {
+  const { id } = req.params
+  const { product_id, quantity_used } = req.body
+
+  if (!product_id || !quantity_used) {
+    return res.status(400).json({ message: 'Producto y cantidad son requeridos' })
+  }
+
+  try {
+    // Verificamos si el producto ya está en la orden para sumarlo, si no, lo insertamos
+    const [existing] = await pool.query('SELECT * FROM work_order_products WHERE work_order_id = ? AND product_id = ?', [id, product_id])
+
+    if (existing.length > 0) {
+      await pool.query('UPDATE work_order_products SET quantity_used = quantity_used + ? WHERE work_order_id = ? AND product_id = ?', [quantity_used, id, product_id])
+    } else {
+      await pool.query('INSERT INTO work_order_products (work_order_id, product_id, quantity_used) VALUES (?, ?, ?)', [id, product_id, quantity_used])
+    }
+    res.status(201).json({ message: 'Material agregado a la orden' })
+  } catch (error) {
+    console.error('Error al agregar material:', error)
+    res.status(500).json({ message: 'Error al agregar el material' })
   }
 }
