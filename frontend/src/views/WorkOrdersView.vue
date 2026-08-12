@@ -1,123 +1,117 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import { useWorkOrdersStore } from '../stores/workOrders'
-import WorkOrderForm from '../components/WorkOrderForm.vue'
-import { formatStatus, formatWorkOrderId } from '@/utils/formatters'
+  import { onMounted, ref, computed } from 'vue'
+  import { useWorkOrdersStore } from '../stores/workOrders'
+  import WorkOrderForm from '../components/WorkOrderForm.vue'
+  import { formatStatus, formatWorkOrderId } from '@/utils/formatters'
 
-// Importaciones de PrimeVue
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import { FilterMatchMode } from '@primevue/core/api'
+  // Importaciones de PrimeVue
+  import DataTable from 'primevue/datatable'
+  import Column from 'primevue/column'
+  import Button from 'primevue/button'
+  import Tag from 'primevue/tag'
+  import InputText from 'primevue/inputtext'
+  import IconField from 'primevue/iconfield'
+  import InputIcon from 'primevue/inputicon'
+  import { FilterMatchMode } from '@primevue/core/api'
 
-// --- Estado del Componente ---
-const workOrdersStore = useWorkOrdersStore()
+  const workOrdersStore = useWorkOrdersStore()
 
-// Refs para controlar los datos y los modales
-const orderToEdit = ref(null)
-const orderToDelete = ref(null)
-const orderFormRef = ref(null)
-const isSaving = ref(false)
+  const orderToEdit = ref(null)
+  const orderToDelete = ref(null)
+  const orderFormRef = ref(null)
+  const isSaving = ref(false)
+  const showDeleteModal = ref(false)
 
-// NUEVO: Control nativo del modal de borrado
-const showDeleteModal = ref(false)
+  // NUEVO: Referencia a la DataTable
+  const dt = ref()
 
-// Propiedad computada para añadir el folio
-const formattedWorkOrders = computed(() => {
-  return workOrdersStore.workOrders.map((order) => ({
-    ...order,
-    folio: formatWorkOrderId(order.id),
-  }))
-})
+  const formattedWorkOrders = computed(() => {
+    return workOrdersStore.workOrders.map(order => ({
+      ...order,
+      folio: formatWorkOrderId(order.id),
+    }))
+  })
 
-// Filtros de la DataTable
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-})
+  const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  })
 
-onMounted(() => {
-  workOrdersStore.fetchWorkOrders()
-})
+  onMounted(() => {
+    workOrdersStore.fetchWorkOrders()
+  })
 
-// Abre el modal para crear una NUEVA orden.
-const openModalForNew = () => {
-  orderToEdit.value = null
-  if (orderFormRef.value) {
-    orderFormRef.value.resetForm()
+  // NUEVO: Función para exportar a CSV/Excel
+  const exportCSV = () => {
+    dt.value.exportCSV()
   }
-  orderFormRef.value?.openModal()
-}
 
-// Abre el modal para EDITAR una orden existente.
-const openModalForEdit = async (order) => {
-  await workOrdersStore.fetchWorkOrderById(order.id)
-  orderToEdit.value = workOrdersStore.currentOrder
-  orderFormRef.value?.openModal()
-}
-
-// Abre el modal de confirmación de borrado.
-const openDeleteModal = (order) => {
-  orderToDelete.value = order
-  showDeleteModal.value = true
-}
-
-// Se ejecuta cuando el formulario emite 'submit'.
-const handleFormSubmit = async (orderData) => {
-  isSaving.value = true
-  try {
-    if (orderData.id) {
-      await workOrdersStore.updateWorkOrder(orderData.id, orderData)
-    } else {
-      await workOrdersStore.addWorkOrder(orderData)
+  const openModalForNew = () => {
+    orderToEdit.value = null
+    if (orderFormRef.value) {
+      orderFormRef.value.resetForm()
     }
-    orderFormRef.value?.closeModal()
-  } finally {
-    isSaving.value = false
+    orderFormRef.value?.openModal()
   }
-}
 
-// Confirma y ejecuta la eliminación.
-const confirmDeleteOrder = async () => {
-  if (orderToDelete.value) {
-    await workOrdersStore.deleteWorkOrder(orderToDelete.value.id)
+  const openModalForEdit = async order => {
+    await workOrdersStore.fetchWorkOrderById(order.id)
+    orderToEdit.value = workOrdersStore.currentOrder
+    orderFormRef.value?.openModal()
   }
-  showDeleteModal.value = false
-  orderToDelete.value = null
-}
 
-// Devuelve un color para el tag de estado.
-const getSeverityForStatus = (status) => {
-  const statusMap = {
-    pendiente: 'warn',
-    en_progreso: 'info',
-    por_aprobar: 'secondary',
-    completada: 'success',
-    cancelada: 'danger',
+  const openDeleteModal = order => {
+    orderToDelete.value = order
+    showDeleteModal.value = true
   }
-  return statusMap[status] || 'contrast'
-}
+
+  const handleFormSubmit = async orderData => {
+    isSaving.value = true
+    try {
+      if (orderData.id) {
+        await workOrdersStore.updateWorkOrder(orderData.id, orderData)
+      } else {
+        await workOrdersStore.addWorkOrder(orderData)
+      }
+      orderFormRef.value?.closeModal()
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  const confirmDeleteOrder = async () => {
+    if (orderToDelete.value) {
+      await workOrdersStore.deleteWorkOrder(orderToDelete.value.id)
+    }
+    showDeleteModal.value = false
+    orderToDelete.value = null
+  }
+
+  const getSeverityForStatus = status => {
+    const statusMap = {
+      pendiente: 'warn',
+      en_progreso: 'info',
+      por_aprobar: 'secondary',
+      completada: 'success',
+      cancelada: 'danger',
+    }
+    return statusMap[status] || 'contrast'
+  }
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Órdenes de Trabajo</h1>
-      <button 
-        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" 
-        @click="openModalForNew"
-      >
+      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openModalForNew">
         <i class="pi pi-plus mr-2"></i>
         Nueva Orden
       </button>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- NUEVO: Agregamos ref="dt" a la tabla -->
       <DataTable
+        ref="dt"
         :value="formattedWorkOrders"
         :paginator="true"
         :rows="10"
@@ -129,13 +123,14 @@ const getSeverityForStatus = (status) => {
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        class="border-none"
-      >
+        class="border-none">
         <template #header>
-          <div class="flex justify-end p-2">
+          <!-- NUEVO: Agregamos el botón de exportar junto al buscador -->
+          <div class="flex flex-col sm:flex-row justify-end items-center gap-3 p-2">
+            <!-- <Button icon="pi pi-file-excel" label="Exportar Excel" class="p-button-success p-button-sm w-full sm:w-auto" @click="exportCSV" /> -->
             <IconField>
               <InputIcon><i class="pi pi-search text-gray-400" /></InputIcon>
-              <InputText v-model="filters.global.value" placeholder="Buscar orden..." class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+              <InputText v-model="filters.global.value" placeholder="Buscar orden..." class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64" />
             </IconField>
           </div>
         </template>
@@ -143,7 +138,10 @@ const getSeverityForStatus = (status) => {
           <div class="text-center py-4 text-gray-500">No se encontraron órdenes de trabajo.</div>
         </template>
         <template #loading>
-          <div class="text-center py-4 text-gray-500"><i class="pi pi-spin pi-spinner mr-2"></i> Cargando órdenes...</div>
+          <div class="text-center py-4 text-gray-500">
+            <i class="pi pi-spin pi-spinner mr-2"></i>
+            Cargando órdenes...
+          </div>
         </template>
 
         <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
@@ -155,7 +153,7 @@ const getSeverityForStatus = (status) => {
         <Column field="client_name" header="Cliente" :sortable="true"></Column>
         <Column field="assigned_to" header="Asignada a" :sortable="true">
           <template #body="{ data }">
-             <span class="text-gray-600 truncate block max-w-[150px]" :title="data.assigned_to">{{ data.assigned_to }}</span>
+            <span class="text-gray-600 truncate block max-w-[150px]" :title="data.assigned_to">{{ data.assigned_to }}</span>
           </template>
         </Column>
         <Column field="end_date" header="Fecha Límite" :sortable="true">
@@ -171,7 +169,7 @@ const getSeverityForStatus = (status) => {
             <Tag :value="formatStatus(data.status)" :severity="getSeverityForStatus(data.status)" class="uppercase text-[10px] font-bold px-2 py-1"></Tag>
           </template>
         </Column>
-        
+
         <Column header="Acciones" style="width: 12rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
@@ -190,7 +188,7 @@ const getSeverityForStatus = (status) => {
 
     <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto">
       <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showDeleteModal = false"></div>
-      
+
       <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-50 transform transition-all">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-bold text-gray-900">Confirmar Eliminación</h3>
@@ -198,30 +196,35 @@ const getSeverityForStatus = (status) => {
             <i class="pi pi-times"></i>
           </button>
         </div>
-        
+
         <div class="px-6 py-4">
           <div class="flex items-start">
             <i class="pi pi-exclamation-triangle text-red-500 text-2xl mr-3 mt-1"></i>
             <div>
               <p class="text-gray-600 mb-2" v-if="orderToDelete">
-                ¿Estás seguro de que deseas eliminar la orden: 
-                <strong class="text-gray-900">{{ orderToDelete.title }}</strong>?
+                ¿Estás seguro de que deseas eliminar la orden:
+                <strong class="text-gray-900">{{ orderToDelete.title }}</strong>
+                ?
               </p>
               <p class="text-sm font-medium text-red-500">Esta acción no se puede deshacer.</p>
             </div>
           </div>
         </div>
-        
+
         <div class="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl space-x-3">
-          <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+          <button
+            @click="showDeleteModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
             Cancelar
           </button>
-          <button @click="confirmDeleteOrder" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center">
-            <i class="pi pi-trash mr-2"></i> Sí, Eliminar
+          <button
+            @click="confirmDeleteOrder"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center">
+            <i class="pi pi-trash mr-2"></i>
+            Sí, Eliminar
           </button>
         </div>
       </div>
     </div>
-
   </div>
 </template>

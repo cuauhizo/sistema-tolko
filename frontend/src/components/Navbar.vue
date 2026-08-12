@@ -124,6 +124,7 @@
               </button>
               <div v-show="adminDropdownOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
                 <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/suppliers" @click="closeAllDropdowns">Proveedores</RouterLink>
+                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/clients" @click="closeAllDropdowns">Clientes</RouterLink>
                 <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/categories" @click="closeAllDropdowns">Categorías</RouterLink>
                 <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/products" @click="closeAllDropdowns">Productos</RouterLink>
                 <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/users" @click="closeAllDropdowns">Usuarios</RouterLink>

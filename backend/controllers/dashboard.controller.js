@@ -1,35 +1,54 @@
-import { pool } from '../config/db.js';
+import { pool } from '../config/db.js'
 
 export const getDashboardStats = async (req, res) => {
   try {
-    // 1. Contar el total de productos
-    const [totalProductsResult] = await pool.query('SELECT COUNT(id) as total FROM products');
+    // 1. KPI: Total de productos
+    const [[{ totalProducts }]] = await pool.query('SELECT COUNT(*) as totalProducts FROM products WHERE is_active = 1')
 
-    // 2. Encontrar productos con bajo stock (ej. 10 o menos unidades)
-    const [lowStockProductsResult] = await pool.query('SELECT COUNT(id) as total FROM products WHERE stock <= 10');
+    // ¡NUEVO! 2. Salud del Inventario (Para la Dona)
+    const [[inventoryStats]] = await pool.query(`
+            SELECT 
+                SUM(CASE WHEN stock <= 0 THEN 1 ELSE 0 END) as outOfStock,
+                SUM(CASE WHEN stock > 0 AND stock <= min_stock THEN 1 ELSE 0 END) as lowStock,
+                SUM(CASE WHEN stock > min_stock THEN 1 ELSE 0 END) as optimal
+            FROM products 
+            WHERE is_active = 1
+        `)
 
-    // 3. Calcular el valor total del inventario (precio * stock)
-    const [inventoryValueResult] = await pool.query('SELECT SUM(price * stock) as totalValue FROM products');
+    // 3. KPIs restantes
+    const [[{ activeWorkOrders }]] = await pool.query('SELECT COUNT(*) as activeWorkOrders FROM work_orders WHERE status NOT IN ("completada", "cancelada")')
+    const [[{ totalUsers }]] = await pool.query('SELECT COUNT(*) as totalUsers FROM users WHERE is_active = 1')
+    const [[{ inventoryValue }]] = await pool.query('SELECT SUM(stock * price) as inventoryValue FROM products WHERE is_active = 1')
 
-    // 4. Contar el total de usuarios registrados
-    const [totalUsersResult] = await pool.query('SELECT COUNT(id) as total FROM users');
+    // 4. Datos para el Gráfico de Órdenes (Barras)
+    const [ordersData] = await pool.query('SELECT status, COUNT(*) as count FROM work_orders GROUP BY status')
 
-    // 5. Contar órdenes de trabajo activas (pendientes o en progreso)
-    const [activeWorkOrdersResult] = await pool.query(
-      "SELECT COUNT(id) as total FROM work_orders WHERE status IN ('pendiente', 'en_progreso')"
-    );
+    const ordersByStatus = { pendiente: 0, en_progreso: 0, por_aprobar: 0, completada: 0, cancelada: 0 }
+    ordersData.forEach(row => {
+      if (ordersByStatus[row.status] !== undefined) {
+        ordersByStatus[row.status] = row.count
+      }
+    })
 
-    const stats = {
-      totalProducts: totalProductsResult[0].total || 0,
-      lowStockProducts: lowStockProductsResult[0].total || 0,
-      inventoryValue: inventoryValueResult[0].totalValue || 0,
-      totalUsers: totalUsersResult[0].total || 0,
-      activeWorkOrders: activeWorkOrdersResult[0].total || 0,
-    };
+    // Parseamos los datos de la dona para evitar nulos
+    const optimal = Number(inventoryStats.optimal) || 0
+    const lowStock = Number(inventoryStats.lowStock) || 0
+    const outOfStock = Number(inventoryStats.outOfStock) || 0
 
-    res.status(200).json(stats);
+    // 5. Enviamos todo al frontend
+    res.status(200).json({
+      totalProducts,
+      // Sumamos los bajos y agotados para la tarjeta roja de alerta superior
+      lowStockProducts: lowStock + outOfStock,
+      activeWorkOrders,
+      totalUsers,
+      inventoryValue: inventoryValue || 0,
+      ordersByStatus,
+      // Nueva propiedad para la Dona
+      inventoryHealth: { optimal, lowStock, outOfStock },
+    })
   } catch (error) {
-    console.error('Error al obtener las estadísticas del dashboard:', error);
-    return res.status(500).json({ message: 'Algo salió mal' });
+    console.error('Error al obtener estadísticas:', error)
+    res.status(500).json({ message: 'Error al cargar el dashboard' })
   }
-};
+}

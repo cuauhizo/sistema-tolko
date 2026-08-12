@@ -15,6 +15,7 @@ import AdjustmentsView from '../views/AdjustmentsView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import SuppliersView from '../views/SuppliersView.vue'
+import ClientsView from '../views/ClientsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +37,12 @@ const router = createRouter({
       name: 'products',
       component: ProductsView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/clients',
+      name: 'clients',
+      component: ClientsView,
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/suppliers',

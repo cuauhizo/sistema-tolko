@@ -35,20 +35,20 @@ export const createMovement = async (req, res) => {
     return res.status(400).json({ message: 'Faltan campos obligatorios (producto, tipo o cantidad)' })
   }
 
-  // 1. Preparar la lógica matemática
-  const absQuantity = Math.abs(parseInt(quantity))
-  let quantityChange = 0
+// 1. Preparar la lógica matemática (Cambiamos parseInt por parseFloat)
+    const absQuantity = Math.abs(parseFloat(quantity));
+    let quantityChange = 0;
 
-  if (movement_type === 'ENTRADA') {
-    quantityChange = absQuantity // Suma
-  } else if (movement_type === 'SALIDA' || movement_type === 'MERMA') {
-    quantityChange = -absQuantity // Resta
-  } else if (movement_type === 'AJUSTE') {
-    // Un ajuste puede ser positivo o negativo, respetamos el signo que envíe el cliente
-    quantityChange = parseInt(quantity)
-  } else {
-    return res.status(400).json({ message: 'Tipo de movimiento inválido' })
-  }
+    if (movement_type === 'ENTRADA') {
+        quantityChange = absQuantity; // Suma
+    } else if (movement_type === 'SALIDA' || movement_type === 'MERMA') {
+        quantityChange = -absQuantity; // Resta
+    } else if (movement_type === 'AJUSTE') {
+        // Un ajuste puede ser positivo o negativo
+        quantityChange = parseFloat(quantity);
+    } else {
+        return res.status(400).json({ message: 'Tipo de movimiento inválido' });
+    }
 
   // 2. Iniciar la conexión para la Transacción
   const connection = await pool.getConnection()

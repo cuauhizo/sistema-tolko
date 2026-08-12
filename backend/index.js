@@ -18,6 +18,7 @@ import userDashboardRoutes from './routes/userDashboard.routes.js'
 import notificationsRoutes from './routes/notifications.routes.js'
 import publicRoutes from './routes/public.routes.js'
 import suppliersRoutes from './routes/suppliers.routes.js'
+import clientsRoutes from './routes/clients.routes.js'
 
 // Variables de entorno
 dotenv.config()
@@ -101,6 +102,7 @@ app.use('/api/inventory', inventoryRoutes)
 app.use('/api/user-dashboard', userDashboardRoutes)
 app.use('/api/notifications', notificationsRoutes)
 app.use('/api/suppliers', suppliersRoutes)
+app.use('/api/clients', clientsRoutes)
 
 app.use('/', (req, res) => {
   res.send('Servidor sistema tolko funcionando')

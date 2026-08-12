@@ -27,13 +27,15 @@ export const getSupplierById = async (req, res) => {
 
 // CREAR un nuevo proveedor
 export const createSupplier = async (req, res) => {
-  const { name, contact_email, phone, address } = req.body
+  // 1. Agregamos 'giro' aquí
+  const { name, giro, contact_email, phone, address } = req.body
 
   if (!name) return res.status(400).json({ message: 'El nombre del proveedor es obligatorio' })
 
   try {
-    const [result] = await pool.query('INSERT INTO suppliers (name, contact_email, phone, address) VALUES (?, ?, ?, ?)', [name, contact_email, phone, address])
-    res.status(201).json({ id: result.insertId, name, contact_email, phone, address })
+    // 2. Agregamos 'giro' a la consulta SQL y a los valores
+    const [result] = await pool.query('INSERT INTO suppliers (name, giro, contact_email, phone, address) VALUES (?, ?, ?, ?, ?)', [name, giro, contact_email, phone, address])
+    res.status(201).json({ id: result.insertId, name, giro, contact_email, phone, address })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Error al crear el proveedor' })
@@ -43,10 +45,12 @@ export const createSupplier = async (req, res) => {
 // ACTUALIZAR un proveedor
 export const updateSupplier = async (req, res) => {
   const { id } = req.params
-  const { name, contact_email, phone, address } = req.body
+  // 3. Agregamos 'giro' aquí también
+  const { name, giro, contact_email, phone, address } = req.body
 
   try {
-    const [result] = await pool.query('UPDATE suppliers SET name = ?, contact_email = ?, phone = ?, address = ? WHERE id = ?', [name, contact_email, phone, address, id])
+    // 4. Actualizamos el query para incluir 'giro = ?'
+    const [result] = await pool.query('UPDATE suppliers SET name = ?, giro = ?, contact_email = ?, phone = ?, address = ? WHERE id = ?', [name, giro, contact_email, phone, address, id])
 
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Proveedor no encontrado' })
 

@@ -44,56 +44,58 @@ export const getProductById = async (req, res) => {
 
 // CREAR un nuevo producto
 export const createProduct = async (req, res) => {
-  // Extraemos supplier_id del cuerpo de la petición
-  const { name, description, stock, price, unit, category_id, supplier_id } = req.body
+    // Añadimos sku, min_stock y max_stock
+    const { sku, name, description, stock, min_stock, max_stock, price, unit, category_id, supplier_id } = req.body;
+    
+    if (!name || !price) {
+        return res.status(400).json({ message: 'El nombre y el precio son obligatorios' });
+    }
 
-  // Validación básica
-  if (!name || !price) {
-    return res.status(400).json({ message: 'El nombre y el precio son obligatorios' })
-  }
-
-  try {
-    const [result] = await pool.query('INSERT INTO products (name, description, stock, price, unit, category_id, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-      name,
-      description || null,
-      stock || 0,
-      price,
-      unit || 'piezas',
-      category_id || null,
-      supplier_id || null, // Aquí guardamos el proveedor
-    ])
-
-    res.status(201).json({
-      id: result.insertId,
-      name,
-      stock,
-      price,
-      supplier_id,
-    })
-  } catch (error) {
-    console.error('Error en createProduct:', error)
-    res.status(500).json({ message: 'Error al crear el producto' })
-  }
-}
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO products (sku, name, description, stock, min_stock, max_stock, price, unit, category_id, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                sku || null,
+                name, 
+                description || null, 
+                stock ? parseFloat(stock) : 0.00, 
+                min_stock ? parseFloat(min_stock) : 0.00,
+                max_stock ? parseFloat(max_stock) : null,
+                parseFloat(price), 
+                unit || 'piezas', 
+                category_id || null, 
+                supplier_id || null
+            ]
+        );
+        
+        res.status(201).json({ id: result.insertId, name, stock, price, supplier_id });
+    } catch (error) {
+        console.error("Error en createProduct:", error);
+        res.status(500).json({ message: 'Error al crear el producto' });
+    }
+};
 
 // ACTUALIZAR un producto
 export const updateProduct = async (req, res) => {
-  const { id } = req.params
-  const { name, description, stock, price, unit, category_id, supplier_id } = req.body
+    const { id } = req.params;
+    const { sku, name, description, stock, min_stock, max_stock, price, unit, category_id, supplier_id } = req.body;
 
-  try {
-    const [result] = await pool.query('UPDATE products SET name = ?, description = ?, stock = ?, price = ?, unit = ?, category_id = ?, supplier_id = ? WHERE id = ?', [name, description, stock, price, unit, category_id, supplier_id, id])
+    try {
+        const [result] = await pool.query(
+            'UPDATE products SET sku = ?, name = ?, description = ?, stock = ?, min_stock = ?, max_stock = ?, price = ?, unit = ?, category_id = ?, supplier_id = ? WHERE id = ?',
+            [sku || null, name, description, stock, min_stock, max_stock, price, unit, category_id, supplier_id, id]
+        );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Producto no encontrado' })
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+        
+        res.status(200).json({ message: 'Producto actualizado correctamente' });
+    } catch (error) {
+        console.error("Error en updateProduct:", error);
+        res.status(500).json({ message: 'Error al actualizar el producto' });
     }
-
-    res.status(200).json({ message: 'Producto actualizado correctamente' })
-  } catch (error) {
-    console.error('Error en updateProduct:', error)
-    res.status(500).json({ message: 'Error al actualizar el producto' })
-  }
-}
+};
 
 // ELIMINAR (Soft Delete) un producto
 export const deleteProduct = async (req, res) => {
@@ -115,19 +117,19 @@ export const deleteProduct = async (req, res) => {
 
 // OBTENER productos con stock bajo (Dashboard)
 export const getLowStockProducts = async (req, res) => {
-  try {
-    // Consideramos "Bajo Stock" a cualquier producto con 10 unidades o menos
-    const query = `
-            SELECT id, name, stock, unit 
+    try {
+        // AHORA ES DINÁMICO: Comparamos el stock actual con el min_stock de cada producto
+        const query = `
+            SELECT id, name, stock, min_stock, unit 
             FROM products 
-            WHERE is_active = 1 AND stock <= 10
+            WHERE is_active = 1 AND stock <= min_stock
             ORDER BY stock ASC
             LIMIT 10
-        `
-    const [rows] = await pool.query(query)
-    res.status(200).json(rows)
-  } catch (error) {
-    console.error('Error en getLowStockProducts:', error)
-    res.status(500).json({ message: 'Error al obtener productos con bajo stock' })
-  }
-}
+        `;
+        const [rows] = await pool.query(query);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error("Error en getLowStockProducts:", error);
+        res.status(500).json({ message: 'Error al obtener productos con bajo stock' });
+    }
+};

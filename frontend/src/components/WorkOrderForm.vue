@@ -2,6 +2,7 @@
   import { ref, watch, onMounted } from 'vue'
   import { useUsersStore } from '../stores/users'
   import { useProductsStore } from '../stores/products'
+  import { useClientsStore } from '../stores/clients' // NUEVO: Importamos el store de clientes
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
   import MultiSelect from 'primevue/multiselect'
@@ -22,11 +23,12 @@
   // --- Refs y Estado ---
   const veeForm = ref(null)
   const formKey = ref(0)
-  const isOpen = ref(false) // Control nativo del modal
+  const isOpen = ref(false)
 
   // --- Stores ---
   const usersStore = useUsersStore()
   const productsStore = useProductsStore()
+  const clientsStore = useClientsStore() // NUEVO
 
   // --- Estado del Componente ---
   const order = ref({})
@@ -37,7 +39,10 @@
   // --- Esquema de Validación con Yup ---
   const schema = yup.object({
     title: yup.string().required('El título es obligatorio').trim(),
-    client_name: yup.string().required('El cliente es obligatorio').trim(),
+    client_id: yup.number().nullable(), // NUEVO: client_id en lugar de client_name
+    design_link: yup.string().url('Debe ser una URL válida').nullable(), // NUEVO
+    width: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(), // NUEVO
+    height: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(), // NUEVO
     assigned_to_ids: yup.array().min(1, 'Debe asignar al menos un usuario').required('Debe asignar un usuario.'),
     description: yup.string().required('La descripción es obligatoria').trim(),
     start_date: yup.date().nullable().required('La fecha de inicio es obligatoria').typeError('Debe ser una fecha válida'),
@@ -53,7 +58,10 @@
   const resetForm = () => {
     order.value = {
       title: '',
-      client_name: '',
+      client_id: null,
+      design_link: '',
+      width: null,
+      height: null,
       description: '',
       assigned_to_ids: [],
       start_date: null,
@@ -123,6 +131,7 @@
   onMounted(() => {
     usersStore.fetchUsers()
     productsStore.fetchProducts()
+    clientsStore.fetchClients() // NUEVO: Cargamos los clientes
   })
 
   // --- Lógica para añadir/quitar productos ---
@@ -135,7 +144,7 @@
       order.value.products.push({
         product_id: product.id,
         name: product.name,
-        quantity_used: 1,
+        quantity_used: 1, // Por defecto 1
       })
     }
     productSearch.value = null
@@ -160,25 +169,148 @@
 
       <Form ref="veeForm" :key="formKey" @submit="handleSubmit" :validation-schema="schema" :initial-values="order" v-slot="{ errors }" class="flex flex-col overflow-hidden">
         <div class="px-6 py-5 overflow-y-auto flex-grow">
+          <!-- FILA 1: Título y Cliente -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
-            <div :class="isEditMode ? 'md:col-span-4' : 'md:col-span-6'">
-              <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Título de la Orden</label>
-              <Field type="text" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" :class="errors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'" id="title" name="title" />
+            <div class="md:col-span-6">
+              <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                Título de la Orden
+                <span class="text-red-500">*</span>
+              </label>
+              <Field
+                type="text"
+                class="block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                :class="errors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                id="title"
+                name="title"
+                placeholder="Ej. Impresión 10 Lonas 13oz" />
               <ErrorMessage name="title" class="text-red-500 text-xs mt-1 block" />
             </div>
 
-            <div :class="isEditMode ? 'md:col-span-4' : 'md:col-span-6'">
-              <label for="client_name" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Cliente</label>
+            <div class="md:col-span-6">
+              <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
               <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-building"></i></span>
                 <Field
-                  type="text"
-                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  :class="errors.client_name ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-                  id="client_name"
-                  name="client_name" />
+                  as="select"
+                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
+                  :class="errors.client_id ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                  id="client_id"
+                  name="client_id">
+                  <option :value="null">Sin cliente asignado / Público General</option>
+                  <option v-for="client in clientsStore.clients" :key="client.id" :value="client.id">
+                    {{ client.name }}
+                    <span v-if="client.company">({{ client.company }})</span>
+                  </option>
+                </Field>
               </div>
-              <ErrorMessage name="client_name" class="text-red-500 text-xs mt-1 block" />
+              <ErrorMessage name="client_id" class="text-red-500 text-xs mt-1 block" />
+            </div>
+          </div>
+
+          <!-- FILA NUEVA: Link de Diseño y Medidas de Impresión -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5 p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
+            <div class="md:col-span-6">
+              <label for="design_link" class="block text-sm font-medium text-gray-700 mb-1">Enlace de Diseño (Drive, WeTransfer, etc.)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-cloud-download"></i></span>
+                <Field type="url" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="design_link" name="design_link" placeholder="https://..." />
+              </div>
+              <ErrorMessage name="design_link" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <div class="md:col-span-3">
+              <label for="width" class="block text-sm font-medium text-gray-700 mb-1">Base / Ancho</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
+                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="width" name="width" placeholder="Ej. 1.20" />
+              </div>
+              <ErrorMessage name="width" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <div class="md:col-span-3">
+              <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Altura</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
+                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="height" name="height" placeholder="Ej. 2.00" />
+              </div>
+              <ErrorMessage name="height" class="text-red-500 text-xs mt-1 block" />
+            </div>
+          </div>
+
+          <!-- FILA 3: Asignación y Fechas -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
+            <div class="md:col-span-4">
+              <label for="assigned_to_ids" class="block text-sm font-medium text-gray-700 mb-1">
+                Asignar a
+                <span class="text-red-500">*</span>
+              </label>
+              <Field name="assigned_to_ids" v-slot="{ field }">
+                <MultiSelect
+                  :modelValue="field.value"
+                  @update:modelValue="field.onChange($event)"
+                  :options="usersStore.users"
+                  optionLabel="username"
+                  optionValue="id"
+                  :maxSelectedLabels="3"
+                  placeholder="Selecciona usuarios"
+                  class="w-full border shadow-sm rounded-md"
+                  :class="errors.assigned_to_ids ? 'border-red-500' : 'border-gray-300'"
+                  display="chip" />
+              </Field>
+              <ErrorMessage name="assigned_to_ids" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <div class="md:col-span-4">
+              <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
+                Fecha de Inicio
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-calendar-plus"></i></span>
+                <Field
+                  type="date"
+                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  :class="errors.start_date ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                  id="start_date"
+                  name="start_date" />
+              </div>
+              <ErrorMessage name="start_date" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <div class="md:col-span-4">
+              <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
+                Fecha de Finalización
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-calendar-times"></i></span>
+                <Field
+                  type="date"
+                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  :class="errors.end_date ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                  id="end_date"
+                  name="end_date" />
+              </div>
+              <ErrorMessage name="end_date" class="text-red-500 text-xs mt-1 block" />
+            </div>
+          </div>
+
+          <!-- Descripción y Estado -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-8">
+            <div :class="isEditMode ? 'md:col-span-8' : 'md:col-span-12'">
+              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                Descripción de la Tarea
+                <span class="text-red-500">*</span>
+              </label>
+              <Field
+                as="textarea"
+                rows="3"
+                class="block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                :class="errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+                id="description"
+                name="description"
+                placeholder="Escribe los detalles de los acabados, ojillos, bastillas, etc..." />
+              <ErrorMessage name="description" class="text-red-500 text-xs mt-1 block" />
             </div>
 
             <div v-if="isEditMode" class="md:col-span-4">
@@ -199,73 +331,13 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
-            <div class="md:col-span-4">
-              <label for="assigned_to_ids" class="block text-sm font-medium text-gray-700 mb-1">Asignar a</label>
-              <Field name="assigned_to_ids" v-slot="{ field }">
-                <MultiSelect
-                  :modelValue="field.value"
-                  @update:modelValue="field.onChange($event)"
-                  :options="usersStore.users"
-                  optionLabel="username"
-                  optionValue="id"
-                  :maxSelectedLabels="3"
-                  placeholder="Selecciona usuarios"
-                  class="w-full border shadow-sm rounded-md"
-                  :class="errors.assigned_to_ids ? 'border-red-500' : 'border-gray-300'"
-                  display="chip" />
-              </Field>
-              <ErrorMessage name="assigned_to_ids" class="text-red-500 text-xs mt-1 block" />
-            </div>
-
-            <div class="md:col-span-4">
-              <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-calendar-plus"></i></span>
-                <Field
-                  type="date"
-                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  :class="errors.start_date ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-                  id="start_date"
-                  name="start_date" />
-              </div>
-              <ErrorMessage name="start_date" class="text-red-500 text-xs mt-1 block" />
-            </div>
-
-            <div class="md:col-span-4">
-              <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Finalización</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-calendar-times"></i></span>
-                <Field
-                  type="date"
-                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  :class="errors.end_date ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-                  id="end_date"
-                  name="end_date" />
-              </div>
-              <ErrorMessage name="end_date" class="text-red-500 text-xs mt-1 block" />
-            </div>
-          </div>
-
-          <div class="mb-8">
-            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descripción de la Tarea</label>
-            <Field
-              as="textarea"
-              rows="3"
-              class="block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              :class="errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-              id="description"
-              name="description"
-              placeholder="Escribe los detalles del trabajo a realizar..." />
-            <ErrorMessage name="description" class="text-red-500 text-xs mt-1 block" />
-          </div>
-
           <hr class="border-gray-200 mb-6" />
 
+          <!-- MATERIALES -->
           <div>
             <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
               <i class="pi pi-box mr-2 text-blue-600"></i>
-              Materiales / Productos a Utilizar
+              Materiales a Utilizar
             </h5>
 
             <div class="flex flex-col sm:flex-row gap-3 mb-4 items-end">
@@ -304,10 +376,12 @@
                       </div>
                     </td>
                     <td class="px-4 py-3">
+                      <!-- NUEVO: Agregado step="0.01" para permitir uso de materiales en decimales -->
                       <input
                         type="number"
+                        step="0.01"
                         v-model.number="item.quantity_used"
-                        min="1"
+                        min="0.01"
                         class="block w-full px-2 py-1 text-sm border rounded-md focus:ring-blue-500 focus:border-blue-500"
                         :class="item.quantity_used > getProductStock(item.product_id) ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-300'" />
                     </td>

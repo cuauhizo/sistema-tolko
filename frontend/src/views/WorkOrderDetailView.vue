@@ -18,7 +18,7 @@
 
   // Estados locales para el formulario de materiales
   const selectedProduct = ref('')
-  const quantityToAdd = ref(1)
+  const quantityToAdd = ref(1) // Ahora aceptará decimales desde el template
   const isAddingMaterial = ref(false)
   const isChangingStatus = ref(false)
 
@@ -31,7 +31,7 @@
     generateWorkOrderPDF(currentOrder.value)
   }
 
-  // Novedad: Función para cambiar el estado de la orden
+  // Función para cambiar el estado de la orden
   const changeStatus = async newStatus => {
     if (newStatus === 'completada') {
       const confirm = window.confirm('¿Estás seguro de completar la orden? Esto descontará automáticamente el stock de los materiales utilizados.')
@@ -50,15 +50,15 @@
     }
   }
 
-  // Novedad: Función para agregar material a la orden
+  // Función para agregar material a la orden
   const handleAddMaterial = async () => {
-    if (!selectedProduct.value || quantityToAdd.value < 1) return
+    if (!selectedProduct.value || quantityToAdd.value <= 0) return
 
     isAddingMaterial.value = true
     try {
       await workOrdersStore.addProductToOrder(currentOrder.value.id, {
         product_id: selectedProduct.value,
-        quantity_used: quantityToAdd.value,
+        quantity_used: quantityToAdd.value, // Envía el valor (puede ser decimal)
       })
       toast.showSuccess('Material agregado con éxito')
 
@@ -91,7 +91,7 @@
     </div>
 
     <div v-else-if="currentOrder">
-      <!-- Encabezado Original modificado para Acciones de Estado -->
+      <!-- Encabezado -->
       <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
         <div>
           <p class="text-sm font-bold text-blue-600 tracking-wider uppercase mb-1">
@@ -106,7 +106,6 @@
         </div>
 
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <!-- Píldora de estado original -->
           <span
             class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm"
             :class="{
@@ -119,7 +118,6 @@
             {{ formatStatus(currentOrder.status) }}
           </span>
 
-          <!-- Botones de Acción según el Estado -->
           <button
             v-if="currentOrder.status === 'pendiente'"
             @click="changeStatus('en_progreso')"
@@ -146,11 +144,10 @@
         </div>
       </div>
 
-      <!-- Tarjeta de Detalles Original -->
+      <!-- Tarjeta de Detalles Principal -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <!-- Bloques de info original mantenidos exactos -->
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
               <p class="text-sm text-gray-500 mb-1 font-medium">Asignada a</p>
               <p class="font-bold text-gray-900 flex items-center">
@@ -176,12 +173,47 @@
             </div>
           </div>
 
+          <!-- NUEVO: Detalles de Producción (Solo aparece si hay datos) -->
+          <div v-if="currentOrder.design_link || currentOrder.width || currentOrder.height" class="border-t border-gray-100 pt-6 mb-6">
+            <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+              <i class="pi pi-print mr-2 text-indigo-500"></i>
+              Detalles de Producción
+            </h5>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div v-if="currentOrder.design_link" class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100 flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500 font-medium">Archivo de Diseño</p>
+                  <p class="text-indigo-700 font-medium text-sm truncate max-wxs">Disponible en la nube</p>
+                </div>
+                <a :href="currentOrder.design_link" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow-sm transition-colors flex items-center text-sm font-medium">
+                  <i class="pi pi-cloud-download mr-2"></i>
+                  Abrir Enlace
+                </a>
+              </div>
+
+              <div v-if="currentOrder.width || currentOrder.height" class="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex flex-col justify-center">
+                <p class="text-sm text-gray-500 font-medium mb-1">Medidas Reales</p>
+                <div class="flex items-center text-gray-900 font-bold text-lg">
+                  <span v-if="currentOrder.width">
+                    {{ currentOrder.width }}
+                    <span class="text-sm font-normal text-gray-500 mr-2">m</span>
+                  </span>
+                  <i v-if="currentOrder.width && currentOrder.height" class="pi pi-times text-gray-400 text-sm mx-1"></i>
+                  <span v-if="currentOrder.height" class="ml-2">
+                    {{ currentOrder.height }}
+                    <span class="text-sm font-normal text-gray-500">m</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="border-t border-gray-100 pt-6">
             <h5 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
               <i class="pi pi-align-left mr-2 text-gray-400"></i>
               Descripción del Trabajo
             </h5>
-            <div class="text-gray-700 whitespace-pre-line bg-blue-50/50 p-5 rounded-lg border border-blue-100/50 leading-relaxed">
+            <div class="text-gray-700 whitespace-pre-line bg-gray-50 p-5 rounded-lg border border-gray-100 leading-relaxed">
               {{ currentOrder.description || 'Sin descripción.' }}
             </div>
           </div>
@@ -197,7 +229,7 @@
           </h5>
         </div>
 
-        <!-- Novedad: Formulario para agregar material (Solo si no está completada/cancelada) -->
+        <!-- Formulario para agregar material -->
         <div v-if="['pendiente', 'en_progreso'].includes(currentOrder.status)" class="p-4 bg-white border-b border-gray-100">
           <form @submit.prevent="handleAddMaterial" class="flex flex-col sm:flex-row gap-3 items-end">
             <div class="flex-grow w-full sm:w-auto">
@@ -209,7 +241,8 @@
             </div>
             <div class="w-full sm:w-32">
               <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
-              <input type="number" v-model="quantityToAdd" min="1" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border" required />
+              <!-- NUEVO: Agregamos step="0.01" y min="0.01" para permitir decimales -->
+              <input type="number" step="0.01" v-model="quantityToAdd" min="0.01" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border" required />
             </div>
             <button type="submit" :disabled="isAddingMaterial" class="bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded-md transition-colors w-full sm:w-auto h-10 flex items-center justify-center">
               <i class="pi pi-plus mr-1" v-if="!isAddingMaterial"></i>
@@ -218,7 +251,7 @@
           </form>
         </div>
 
-        <!-- Lista Original -->
+        <!-- Lista -->
         <div class="p-0">
           <ul class="divide-y divide-gray-100">
             <li v-if="!currentOrder.products || currentOrder.products.length === 0" class="px-6 py-8 text-center text-gray-500 italic">No se han asignado productos ni materiales a esta orden.</li>
