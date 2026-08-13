@@ -10,7 +10,7 @@ export const useDashboardStore = defineStore('dashboard', {
       totalUsers: 0,
       activeWorkOrders: 0,
     },
-    isLoading: false,
+    isLoading: true,
     error: null,
   }),
 

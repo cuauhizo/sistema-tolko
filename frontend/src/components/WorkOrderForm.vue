@@ -2,10 +2,13 @@
   import { ref, watch, onMounted } from 'vue'
   import { useUsersStore } from '../stores/users'
   import { useProductsStore } from '../stores/products'
-  import { useClientsStore } from '../stores/clients' // NUEVO: Importamos el store de clientes
+  import { useClientsStore } from '../stores/clients'
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
+
+  // Importaciones de PrimeVue
   import MultiSelect from 'primevue/multiselect'
+  import Select from 'primevue/select' // NUEVO: Importamos Select de PrimeVue
 
   // --- Props y Emits ---
   const props = defineProps({
@@ -28,7 +31,7 @@
   // --- Stores ---
   const usersStore = useUsersStore()
   const productsStore = useProductsStore()
-  const clientsStore = useClientsStore() // NUEVO
+  const clientsStore = useClientsStore()
 
   // --- Estado del Componente ---
   const order = ref({})
@@ -39,10 +42,10 @@
   // --- Esquema de Validación con Yup ---
   const schema = yup.object({
     title: yup.string().required('El título es obligatorio').trim(),
-    client_id: yup.number().nullable(), // NUEVO: client_id en lugar de client_name
-    design_link: yup.string().url('Debe ser una URL válida').nullable(), // NUEVO
-    width: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(), // NUEVO
-    height: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(), // NUEVO
+    client_id: yup.number().nullable(),
+    design_link: yup.string().url('Debe ser una URL válida').nullable(),
+    width: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(),
+    height: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(),
     assigned_to_ids: yup.array().min(1, 'Debe asignar al menos un usuario').required('Debe asignar un usuario.'),
     description: yup.string().required('La descripción es obligatoria').trim(),
     start_date: yup.date().nullable().required('La fecha de inicio es obligatoria').typeError('Debe ser una fecha válida'),
@@ -131,7 +134,7 @@
   onMounted(() => {
     usersStore.fetchUsers()
     productsStore.fetchProducts()
-    clientsStore.fetchClients() // NUEVO: Cargamos los clientes
+    clientsStore.fetchClients()
   })
 
   // --- Lógica para añadir/quitar productos ---
@@ -144,7 +147,7 @@
       order.value.products.push({
         product_id: product.id,
         name: product.name,
-        quantity_used: 1, // Por defecto 1
+        quantity_used: 1,
       })
     }
     productSearch.value = null
@@ -188,21 +191,30 @@
 
             <div class="md:col-span-6">
               <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-building"></i></span>
-                <Field
-                  as="select"
-                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
-                  :class="errors.client_id ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-                  id="client_id"
-                  name="client_id">
-                  <option :value="null">Sin cliente asignado / Público General</option>
-                  <option v-for="client in clientsStore.clients" :key="client.id" :value="client.id">
-                    {{ client.name }}
-                    <span v-if="client.company">({{ client.company }})</span>
-                  </option>
-                </Field>
-              </div>
+              <!-- NUEVO: Selector de Cliente con Buscador Integrado (Corregido) -->
+              <Field name="client_id" v-slot="{ field }">
+                <Select
+                  :modelValue="field.value"
+                  @update:modelValue="field.onChange($event)"
+                  :options="clientsStore.clients"
+                  optionLabel="name"
+                  optionValue="id"
+                  :filterFields="['name', 'company']"
+                  filter
+                  filterPlaceholder="Buscar cliente por nombre o empresa..."
+                  placeholder="Público General / Sin asignar"
+                  showClear
+                  class="w-full border shadow-sm rounded-md"
+                  :class="errors.client_id ? 'border-red-500' : 'border-gray-300'">
+                  <template #option="slotProps">
+                    <div class="flex items-center">
+                      <i class="pi pi-user mr-2 text-gray-400 text-sm"></i>
+                      <span>{{ slotProps.option.name }}</span>
+                      <span v-if="slotProps.option.company" class="ml-2 text-xs text-gray-500 italic">({{ slotProps.option.company }})</span>
+                    </div>
+                  </template>
+                </Select>
+              </Field>
               <ErrorMessage name="client_id" class="text-red-500 text-xs mt-1 block" />
             </div>
           </div>
@@ -252,6 +264,8 @@
                   optionLabel="username"
                   optionValue="id"
                   :maxSelectedLabels="3"
+                  filter
+                  filterPlaceholder="Buscar usuario..."
                   placeholder="Selecciona usuarios"
                   class="w-full border shadow-sm rounded-md"
                   :class="errors.assigned_to_ids ? 'border-red-500' : 'border-gray-300'"
@@ -343,12 +357,26 @@
             <div class="flex flex-col sm:flex-row gap-3 mb-4 items-end">
               <div class="flex-grow">
                 <label for="productSearch" class="block text-sm font-medium text-gray-700 mb-1">Buscar Producto</label>
-                <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white" id="productSearch" v-model="productSearch">
-                  <option :value="null" disabled>Selecciona un producto del inventario...</option>
-                  <option v-for="product in productsStore.products" :key="product.id" :value="product.id">{{ product.name }} (Disponible: {{ product.stock }})</option>
-                </select>
+                <!-- NUEVO: Selector de Productos con Buscador Integrado (Corregido) -->
+                <Select
+                  v-model="productSearch"
+                  :options="productsStore.products"
+                  optionLabel="name"
+                  optionValue="id"
+                  :filterFields="['name', 'category_name']"
+                  filter
+                  filterPlaceholder="Buscar material por nombre..."
+                  placeholder="Selecciona un producto del inventario..."
+                  class="w-full border shadow-sm rounded-md">
+                  <template #option="slotProps">
+                    <div class="flex items-center justify-between w-full">
+                      <span>{{ slotProps.option.name }}</span>
+                      <span class="text-xs ml-4" :class="slotProps.option.stock <= 0 ? 'text-red-500 font-bold' : 'text-gray-500'">(Disp: {{ slotProps.option.stock }} {{ slotProps.option.unit }})</span>
+                    </div>
+                  </template>
+                </Select>
               </div>
-              <button type="button" @click="addProductToOrder" class="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md border border-gray-300 transition-colors flex items-center justify-center">
+              <button type="button" @click="addProductToOrder" class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md border border-gray-300 transition-colors flex items-center justify-center">
                 <i class="pi pi-plus mr-2"></i>
                 Añadir
               </button>
@@ -376,7 +404,6 @@
                       </div>
                     </td>
                     <td class="px-4 py-3">
-                      <!-- NUEVO: Agregado step="0.01" para permitir uso de materiales en decimales -->
                       <input
                         type="number"
                         step="0.01"

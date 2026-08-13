@@ -12,6 +12,7 @@
   import InputText from 'primevue/inputtext'
   import IconField from 'primevue/iconfield'
   import InputIcon from 'primevue/inputicon'
+  import Skeleton from 'primevue/skeleton'
   import { FilterMatchMode } from '@primevue/core/api'
 
   const workOrdersStore = useWorkOrdersStore()
@@ -22,7 +23,6 @@
   const isSaving = ref(false)
   const showDeleteModal = ref(false)
 
-  // NUEVO: Referencia a la DataTable
   const dt = ref()
 
   const formattedWorkOrders = computed(() => {
@@ -40,7 +40,6 @@
     workOrdersStore.fetchWorkOrders()
   })
 
-  // NUEVO: Función para exportar a CSV/Excel
   const exportCSV = () => {
     dt.value.exportCSV()
   }
@@ -109,7 +108,6 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <!-- NUEVO: Agregamos ref="dt" a la tabla -->
       <DataTable
         ref="dt"
         :value="formattedWorkOrders"
@@ -125,7 +123,6 @@
         responsiveLayout="scroll"
         class="border-none">
         <template #header>
-          <!-- NUEVO: Agregamos el botón de exportar junto al buscador -->
           <div class="flex flex-col sm:flex-row justify-end items-center gap-3 p-2">
             <!-- <Button icon="pi pi-file-excel" label="Exportar Excel" class="p-button-success p-button-sm w-full sm:w-auto" @click="exportCSV" /> -->
             <IconField>
@@ -134,13 +131,33 @@
             </IconField>
           </div>
         </template>
+
+        <!-- Estado Vacío (Empty State) Premium -->
         <template #empty>
-          <div class="text-center py-4 text-gray-500">No se encontraron órdenes de trabajo.</div>
+          <div class="flex flex-col items-center justify-center py-16 px-4">
+            <div class="w-16 h-16 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center mb-4">
+              <i class="pi pi-inbox text-3xl text-gray-400"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Aún no hay órdenes de trabajo</h3>
+            <p class="text-sm text-gray-500 mb-5 text-center max-w-sm">Tu bandeja está vacía. Comienza creando tu primera orden para empezar a llevar el control de tu producción.</p>
+            <button @click="openModalForNew" class="text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 font-medium px-4 py-2 rounded-lg transition-colors flex items-center">
+              <i class="pi pi-plus mr-2 text-sm"></i>
+              Crear mi primera orden
+            </button>
+          </div>
         </template>
+
+        <!-- Skeleton Loaders -->
         <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando órdenes...
+          <div class="p-4 border-t border-gray-100">
+            <div v-for="i in 5" :key="i" class="flex space-x-4 mb-4 w-full">
+              <Skeleton width="10%" height="2rem" />
+              <Skeleton width="25%" height="2rem" />
+              <Skeleton width="20%" height="2rem" />
+              <Skeleton width="20%" height="2rem" />
+              <Skeleton width="15%" height="2rem" />
+              <Skeleton width="10%" height="2rem" />
+            </div>
           </div>
         </template>
 
@@ -186,6 +203,7 @@
 
     <WorkOrderForm ref="orderFormRef" :order-to-edit="orderToEdit" :is-saving="isSaving" @submit="handleFormSubmit" />
 
+    <!-- Modal de confirmación de borrado intacto -->
     <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto">
       <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showDeleteModal = false"></div>
 

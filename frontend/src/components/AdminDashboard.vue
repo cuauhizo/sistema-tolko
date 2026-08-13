@@ -2,14 +2,19 @@
   import { onMounted, onUnmounted, ref, computed } from 'vue'
   import { useDashboardStore } from '../stores/dashboard'
   import { useAuthStore } from '../stores/auth'
+  import { useProductsStore } from '../stores/products'
+  import { storeToRefs } from 'pinia'
   import { RouterLink } from 'vue-router'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importamos el componente Chart de PrimeVue
   import Chart from 'primevue/chart'
 
   const dashboardStore = useDashboardStore()
   const authStore = useAuthStore()
+  const productsStore = useProductsStore()
   const pollInterval = ref(null)
+  const { lowStockProducts } = storeToRefs(productsStore)
 
   onMounted(() => {
     if (authStore.isAuthenticated) {
@@ -17,6 +22,13 @@
       pollInterval.value = setInterval(() => {
         dashboardStore.fetchStats()
       }, 60000)
+    }
+  })
+
+  // Cargamos la información del stock al entrar al dashboard
+  onMounted(() => {
+    if (authStore.isAuthenticated) {
+      productsStore.fetchLowStockProducts()
     }
   })
 
@@ -34,11 +46,7 @@
   }
 
   // --- CONFIGURACIÓN DE GRÁFICOS (Datos de ejemplo para estructurar) ---
-  // Nota: Más adelante conectaremos esto a tu backend para que sean datos 100% reales
-
-  // 1. Gráfico de Órdenes (Barras)
   const ordersChartData = computed(() => {
-    // Si la información aún no carga, mostramos ceros
     const statusData = dashboardStore.stats?.ordersByStatus || {
       pendiente: 0,
       en_progreso: 0,
@@ -51,7 +59,6 @@
       datasets: [
         {
           label: 'Órdenes de Trabajo',
-          // ¡Aquí inyectamos los datos reales desde tu Base de Datos!
           data: [statusData.pendiente, statusData.en_progreso, statusData.por_aprobar, statusData.completada],
           backgroundColor: [
             'rgba(245, 158, 11, 0.8)', // Ambar
@@ -75,9 +82,7 @@
     maintainAspectRatio: false,
   })
 
-  // 2. Gráfico de Inventario (Dona)
   const inventoryChartData = computed(() => {
-    // Tomamos los datos de salud del inventario del backend o usamos ceros por defecto
     const health = dashboardStore.stats?.inventoryHealth || { optimal: 0, lowStock: 0, outOfStock: 0 }
 
     return {
@@ -104,9 +109,66 @@
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-    <div v-if="dashboardStore.isLoading" class="flex justify-center items-center py-20">
-      <i class="pi pi-spin pi-spinner text-blue-600 text-4xl"></i>
-      <span class="ml-3 text-blue-600 font-medium text-lg">Cargando estadísticas...</span>
+    <div v-if="dashboardStore.isLoading">
+      <!-- Esqueletos para las 5 tarjetas de KPIs (Total Productos, Stock, etc.) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex justify-between items-start">
+          <div class="w-full">
+            <SkeletonLoader width="60%" height="1rem" class="mb-3" />
+            <SkeletonLoader width="40%" height="2.5rem" />
+          </div>
+          <SkeletonLoader width="40px" height="40px" radius="8px" />
+        </div>
+      </div>
+
+      <!-- Esqueletos para los Gráficos y Alertas (AHORA SON 3 COLUMNAS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <!-- Gráfico de Barras -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="flex justify-between items-center mb-4">
+            <SkeletonLoader width="40%" height="1.5rem" />
+            <SkeletonLoader width="25%" height="1.5rem" radius="6px" />
+          </div>
+          <SkeletonLoader width="100%" height="200px" radius="8px" />
+        </div>
+
+        <!-- Gráfico de Dona -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <SkeletonLoader width="50%" height="1.5rem" class="mx-auto mb-4" />
+          <div class="flex justify-center items-center h-56">
+            <SkeletonLoader width="200px" height="200px" radius="50%" />
+          </div>
+        </div>
+
+        <!-- NUEVO: Esqueleto de Alertas de Stock -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden w-full">
+          <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <SkeletonLoader width="50%" height="1.5rem" />
+            <SkeletonLoader width="20%" height="1.5rem" radius="9999px" />
+          </div>
+          <div class="p-0">
+            <div v-for="i in 3" :key="'alert-skel-' + i" class="px-5 py-3 border-b border-gray-50 flex justify-between items-center">
+              <div class="w-1/2">
+                <SkeletonLoader width="80%" height="1rem" class="mb-1" />
+                <SkeletonLoader width="40%" height="0.75rem" />
+              </div>
+              <SkeletonLoader width="25%" height="1.5rem" radius="6px" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Esqueletos para Accesos Rápidos (Admin) -->
+      <div class="mb-8">
+        <SkeletonLoader width="200px" height="1.5rem" class="mb-4" />
+        <!-- Título -->
+        <div class="flex flex-wrap gap-3">
+          <SkeletonLoader width="378px" height="208px" radius="8px" />
+          <SkeletonLoader width="378px" height="208px" radius="8px" />
+          <SkeletonLoader width="378px" height="208px" radius="8px" />
+          <SkeletonLoader width="378px" height="208px" radius="8px" />
+        </div>
+      </div>
     </div>
 
     <div v-else-if="dashboardStore.error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
@@ -116,7 +178,7 @@
       </div>
     </div>
 
-    <div v-else>
+    <div v-else key="dashboard-loaded-content">
       <!-- KPIs Superiores (Intactos) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
         <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-sm text-white p-6 relative overflow-hidden">
@@ -172,29 +234,70 @@
         </div>
       </div>
 
-      <!-- NUEVA SECCIÓN: Gráficos de Rendimiento -->
+      <!-- SECCIÓN: Gráficos de Rendimiento -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        <!-- Gráfico de Órdenes de Trabajo -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-gray-800">Flujo de Órdenes de Trabajo</h3>
+        <!-- 1. Gráfico de Órdenes de Trabajo -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+          <div class="flex justify-between items-center mb-4 shrink-0">
+            <h3 class="text-lg font-bold text-gray-800">Flujo de Órdenes</h3>
             <span class="text-sm text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">Mes Actual</span>
           </div>
-          <div class="h-64">
-            <Chart type="bar" :data="ordersChartData" :options="ordersChartOptions" class="h-full w-full" />
+          <div class="flex-grow relative min-h-[16rem]">
+            <Chart v-if="dashboardStore.stats" type="bar" :data="ordersChartData" :options="ordersChartOptions" class="absolute inset-0 h-full w-full" />
           </div>
         </div>
 
-        <!-- Gráfico de Salud del Inventario -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Salud del Inventario</h3>
-          <div class="h-56 relative flex justify-center items-center">
-            <Chart type="doughnut" :data="inventoryChartData" :options="inventoryChartOptions" class="h-full w-full" />
+        <!-- 2. Gráfico de Salud del Inventario -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+          <h3 class="text-lg font-bold text-gray-800 mb-4 text-center shrink-0">Salud del Inventario</h3>
+          <div class="flex-grow relative flex justify-center items-center min-h-[16rem]">
+            <Chart v-if="dashboardStore.stats" type="doughnut" :data="inventoryChartData" :options="inventoryChartOptions" class="absolute inset-0 h-full w-full" />
             <!-- Texto central en la dona -->
             <div class="absolute flex flex-col items-center justify-center pointer-events-none">
               <span class="text-3xl font-bold text-gray-800">{{ dashboardStore.stats.totalProducts }}</span>
               <span class="text-xs text-gray-500">Items</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 3. Widget de Alertas de Stock (Homologado y Limitado) -->
+        <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden flex flex-col h-full">
+          <!-- Cabecera pegada a los bordes -->
+          <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex items-center justify-between shrink-0">
+            <h3 class="text-lg font-bold text-red-800 flex items-center">
+              <i class="pi pi-exclamation-triangle mr-2 text-red-600"></i>
+              Alertas de Stock
+            </h3>
+            <span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ lowStockProducts.length }} críticos</span>
+          </div>
+
+          <!-- Lista con scroll interno y límite de 5 items (.slice) -->
+          <div class="flex-grow overflow-y-auto bg-white">
+            <ul v-if="lowStockProducts.length > 0" class="divide-y divide-gray-100">
+              <li v-for="product in lowStockProducts.slice(0, 5)" :key="product.id" class="px-5 py-3 hover:bg-gray-50 flex justify-between items-center transition-colors">
+                <div class="overflow-hidden pr-2">
+                  <p class="text-sm font-bold text-gray-900 truncate" :title="product.name">{{ product.name }}</p>
+                  <p class="text-xs text-gray-500">Unidad: {{ product.unit }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold" :class="product.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'">Disp: {{ product.stock }}</span>
+                </div>
+              </li>
+            </ul>
+
+            <!-- Estado ideal: No hay alertas -->
+            <div v-else class="px-5 py-8 h-full flex flex-col justify-center items-center text-center bg-gray-50">
+              <i class="pi pi-check-circle text-4xl text-emerald-400 mb-2"></i>
+              <p class="text-sm text-gray-600 font-medium">Todo el inventario está en niveles óptimos.</p>
+            </div>
+          </div>
+
+          <!-- Footer para ver más (Solo si hay más de 5) -->
+          <div v-if="lowStockProducts.length > 5" class="bg-gray-50 border-t border-gray-100 p-3 text-center shrink-0">
+            <RouterLink to="/products" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center justify-center">
+              Ver los {{ lowStockProducts.length - 5 }} restantes
+              <i class="pi pi-arrow-right text-xs ml-1"></i>
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -226,7 +329,6 @@
             <h5 class="text-lg font-bold text-gray-800 mb-2">Gestionar Órdenes</h5>
             <span class="mt-auto px-4 py-2 border border-red-500 text-red-500 font-medium rounded-md group-hover:bg-red-500 group-hover:text-white transition-colors w-full">Ir a Órdenes</span>
           </RouterLink>
-          <!-- (Puedes agregar de vuelta los otros accesos rápidos de tareas si lo deseas, los acorté para simplificar) -->
         </div>
       </div>
     </div>

@@ -4,6 +4,9 @@
   import { useAuthStore } from '../stores/auth'
   import NotificationBell from './NotificationBell.vue'
 
+  // NUEVO: Importamos tu componente Skeleton
+  import SkeletonLoader from './SkeletonLoader.vue'
+
   const authStore = useAuthStore()
   const router = useRouter()
   const route = useRoute()
@@ -12,7 +15,7 @@
   const mobileMenuOpen = ref(false)
   const workDropdownOpen = ref(false)
   const adminDropdownOpen = ref(false)
-  const profileDropdownOpen = ref(false) // <- ¡Aquí está la variable nueva!
+  const profileDropdownOpen = ref(false)
 
   // Referencias para los elementos del navbar
   const navbarRef = ref(null)
@@ -39,7 +42,6 @@
     profileDropdownOpen.value = false
   }
 
-  // Nueva función para el menú del usuario
   const toggleProfileDropdown = () => {
     profileDropdownOpen.value = !profileDropdownOpen.value
     workDropdownOpen.value = false
@@ -91,17 +93,29 @@
   <nav class="bg-blue-600 shadow-sm w-full z-50" ref="navbarRef">
     <div class="container mx-auto px-4">
       <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
         <RouterLink class="flex items-center text-white w-[200px] text-lg font-bold hover:text-blue-100 transition-colors" to="/">
           <i class="pi pi-box mr-2 !text-xl"></i>
           Sistema Tolko
         </RouterLink>
 
+        <!-- Botón Móvil -->
         <button class="lg:hidden text-white hover:text-blue-200 focus:outline-none" type="button" @click="toggleMobileMenu">
           <i class="pi pi-bars !text-2xl"></i>
         </button>
 
         <div class="hidden lg:flex lg:items-center lg:w-full lg:justify-between ml-8">
-          <ul v-if="authStore.isAuthenticated" class="flex space-x-1 items-center">
+          <!-- ========================================== -->
+          <!-- ESTADO DE CARGA: ENLACES IZQUIERDOS        -->
+          <!-- ========================================== -->
+          <ul v-if="authStore.isLoading" class="flex space-x-4 items-center">
+            <li><SkeletonLoader width="60px" height="24px" radius="4px" /></li>
+            <li><SkeletonLoader width="100px" height="24px" radius="4px" /></li>
+            <li><SkeletonLoader width="140px" height="24px" radius="4px" /></li>
+          </ul>
+
+          <!-- ENLACES IZQUIERDOS REALES -->
+          <ul v-else-if="authStore.isAuthenticated" class="flex space-x-1 items-center">
             <li>
               <RouterLink class="px-3 py-2 rounded-md text-white/80 hover:text-white font-medium hover:bg-blue-500 transition-colors" active-class="bg-blue-700 text-white font-bold" to="/" @click="closeAllDropdowns">Inicio</RouterLink>
             </li>
@@ -138,7 +152,16 @@
             </li>
           </ul>
 
-          <ul v-if="authStore.isAuthenticated" class="flex items-center space-x-2">
+          <!-- ========================================== -->
+          <!-- ESTADO DE CARGA: CAMPANA Y PERFIL (DERECHA)-->
+          <!-- ========================================== -->
+          <ul v-if="authStore.isLoading" class="flex items-center space-x-4">
+            <li><SkeletonLoader width="36px" height="36px" radius="8px" /></li>
+            <li><SkeletonLoader width="140px" height="36px" radius="6px" /></li>
+          </ul>
+
+          <!-- CAMPANA Y PERFIL REALES -->
+          <ul v-else-if="authStore.isAuthenticated" class="flex items-center space-x-2">
             <NotificationBell />
 
             <li class="relative">
@@ -165,6 +188,7 @@
       </div>
     </div>
 
+    <!-- Menú Móvil (Se mantiene intacto) -->
     <div v-show="mobileMenuOpen" class="lg:hidden bg-blue-700 px-2 pt-2 pb-3 space-y-1 shadow-inner">
       <RouterLink class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800 font-bold" to="/" @click="toggleMobileMenu">Inicio</RouterLink>
 

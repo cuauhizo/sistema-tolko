@@ -4,6 +4,7 @@
   import * as yup from 'yup'
   import { useSuppliersStore } from '../stores/suppliers'
   import { storeToRefs } from 'pinia'
+  import Select from 'primevue/select'
 
   const props = defineProps({
     productToEdit: { type: Object, default: null },
@@ -132,26 +133,54 @@
 
           <!-- Fila 2: Categoría y Proveedor -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
+            <!-- NUEVO: Selector de Categorías -->
             <div class="md:col-span-6">
-              <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-tags"></i></span>
-                <Field as="select" id="category" name="category_id" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
-                  <option :value="null">Sin categoría</option>
-                  <option v-for="category in props.categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-                </Field>
-              </div>
+              <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+              <Field name="category_id" v-slot="{ field }">
+                <Select
+                  :modelValue="field.value"
+                  @update:modelValue="field.onChange($event)"
+                  :options="props.categories"
+                  optionLabel="name"
+                  optionValue="id"
+                  :filterFields="['name']"
+                  filter
+                  filterPlaceholder="Buscar categoría..."
+                  placeholder="Sin categoría"
+                  showClear
+                  class="w-full border shadow-sm rounded-md"
+                  :class="errors.category_id ? 'border-red-500' : 'border-gray-300'" />
+              </Field>
+              <ErrorMessage name="category_id" class="text-red-500 text-xs mt-1 block" />
             </div>
 
+            <!-- NUEVO: Selector de Proveedores -->
             <div class="md:col-span-6">
-              <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">Proveedor (Opcional)</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-truck"></i></span>
-                <Field as="select" id="supplier" name="supplier_id" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
-                  <option :value="null">Ninguno / Producción Interna</option>
-                  <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">{{ supplier.name }}</option>
-                </Field>
-              </div>
+              <label for="supplier_id" class="block text-sm font-medium text-gray-700 mb-1">Proveedor (Opcional)</label>
+              <Field name="supplier_id" v-slot="{ field }">
+                <Select
+                  :modelValue="field.value"
+                  @update:modelValue="field.onChange($event)"
+                  :options="suppliers"
+                  optionLabel="name"
+                  optionValue="id"
+                  :filterFields="['name', 'company']"
+                  filter
+                  filterPlaceholder="Buscar proveedor o empresa..."
+                  placeholder="Ninguno / Producción Interna"
+                  showClear
+                  class="w-full border shadow-sm rounded-md"
+                  :class="errors.supplier_id ? 'border-red-500' : 'border-gray-300'">
+                  <template #option="slotProps">
+                    <div class="flex items-center">
+                      <i class="pi pi-truck mr-2 text-gray-400 text-sm"></i>
+                      <span>{{ slotProps.option.name }}</span>
+                      <span v-if="slotProps.option.company" class="ml-2 text-xs text-gray-500 italic">({{ slotProps.option.company }})</span>
+                    </div>
+                  </template>
+                </Select>
+              </Field>
+              <ErrorMessage name="supplier_id" class="text-red-500 text-xs mt-1 block" />
             </div>
           </div>
 
@@ -167,7 +196,7 @@
               placeholder="Detalles adicionales del producto..." />
           </div>
 
-          <!-- Fila 3: Stock y Límites (Permite decimales) -->
+          <!-- Fila 3: Stock y Límites -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
             <div class="md:col-span-4">
               <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">
