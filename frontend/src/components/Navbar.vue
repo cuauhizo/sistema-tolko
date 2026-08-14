@@ -197,10 +197,18 @@
       <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/my-work-orders" @click="toggleMobileMenu">Mis Órdenes</RouterLink>
 
       <template v-if="authStore.isAdmin">
-        <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Gestión</div>
+        <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Gestión (Admin)</div>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/suppliers" @click="toggleMobileMenu">Proveedores</RouterLink>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/clients" @click="toggleMobileMenu">Clientes</RouterLink>
         <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/categories" @click="toggleMobileMenu">Categorías</RouterLink>
         <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/products" @click="toggleMobileMenu">Productos</RouterLink>
         <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/users" @click="toggleMobileMenu">Usuarios</RouterLink>
+        <hr class="border-gray-200 my-1" />
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/tasks" @click="toggleMobileMenu">Asignar Tareas</RouterLink>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/work-orders" @click="toggleMobileMenu">Órdenes de Trabajo</RouterLink>
+        <hr class="border-gray-200 my-1" />
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/adjustments" @click="toggleMobileMenu">Ajustes de Inventario</RouterLink>
+        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/movements" @click="toggleMobileMenu">Historial de Mov.</RouterLink>
       </template>
 
       <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2 border-t border-blue-500 pt-3">Mi Cuenta</div>
