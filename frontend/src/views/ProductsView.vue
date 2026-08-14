@@ -114,6 +114,8 @@
         :paginator="true"
         :rows="10"
         :rowsPerPageOptions="[5, 10, 20, 50]"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         :globalFilterFields="['name', 'sku', 'description', 'category_name']"
         v-model:filters="filters"
         size="small"

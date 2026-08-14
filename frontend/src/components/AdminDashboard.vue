@@ -112,9 +112,10 @@
     <div v-if="dashboardStore.isLoading">
       <!-- Esqueletos para las 5 tarjetas de KPIs (Total Productos, Stock, etc.) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-        <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex justify-between items-start">
+        <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex justify-between items-start gap-6">
           <div class="w-full">
-            <SkeletonLoader width="60%" height="1rem" class="mb-3" />
+            <SkeletonLoader width="80%" height="1rem" class="mb-3" />
+            <div></div>
             <SkeletonLoader width="40%" height="2.5rem" />
           </div>
           <SkeletonLoader width="40px" height="40px" radius="8px" />

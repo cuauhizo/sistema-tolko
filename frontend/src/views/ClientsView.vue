@@ -98,6 +98,8 @@
         :paginator="true"
         :rows="10"
         :rowsPerPageOptions="[5, 10, 20, 50]"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         :globalFilterFields="['name', 'company', 'email', 'phone']"
         v-model:filters="filters"
         size="small"

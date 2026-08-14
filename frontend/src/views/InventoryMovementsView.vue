@@ -67,6 +67,8 @@
         :rows="10"
         v-model:filters="filters"
         :rowsPerPageOptions="[5, 10, 20, 50]"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         :globalFilterFields="['product_name', 'reason', 'work_order_title', 'user_name', 'movement_type']"
         :loading="inventoryStore.isLoading"
         size="small"

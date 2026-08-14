@@ -22,7 +22,9 @@
 
   const currentId = ref(null)
   const itemToDelete = ref(null)
-  const formData = ref({ name: '', giro: '', contact_email: '', phone: '', address: '' })
+
+  // Agregamos contact_phone al estado
+  const formData = ref({ name: '', giro: '', contact_name: '', contact_phone: '', contact_email: '', phone: '', email: '', address: '' })
 
   // Filtros para la DataTable
   const filters = ref({
@@ -37,7 +39,7 @@
   const openCreateModal = () => {
     isEditing.value = false
     currentId.value = null
-    formData.value = { name: '', giro: '', contact_email: '', phone: '', address: '' }
+    formData.value = { name: '', giro: '', contact_name: '', contact_phone: '', contact_email: '', phone: '', email: '', address: '' }
     showFormModal.value = true
   }
 
@@ -93,12 +95,15 @@
 
     <!-- Tabla PrimeVue -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- NUEVO: Agregamos paginatorTemplate y currentPageReportTemplate -->
       <DataTable
         :value="suppliersStore.suppliers"
         :paginator="true"
         :rows="10"
         :rowsPerPageOptions="[5, 10, 20, 50]"
-        :globalFilterFields="['name', 'giro', 'contact_email']"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        :globalFilterFields="['name', 'giro', 'contact_name', 'contact_email']"
         v-model:filters="filters"
         size="small"
         stripedRows
@@ -131,15 +136,33 @@
           </template>
         </Column>
 
-        <Column field="contact_email" header="Contacto" :sortable="true" style="min-width: 14rem">
+        <Column field="email" header="Contacto" :sortable="true" style="min-width: 16rem">
           <template #body="{ data }">
-            <div class="text-sm text-gray-900 flex items-center" v-if="data.contact_email">
+            <div class="text-gray-600 flex items-center mt-2" v-if="data.phone" title="Teléfono de la Empresa">
+              <i class="pi pi-phone mr-1"></i>
+              {{ data.phone }}
+            </div>
+            <div class="text-gray-600 flex items-center mt-2" v-if="data.email" title="Correo de la Empresa">
+              <i class="pi pi-envelope mr-1"></i>
+              {{ data.email }}
+            </div>
+          </template>
+        </Column>
+
+        <Column field="contact_name" header="Vendedor / Contacto Directo" :sortable="true" style="min-width: 16rem">
+          <template #body="{ data }">
+            <div class="font-semibold text-gray-800 mb-1 flex items-center" v-if="data.contact_name">
+              <i class="pi pi-user mr-2 text-blue-500"></i>
+              {{ data.contact_name }}
+            </div>
+            <!-- Mostrar Celular / WhatsApp del vendedor -->
+            <div class="text-sm text-gray-600 flex items-center mb-1" v-if="data.contact_phone">
+              <i class="pi pi-whatsapp mr-2 text-green-500"></i>
+              {{ data.contact_phone }}
+            </div>
+            <div class="text-sm text-gray-600 flex items-center" v-if="data.contact_email">
               <i class="pi pi-envelope mr-2 text-gray-400"></i>
               {{ data.contact_email }}
-            </div>
-            <div class="text-sm text-gray-600 flex items-center mt-1" v-if="data.phone">
-              <i class="pi pi-phone mr-2 text-gray-400"></i>
-              {{ data.phone }}
             </div>
           </template>
         </Column>
@@ -155,7 +178,7 @@
       </DataTable>
     </div>
 
-    <!-- MODAL FORMULARIO (Con Íconos) -->
+    <!-- MODAL FORMULARIO -->
     <div v-if="showFormModal" class="fixed inset-0 z-[60] flex items-center justify-center overflow-x-hidden overflow-y-auto px-4">
       <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showFormModal = false"></div>
       <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl z-50 transform transition-all flex flex-col max-h-[90vh]">
@@ -168,7 +191,7 @@
           <div class="px-6 py-5 overflow-y-auto flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
-                Nombre Comercial
+                Nombre de la Empresa / Comercial
                 <span class="text-red-500">*</span>
               </label>
               <div class="relative">
@@ -186,15 +209,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-envelope"></i></span>
-                <input type="email" v-model="formData.contact_email" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono de la Empresa</label>
               <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-phone"></i></span>
                 <input
@@ -206,14 +221,57 @@
               </div>
             </div>
 
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico Empresa</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-envelope"></i></span>
+                <input type="email" v-model="formData.email" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              </div>
+            </div>
+
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Dirección Física</label>
               <div class="relative">
                 <span class="absolute top-3 left-0 pl-3 flex items-start text-gray-400"><i class="pi pi-map-marker"></i></span>
                 <textarea v-model="formData.address" rows="2" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
               </div>
             </div>
+
+            <!-- SECCIÓN CONTACTO DIRECTO -->
+            <div class="md:col-span-2 border-t border-gray-100 pt-4 mt-2">
+              <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Datos del Vendedor / Contacto</h4>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Vendedor</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-user"></i></span>
+                <input type="text" v-model="formData.contact_name" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ej. Juan Pérez" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp / Celular Directo</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-whatsapp"></i></span>
+                <input
+                  type="tel"
+                  v-model="formData.contact_phone"
+                  @input="formData.contact_phone = $event.target.value.replace(/[^0-9]/g, '')"
+                  class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  maxlength="15" />
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico Directo</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-envelope"></i></span>
+                <input type="email" v-model="formData.contact_email" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              </div>
+            </div>
           </div>
+
           <div class="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0 space-x-3 rounded-b-xl">
             <button
               type="button"
@@ -235,6 +293,7 @@
     </div>
 
     <!-- MODAL CONFIRMAR ELIMINACIÓN -->
+    <!-- (El código del modal de eliminación permanece intacto) -->
     <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto">
       <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showDeleteModal = false"></div>
       <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-50 transform transition-all">

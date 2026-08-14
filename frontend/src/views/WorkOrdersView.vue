@@ -114,6 +114,8 @@
         :paginator="true"
         :rows="10"
         :rowsPerPageOptions="[5, 10, 20, 50]"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         v-model:filters="filters"
         :globalFilterFields="['folio', 'title', 'client_name', 'assigned_to', 'status']"
         :loading="workOrdersStore.isLoading"
