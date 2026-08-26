@@ -72,7 +72,8 @@ export const handleCareersForm = async (req, res) => {
   try {
     await transporter.sendMail({
       from: `"Programa de Becarios Tolko" <${process.env.EMAIL_USER}>`,
-      to: 'frodriguez@tolkogroup.com', // O el correo de Recursos Humanos
+      to: 'clazcano@tolkogroup.com', // O el correo de Recursos Humanos
+      cc: 'frodriguez@tolkogroup.com, bsalgado@tolkogroup.com, sserrano@tolkogroup.com', // O el correo de Recursos Humanos
       subject: `Nueva postulación de: ${nombre}`,
       html: contentHTML,
       replyTo: email,
