@@ -5,28 +5,36 @@ import { io } from '../index.js'
 
 // ADMIN: Crear una nueva orden de trabajo
 export const createWorkOrder = async (req, res) => {
-  const { title, description, client_id, design_link, width, height, assigned_to_ids, start_date, end_date, products } = req.body
+  // 1. Quitamos start_date y agregamos task_types
+  const { title, description, client_id, design_link, width, height, assigned_to_ids, end_date, products, task_types } = req.body
   const created_by_id = req.userId
 
   if (!title || !assigned_to_ids || assigned_to_ids.length === 0) {
     return res.status(400).json({ message: 'El título y al menos un usuario asignado son requeridos.' })
   }
 
+  // 2. Convertimos el arreglo de checkboxes a JSON (si viene vacío, guardamos "[]")
+  const taskTypesJson = task_types ? JSON.stringify(task_types) : JSON.stringify([])
+
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
 
-    const [result] = await connection.query('INSERT INTO work_orders (title, description, client_id, design_link, width, height, created_by_id, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-      title,
-      description,
-      client_id || null,
-      design_link || null,
-      width ? parseFloat(width) : null,
-      height ? parseFloat(height) : null,
-      created_by_id,
-      start_date,
-      end_date,
-    ])
+    // 3. Modificamos el INSERT (fuera start_date, entra task_types)
+    const [result] = await connection.query(
+      'INSERT INTO work_orders (title, description, client_id, design_link, width, height, created_by_id, end_date, task_types) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+      [
+        title,
+        description,
+        client_id || null,
+        design_link || null,
+        width ? parseFloat(width) : null,
+        height ? parseFloat(height) : null,
+        created_by_id,
+        end_date,
+        taskTypesJson,
+      ]
+    )
     const workOrderId = result.insertId
     const workOrderFolio = `OT-${String(workOrderId).padStart(4, '0')}`
 
@@ -116,7 +124,11 @@ export const getWorkOrders = async (req, res) => {
 // ADMIN: Actualizar una orden de trabajo
 export const updateWorkOrder = async (req, res) => {
   const { id } = req.params
-  const { title, description, client_id, design_link, width, height, assigned_to_ids, start_date, end_date, status, products } = req.body
+  // 1. Quitamos start_date y agregamos task_types
+  const { title, description, client_id, design_link, width, height, assigned_to_ids, end_date, status, products, task_types } = req.body
+
+  // 2. Convertimos a JSON
+  const taskTypesJson = task_types ? JSON.stringify(task_types) : JSON.stringify([])
 
   const connection = await pool.getConnection()
   try {
@@ -129,18 +141,22 @@ export const updateWorkOrder = async (req, res) => {
     }
     const oldStatus = currentOrder[0].status
 
-    await connection.query('UPDATE work_orders SET title = ?, description = ?, client_id = ?, design_link = ?, width = ?, height = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?', [
-      title,
-      description,
-      client_id || null,
-      design_link || null,
-      width ? parseFloat(width) : null,
-      height ? parseFloat(height) : null,
-      start_date,
-      end_date,
-      status,
-      id,
-    ])
+    // 3. Modificamos el UPDATE (fuera start_date, entra task_types)
+    await connection.query(
+      'UPDATE work_orders SET title = ?, description = ?, client_id = ?, design_link = ?, width = ?, height = ?, end_date = ?, status = ?, task_types = ? WHERE id = ?', 
+      [
+        title,
+        description,
+        client_id || null,
+        design_link || null,
+        width ? parseFloat(width) : null,
+        height ? parseFloat(height) : null,
+        end_date,
+        status,
+        taskTypesJson, // Se inyecta aquí
+        id,
+      ]
+    )
 
     await connection.query('DELETE FROM work_order_assignees WHERE work_order_id = ?', [id])
     if (assigned_to_ids && assigned_to_ids.length > 0) {
@@ -163,7 +179,7 @@ export const updateWorkOrder = async (req, res) => {
             id,
             req.userId,
             -parseFloat(product.quantity_used),
-            `Salida por Orden de Trabajo #${formatWorkOrderId(id)}`,
+            `Salida por Orden de Trabajo #${formatWorkOrderId(id)}`, // Asumo que tienes formatWorkOrderId definido en tu archivo
           ])
         }
       }
@@ -189,7 +205,7 @@ export const updateWorkOrder = async (req, res) => {
               from: `"Sistema Tolko" <${process.env.EMAIL_USER}>`,
               to: user.email,
               subject: `Orden de Trabajo Actualizada (${workOrderFolio}) - Sistema Tolko`,
-              html: `<h2>Hola ${user.username},</h2><p>Se ha actualizado una orden que tienes asignada: "${title}".</p><p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p><p>Por favor, revisa los detalles en la plataforma.</p>`,
+              html: `<h2>Hola ${user.username},</h2><p>Se ha actualizado una orden que tienes asignada: "${title}".</p><p><strong>Nuevo estado:</strong> ${formatStatus(status)}</p><p>Por favor, revisa los detalles en la plataforma.</p>`, // Asumo que tienes formatStatus definido
             })
           } catch (emailError) {
             console.error(`AVISO: Falló el envío del correo de actualización para el usuario ${user.id}:`, emailError)
@@ -207,7 +223,7 @@ export const updateWorkOrder = async (req, res) => {
   } finally {
     connection.release()
   }
-}
+};
 
 // OBTENER una orden de trabajo por su ID (SOLO ACTIVAS)
 export const getWorkOrderById = async (req, res) => {
@@ -218,7 +234,7 @@ export const getWorkOrderById = async (req, res) => {
           wo.id, wo.title, wo.description, wo.status, 
           wo.client_id, wo.design_link, wo.width, wo.height,
           COALESCE(c.name, wo.client_name) as client_name, 
-          wo.start_date, wo.end_date,
+          wo.task_types, wo.end_date,
           creator.username as created_by
       FROM work_orders wo
       LEFT JOIN clients c ON wo.client_id = c.id

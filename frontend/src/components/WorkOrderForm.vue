@@ -8,7 +8,7 @@
 
   // Importaciones de PrimeVue
   import MultiSelect from 'primevue/multiselect'
-  import Select from 'primevue/select' // NUEVO: Importamos Select de PrimeVue
+  import Select from 'primevue/select'
 
   // --- Props y Emits ---
   const props = defineProps({
@@ -48,7 +48,8 @@
     height: yup.number().min(0, 'No puede ser negativo').typeError('Debe ser número').nullable(),
     assigned_to_ids: yup.array().min(1, 'Debe asignar al menos un usuario').required('Debe asignar un usuario.'),
     description: yup.string().required('La descripción es obligatoria').trim(),
-    start_date: yup.date().nullable().required('La fecha de inicio es obligatoria').typeError('Debe ser una fecha válida'),
+    // NUEVO: Array para las casillas de verificación
+    task_types: yup.array().of(yup.string()).nullable(),
     end_date: yup.date().nullable().required('La fecha de finalización es obligatoria').typeError('Debe ser una fecha válida'),
     status: yup.string().when('isEditMode', {
       is: true,
@@ -67,7 +68,7 @@
       height: null,
       description: '',
       assigned_to_ids: [],
-      start_date: null,
+      task_types: [], // Inicializamos los checkboxes vacíos
       end_date: null,
       status: 'pendiente',
       products: [],
@@ -114,12 +115,15 @@
     newOrder => {
       if (newOrder) {
         const formattedOrder = { ...newOrder }
-        if (formattedOrder.start_date) {
-          formattedOrder.start_date = new Date(formattedOrder.start_date).toISOString().split('T')[0]
-        }
         if (formattedOrder.end_date) {
           formattedOrder.end_date = new Date(formattedOrder.end_date).toISOString().split('T')[0]
         }
+        
+        // Aseguramos que task_types sea un arreglo
+        if (!formattedOrder.task_types) {
+          formattedOrder.task_types = []
+        }
+        
         order.value = formattedOrder
         modalTitle.value = 'Editar Orden de Trabajo'
         isEditMode.value = true
@@ -191,7 +195,6 @@
 
             <div class="md:col-span-6">
               <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-              <!-- NUEVO: Selector de Cliente con Buscador Integrado (Corregido) -->
               <Field name="client_id" v-slot="{ field }">
                 <Select
                   :modelValue="field.value"
@@ -219,39 +222,11 @@
             </div>
           </div>
 
-          <!-- FILA NUEVA: Link de Diseño y Medidas de Impresión -->
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5 p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
-            <div class="md:col-span-6">
-              <label for="design_link" class="block text-sm font-medium text-gray-700 mb-1">Enlace de Diseño (Drive, WeTransfer, etc.)</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-cloud-download"></i></span>
-                <Field type="url" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="design_link" name="design_link" placeholder="https://..." />
-              </div>
-              <ErrorMessage name="design_link" class="text-red-500 text-xs mt-1 block" />
-            </div>
 
-            <div class="md:col-span-3">
-              <label for="width" class="block text-sm font-medium text-gray-700 mb-1">Base / Ancho</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
-                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="width" name="width" placeholder="Ej. 1.20" />
-              </div>
-              <ErrorMessage name="width" class="text-red-500 text-xs mt-1 block" />
-            </div>
 
-            <div class="md:col-span-3">
-              <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Altura</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
-                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="height" name="height" placeholder="Ej. 2.00" />
-              </div>
-              <ErrorMessage name="height" class="text-red-500 text-xs mt-1 block" />
-            </div>
-          </div>
-
-          <!-- FILA 3: Asignación y Fechas -->
+          <!-- FILA 3: Asignación y Fechas (Ahora ocupa 6 y 6 columnas sin start_date) -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
-            <div class="md:col-span-4">
+            <div class="md:col-span-6">
               <label for="assigned_to_ids" class="block text-sm font-medium text-gray-700 mb-1">
                 Asignar a
                 <span class="text-red-500">*</span>
@@ -274,26 +249,9 @@
               <ErrorMessage name="assigned_to_ids" class="text-red-500 text-xs mt-1 block" />
             </div>
 
-            <div class="md:col-span-4">
-              <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de Inicio
-                <span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-calendar-plus"></i></span>
-                <Field
-                  type="date"
-                  class="block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  :class="errors.start_date ? 'border-red-500 bg-red-50' : 'border-gray-300'"
-                  id="start_date"
-                  name="start_date" />
-              </div>
-              <ErrorMessage name="start_date" class="text-red-500 text-xs mt-1 block" />
-            </div>
-
-            <div class="md:col-span-4">
+            <div class="md:col-span-6">
               <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de Finalización
+                Fecha de Finalización (Entrega)
                 <span class="text-red-500">*</span>
               </label>
               <div class="relative">
@@ -309,11 +267,37 @@
             </div>
           </div>
 
+          <!-- NUEVA SECCIÓN: Requerimientos (Checkboxes) -->
+          <div class="mb-5 bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-3">Requerimientos de la Orden</label>
+            <div class="flex flex-wrap gap-6">
+              <label class="inline-flex items-center cursor-pointer">
+                <Field type="checkbox" name="task_types" value="impresion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <span class="ml-2 text-sm text-gray-700 font-medium">Impresión</span>
+              </label>
+              
+              <label class="inline-flex items-center cursor-pointer">
+                <Field type="checkbox" name="task_types" value="construccion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <span class="ml-2 text-sm text-gray-700 font-medium">Construcción</span>
+              </label>
+              
+              <label class="inline-flex items-center cursor-pointer">
+                <Field type="checkbox" name="task_types" value="instalacion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <span class="ml-2 text-sm text-gray-700 font-medium">Instalación</span>
+              </label>
+
+              <label class="inline-flex items-center cursor-pointer">
+                <Field type="checkbox" name="task_types" value="entrega" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <span class="ml-2 text-sm text-gray-700 font-medium">Entrega</span>
+              </label>
+            </div>
+          </div>
+
           <!-- Descripción y Estado -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-8">
             <div :class="isEditMode ? 'md:col-span-8' : 'md:col-span-12'">
               <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-                Descripción de la Tarea
+                Descripción
                 <span class="text-red-500">*</span>
               </label>
               <Field
@@ -345,6 +329,36 @@
             </div>
           </div>
 
+          <!-- FILA 2: Link de Diseño y Medidas de Impresión -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5 p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
+            <div class="md:col-span-12">
+              <label for="design_link" class="block text-sm font-medium text-gray-700 mb-1">Enlace de Diseño (Trello)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="pi pi-cloud-download"></i></span>
+                <Field type="url" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="design_link" name="design_link" placeholder="https://..." />
+              </div>
+              <ErrorMessage name="design_link" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <!-- <div class="md:col-span-3">
+              <label for="width" class="block text-sm font-medium text-gray-700 mb-1">Base / Ancho</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
+                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="width" name="width" placeholder="Ej. 1.20" />
+              </div>
+              <ErrorMessage name="width" class="text-red-500 text-xs mt-1 block" />
+            </div>
+
+            <div class="md:col-span-3">
+              <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Altura</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 text-xs font-bold">m/cm</span>
+                <Field type="number" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="height" name="height" placeholder="Ej. 2.00" />
+              </div>
+              <ErrorMessage name="height" class="text-red-500 text-xs mt-1 block" />
+            </div> -->
+          </div>
+
           <hr class="border-gray-200 mb-6" />
 
           <!-- MATERIALES -->
@@ -357,7 +371,6 @@
             <div class="flex flex-col sm:flex-row gap-3 mb-4 items-end">
               <div class="flex-grow">
                 <label for="productSearch" class="block text-sm font-medium text-gray-700 mb-1">Buscar Producto</label>
-                <!-- NUEVO: Selector de Productos con Buscador Integrado (Corregido) -->
                 <Select
                   v-model="productSearch"
                   :options="productsStore.products"

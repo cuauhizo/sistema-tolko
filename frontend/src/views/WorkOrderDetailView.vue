@@ -76,13 +76,13 @@
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Estado de Carga Original -->
+    <!-- Estado de Carga -->
     <div v-if="isLoading && !currentOrder" class="flex justify-center items-center py-20">
       <i class="pi pi-spin pi-spinner text-blue-600 text-4xl"></i>
       <span class="ml-3 text-blue-600 font-medium text-lg">Cargando detalles de la orden...</span>
     </div>
 
-    <!-- Estado de Error Original -->
+    <!-- Estado de Error -->
     <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
       <div class="flex items-center">
         <i class="pi pi-exclamation-triangle text-red-500 mr-3 text-xl"></i>
@@ -118,26 +118,16 @@
             {{ formatStatus(currentOrder.status) }}
           </span>
 
-          <button
-            v-if="currentOrder.status === 'pendiente'"
-            @click="changeStatus('en_progreso')"
-            :disabled="isChangingStatus"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors w-full sm:w-auto">
+          <!-- <button v-if="currentOrder.status === 'pendiente'" @click="changeStatus('en_progreso')" :disabled="isChangingStatus" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors w-full sm:w-auto">
             Iniciar Trabajo
-          </button>
+          </button> -->
 
-          <button
-            v-if="currentOrder.status === 'en_progreso'"
-            @click="changeStatus('completada')"
-            :disabled="isChangingStatus"
-            class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors w-full sm:w-auto">
+          <button v-if="currentOrder.status === 'en_progreso'" @click="changeStatus('completada')" :disabled="isChangingStatus" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors w-full sm:w-auto">
             <i class="pi pi-check mr-1"></i>
             Completar Orden
           </button>
 
-          <button
-            class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 w-full sm:w-auto justify-center"
-            @click="handleExportPDF">
+          <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 w-full sm:w-auto justify-center" @click="handleExportPDF">
             <i class="pi pi-file-pdf mr-2"></i>
             Exportar
           </button>
@@ -147,7 +137,9 @@
       <!-- Tarjeta de Detalles Principal -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
         <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          
+          <!-- SECCIÓN REESTRUCTURADA: Asignación y Fecha Límite (2 columnas) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
               <p class="text-sm text-gray-500 mb-1 font-medium">Asignada a</p>
               <p class="font-bold text-gray-900 flex items-center">
@@ -157,15 +149,7 @@
             </div>
 
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-              <p class="text-sm text-gray-500 mb-1 font-medium">Fecha de Inicio</p>
-              <p class="font-bold text-gray-900 flex items-center">
-                <i class="pi pi-calendar-plus mr-2 text-emerald-500"></i>
-                {{ currentOrder.start_date ? new Date(currentOrder.start_date).toLocaleDateString() : 'N/A' }}
-              </p>
-            </div>
-
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-              <p class="text-sm text-gray-500 mb-1 font-medium">Fecha Límite</p>
+              <p class="text-sm text-gray-500 mb-1 font-medium">Fecha Límite (Entrega)</p>
               <p class="font-bold text-gray-900 flex items-center">
                 <i class="pi pi-calendar-times mr-2 text-red-500"></i>
                 {{ currentOrder.end_date ? new Date(currentOrder.end_date).toLocaleDateString() : 'N/A' }}
@@ -173,7 +157,26 @@
             </div>
           </div>
 
-          <!-- NUEVO: Detalles de Producción (Solo aparece si hay datos) -->
+          <!-- NUEVO: Mostrar Requerimientos (Checkboxes seleccionados) -->
+          <div v-if="currentOrder.task_types && currentOrder.task_types.length > 0" class="border-t border-gray-100 pt-6 mb-6">
+            <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+              <i class="pi pi-check-square mr-2 text-blue-500"></i>
+              Requerimientos de la Orden
+            </h5>
+            <div class="flex flex-wrap gap-2">
+              <!-- Renderizamos insignias bonitas por cada tarea seleccionada -->
+              <span 
+                v-for="(task, index) in currentOrder.task_types" 
+                :key="index" 
+                class="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm font-bold border border-blue-100 capitalize flex items-center"
+              >
+                <i class="pi pi-check-circle mr-2 text-blue-500"></i>
+                {{ task }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Detalles de Producción (Solo aparece si hay datos) -->
           <div v-if="currentOrder.design_link || currentOrder.width || currentOrder.height" class="border-t border-gray-100 pt-6 mb-6">
             <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
               <i class="pi pi-print mr-2 text-indigo-500"></i>
@@ -187,22 +190,16 @@
                 </div>
                 <a :href="currentOrder.design_link" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg shadow-sm transition-colors flex items-center text-sm font-medium">
                   <i class="pi pi-cloud-download mr-2"></i>
-                  Abrir Enlace
+                  Abrir
                 </a>
               </div>
 
               <div v-if="currentOrder.width || currentOrder.height" class="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex flex-col justify-center">
                 <p class="text-sm text-gray-500 font-medium mb-1">Medidas Reales</p>
                 <div class="flex items-center text-gray-900 font-bold text-lg">
-                  <span v-if="currentOrder.width">
-                    {{ currentOrder.width }}
-                    <span class="text-sm font-normal text-gray-500 mr-2">m</span>
-                  </span>
+                  <span v-if="currentOrder.width">{{ currentOrder.width }}<span class="text-sm font-normal text-gray-500 mr-2">m</span></span>
                   <i v-if="currentOrder.width && currentOrder.height" class="pi pi-times text-gray-400 text-sm mx-1"></i>
-                  <span v-if="currentOrder.height" class="ml-2">
-                    {{ currentOrder.height }}
-                    <span class="text-sm font-normal text-gray-500">m</span>
-                  </span>
+                  <span v-if="currentOrder.height" class="ml-2">{{ currentOrder.height }}<span class="text-sm font-normal text-gray-500">m</span></span>
                 </div>
               </div>
             </div>
@@ -220,7 +217,7 @@
         </div>
       </div>
 
-      <!-- Tarjeta de Materiales Ampliada -->
+      <!-- Tarjeta de Materiales Ampliada (Intacta) -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h5 class="text-lg font-bold text-gray-800 flex items-center">
@@ -241,7 +238,6 @@
             </div>
             <div class="w-full sm:w-32">
               <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
-              <!-- NUEVO: Agregamos step="0.01" y min="0.01" para permitir decimales -->
               <input type="number" step="0.01" v-model="quantityToAdd" min="0.01" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border" required />
             </div>
             <button type="submit" :disabled="isAddingMaterial" class="bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded-md transition-colors w-full sm:w-auto h-10 flex items-center justify-center">
