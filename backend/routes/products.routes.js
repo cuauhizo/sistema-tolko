@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import * as productController from '../controllers/products.controller.js'
 import { verifyToken, hasPermission, hasRole } from '../middlewares/authJwt.js'
+// import { verifyToken, hasPermission } from '../middlewares/authJwt.js'
 
 const router = Router()
 
@@ -19,5 +20,9 @@ const canManage = hasPermission('manage_inventory')
 router.post('/', canManage, productController.createProduct)
 router.put('/:id', canManage, productController.updateProduct)
 router.delete('/:id', canManage, productController.deleteProduct)
+
+// router.post('/', [verifyToken, hasPermission('manage_inventory')], productController.createProduct])
+// router.put('/:id', [verifyToken, hasPermission('manage_inventory')], productController.updateProduct])
+// router.delete('/:id', [verifyToken, hasPermission('manage_inventory')], productController.deleteProduct])
 
 export default router

@@ -8,8 +8,10 @@ const router = Router()
 // Protegemos que deba existir un token
 router.use(verifyToken)
 
+router.get('/', supplierController.getSuppliers)
+
 // 2. Aplicamos permisos granulares a cada ruta específica
-router.get('/', hasPermission('read_suppliers'), supplierController.getSuppliers)
+// router.get('/', hasPermission('read_suppliers'), supplierController.getSuppliers)
 router.get('/:id', hasPermission('read_suppliers'), supplierController.getSupplierById)
 router.post('/', hasPermission('create_suppliers'), supplierController.createSupplier)
 router.put('/:id', hasPermission('update_suppliers'), supplierController.updateSupplier)
