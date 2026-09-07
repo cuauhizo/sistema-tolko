@@ -162,7 +162,7 @@
 
                 <!-- Inventario -->
                 <RouterLink
-                  v-if="authStore.hasPermission('read_inventory')"
+                  v-if="authStore.hasPermission('read_categories')"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                   active-class="bg-blue-50 text-blue-700 font-bold"
                   to="/categories"
@@ -170,7 +170,7 @@
                   Categorías
                 </RouterLink>
                 <RouterLink
-                  v-if="authStore.hasPermission('read_inventory')"
+                  v-if="authStore.hasPermission('read_products')"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                   active-class="bg-blue-50 text-blue-700 font-bold"
                   to="/products"
@@ -207,12 +207,24 @@
                 </RouterLink>
 
                 <!-- Historial Inventario -->
-                <template v-if="authStore.hasPermission('read_inventory')">
+                <template v-if="authStore.hasPermission('manage_inventory') || authStore.hasPermission('read_inventory')">
                   <hr class="border-gray-200 my-1" />
-                  <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/adjustments" @click="closeAllDropdowns">
+                  <RouterLink
+                    v-if="authStore.hasPermission('manage_inventory')"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    active-class="bg-blue-50 text-blue-700 font-bold"
+                    to="/inventory/adjustments"
+                    @click="closeAllDropdowns">
                     Ajustes de Inventario
                   </RouterLink>
-                  <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/movements" @click="closeAllDropdowns">Historial de Mov.</RouterLink>
+                  <RouterLink
+                    v-if="authStore.hasPermission('read_inventory')"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    active-class="bg-blue-50 text-blue-700 font-bold"
+                    to="/inventory/movements"
+                    @click="closeAllDropdowns">
+                    Historial de Mov.
+                  </RouterLink>
                 </template>
               </div>
             </li>
