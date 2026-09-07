@@ -8,10 +8,13 @@
 
 <template>
   <div class="container mx-auto px-4 py-6" v-if="authStore.isAuthenticated">
-    <!-- Dashboards Específicos por Rol -->
-    <AdminDashboard v-if="authStore.isAdmin" />
+    <!-- Dashboard Director / Administrador (Tiene el permiso más alto) -->
+    <AdminDashboard v-if="authStore.hasPermission('view_admin_dash')" />
+
+    <!-- Dashboard Coordinador (Reutilizamos el de Admin, pero adentro le ocultaremos cosas) -->
+    <AdminDashboard v-else-if="authStore.hasPermission('view_coord_dash')" />
+
+    <!-- Dashboard Operativo (Por defecto para quien no tiene permisos gerenciales) -->
     <UserDashboard v-else />
   </div>
 </template>
-
-<style scoped></style>

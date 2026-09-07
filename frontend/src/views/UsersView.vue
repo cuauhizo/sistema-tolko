@@ -1,7 +1,9 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useUsersStore } from '../stores/users'
+  import { useAuthStore } from '../stores/auth'
   import UserForm from '../components/UserForm.vue'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importaciones de PrimeVue
   import DataTable from 'primevue/datatable'
@@ -14,6 +16,7 @@
 
   // --- Estado del Componente ---
   const usersStore = useUsersStore()
+  const authStore = useAuthStore()
 
   // Refs para controlar los datos y los modales
   const userToEdit = ref(null)
@@ -78,13 +81,25 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Administración de Usuarios</h1>
-      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openUserModal(null)">
+      <button
+        v-if="authStore.hasPermission('manage_users')"
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        @click="openUserModal(null)">
         <i class="pi pi-user-plus mr-2"></i>
         Nuevo Usuario
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="usersStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
       <DataTable
         :value="usersStore.users"
         :paginator="true"
@@ -98,7 +113,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="usersStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex justify-end p-2">
@@ -108,14 +122,9 @@
             </IconField>
           </div>
         </template>
+
         <template #empty>
           <div class="text-center py-4 text-gray-500">No se encontraron usuarios.</div>
-        </template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando usuarios...
-          </div>
         </template>
 
         <Column field="username" header="Nombre de Usuario" :sortable="true" style="min-width: 14rem">
@@ -140,10 +149,10 @@
             <span
               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider"
               :class="{
-                'bg-emerald-100 text-emerald-800 border border-emerald-200': data.role === 'admin',
-                'bg-slate-100 text-slate-800 border border-slate-200': data.role === 'user' || data.role !== 'admin',
+                'bg-emerald-100 text-emerald-800 border border-emerald-200': data.role === 'admin' || data.role === 'superadmin',
+                'bg-slate-100 text-slate-800 border border-slate-200': data.role !== 'admin' && data.role !== 'superadmin',
               }">
-              <i class="pi mr-1 text-[10px]" :class="data.role === 'admin' ? 'pi-shield' : 'pi-user'"></i>
+              <i class="pi mr-1 text-[10px]" :class="data.role === 'admin' || data.role === 'superadmin' ? 'pi-shield' : 'pi-user'"></i>
               {{ data.role }}
             </span>
           </template>
@@ -152,8 +161,9 @@
         <Column header="Acciones" style="width: 10rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openUserModal(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+              <!-- Solo se muestran si tiene el permiso manage_users -->
+              <Button v-if="authStore.hasPermission('manage_users')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openUserModal(data)" />
+              <Button v-if="authStore.hasPermission('manage_users')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
             </div>
           </template>
         </Column>

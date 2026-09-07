@@ -1,16 +1,18 @@
 import { Router } from 'express'
 import * as supplierController from '../controllers/suppliers.controller.js'
-import { verifyToken } from '../middlewares/authJwt.js'
+// 1. Cambiamos hasRole por hasPermission
+import { verifyToken, hasPermission } from '../middlewares/authJwt.js'
 
 const router = Router()
 
-// Protegemos todas las rutas con verifyToken
+// Protegemos que deba existir un token
 router.use(verifyToken)
 
-router.get('/', supplierController.getSuppliers)
-router.get('/:id', supplierController.getSupplierById)
-router.post('/', supplierController.createSupplier)
-router.put('/:id', supplierController.updateSupplier)
-router.delete('/:id', supplierController.deleteSupplier)
+// 2. Aplicamos permisos granulares a cada ruta específica
+router.get('/', hasPermission('read_suppliers'), supplierController.getSuppliers)
+router.get('/:id', hasPermission('read_suppliers'), supplierController.getSupplierById)
+router.post('/', hasPermission('create_suppliers'), supplierController.createSupplier)
+router.put('/:id', hasPermission('update_suppliers'), supplierController.updateSupplier)
+router.delete('/:id', hasPermission('delete_suppliers'), supplierController.deleteSupplier)
 
 export default router

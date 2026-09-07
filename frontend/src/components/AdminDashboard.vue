@@ -20,8 +20,8 @@
     if (authStore.isAuthenticated) {
       dashboardStore.fetchStats()
       pollInterval.value = setInterval(() => {
-        dashboardStore.fetchStats()
-      }, 60000)
+        dashboardStore.fetchStats(true)
+      }, 300000) // Cambiado a 5 minutos (300,000 ms)
     }
   })
 
@@ -222,7 +222,7 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl shadow-sm text-white p-6 relative overflow-hidden sm:col-span-2 xl:col-span-1">
+        <div v-if="authStore.hasPermission('view_admin_dash')" class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl shadow-sm text-white p-6 relative overflow-hidden sm:col-span-2 xl:col-span-1">
           <div class="flex justify-between items-start">
             <div>
               <p class="text-gray-300 text-sm font-medium mb-1">Valor Inventario</p>

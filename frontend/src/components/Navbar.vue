@@ -1,10 +1,8 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
   import { RouterLink, useRouter, useRoute } from 'vue-router'
   import { useAuthStore } from '../stores/auth'
   import NotificationBell from './NotificationBell.vue'
-
-  // NUEVO: Importamos tu componente Skeleton
   import SkeletonLoader from './SkeletonLoader.vue'
 
   const authStore = useAuthStore()
@@ -16,9 +14,22 @@
   const workDropdownOpen = ref(false)
   const adminDropdownOpen = ref(false)
   const profileDropdownOpen = ref(false)
-
-  // Referencias para los elementos del navbar
   const navbarRef = ref(null)
+
+  // NUEVO: Verificamos si el usuario tiene al menos un permiso para mostrar el menú "Gestión"
+  const hasManagementAccess = computed(() => {
+    return (
+      authStore.hasPermission('read_suppliers') ||
+      authStore.hasPermission('read_clients') ||
+      authStore.hasPermission('read_categories') ||
+      authStore.hasPermission('read_products') ||
+      authStore.hasPermission('manage_users') ||
+      authStore.hasPermission('read_tasks') ||
+      authStore.hasPermission('read_workorders') ||
+      authStore.hasPermission('read_inventory') ||
+      authStore.hasPermission('manage_inventory')
+    )
+  })
 
   const handleLogout = () => {
     authStore.logout()
@@ -54,7 +65,6 @@
     profileDropdownOpen.value = false
   }
 
-  // Función para cerrar dropdowns al hacer click fuera
   const handleClickOutside = event => {
     if (navbarRef.value && !navbarRef.value.contains(event.target)) {
       closeAllDropdowns()
@@ -62,7 +72,6 @@
     }
   }
 
-  // Función para cerrar dropdowns con la tecla Escape
   const handleEscapeKey = event => {
     if (event.key === 'Escape') {
       closeAllDropdowns()
@@ -105,9 +114,6 @@
         </button>
 
         <div class="hidden lg:flex lg:items-center lg:w-full lg:justify-between ml-8">
-          <!-- ========================================== -->
-          <!-- ESTADO DE CARGA: ENLACES IZQUIERDOS        -->
-          <!-- ========================================== -->
           <ul v-if="authStore.isLoading" class="flex space-x-4 items-center">
             <li><SkeletonLoader width="60px" height="24px" radius="4px" /></li>
             <li><SkeletonLoader width="100px" height="24px" radius="4px" /></li>
@@ -131,36 +137,92 @@
               </div>
             </li>
 
-            <li v-if="authStore.isAdmin" class="relative">
+            <!-- GESTIÓN: Visible solo si tiene al menos un permiso de los siguientes -->
+            <li v-if="authStore.hasPermission('read_suppliers') || authStore.hasPermission('read_clients') || authStore.hasPermission('read_inventory') || authStore.hasPermission('manage_users')" class="relative">
               <button @click.prevent="toggleAdminDropdown" class="px-3 py-2 rounded-md text-white/80 hover:text-white font-medium hover:bg-blue-500 transition-colors flex items-center">
-                Gestión (Admin)
+                Gestión
                 <i class="pi pi-angle-down ml-1 text-sm"></i>
               </button>
+
               <div v-show="adminDropdownOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/suppliers" @click="closeAllDropdowns">Proveedores</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/clients" @click="closeAllDropdowns">Clientes</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/categories" @click="closeAllDropdowns">Categorías</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/products" @click="closeAllDropdowns">Productos</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/users" @click="closeAllDropdowns">Usuarios</RouterLink>
+                <!-- Proveedores -->
+                <RouterLink
+                  v-if="authStore.hasPermission('read_suppliers')"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  active-class="bg-blue-50 text-blue-700 font-bold"
+                  to="/suppliers"
+                  @click="closeAllDropdowns">
+                  Proveedores
+                </RouterLink>
+
+                <!-- Clientes -->
+                <RouterLink v-if="authStore.hasPermission('read_clients')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/clients" @click="closeAllDropdowns">
+                  Clientes
+                </RouterLink>
+
+                <!-- Inventario -->
+                <RouterLink
+                  v-if="authStore.hasPermission('read_inventory')"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  active-class="bg-blue-50 text-blue-700 font-bold"
+                  to="/categories"
+                  @click="closeAllDropdowns">
+                  Categorías
+                </RouterLink>
+                <RouterLink
+                  v-if="authStore.hasPermission('read_inventory')"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  active-class="bg-blue-50 text-blue-700 font-bold"
+                  to="/products"
+                  @click="closeAllDropdowns">
+                  Productos
+                </RouterLink>
+
+                <!-- Usuarios y Permisos -->
+                <RouterLink v-if="authStore.hasPermission('manage_users')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/users" @click="closeAllDropdowns">
+                  Usuarios
+                </RouterLink>
+                <RouterLink
+                  v-if="authStore.hasPermission('manage_users')"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  active-class="bg-blue-50 text-blue-700 font-bold"
+                  to="/permissions"
+                  @click="closeAllDropdowns">
+                  Matriz de Permisos
+                </RouterLink>
+
                 <hr class="border-gray-200 my-1" />
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/tasks" @click="closeAllDropdowns">Asignar Tareas</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/work-orders" @click="closeAllDropdowns">Órdenes de Trabajo</RouterLink>
-                <hr class="border-gray-200 my-1" />
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/adjustments" @click="closeAllDropdowns">Ajustes de Inventario</RouterLink>
-                <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/movements" @click="closeAllDropdowns">Historial de Mov.</RouterLink>
+
+                <!-- Gestión de Órdenes -->
+                <RouterLink v-if="authStore.hasPermission('read_tasks')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/tasks" @click="closeAllDropdowns">
+                  Asignar Tareas
+                </RouterLink>
+                <RouterLink
+                  v-if="authStore.hasPermission('read_workorders')"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  active-class="bg-blue-50 text-blue-700 font-bold"
+                  to="/work-orders"
+                  @click="closeAllDropdowns">
+                  Órdenes de Trabajo
+                </RouterLink>
+
+                <!-- Historial Inventario -->
+                <template v-if="authStore.hasPermission('read_inventory')">
+                  <hr class="border-gray-200 my-1" />
+                  <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/adjustments" @click="closeAllDropdowns">
+                    Ajustes de Inventario
+                  </RouterLink>
+                  <RouterLink class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/inventory/movements" @click="closeAllDropdowns">Historial de Mov.</RouterLink>
+                </template>
               </div>
             </li>
           </ul>
 
-          <!-- ========================================== -->
-          <!-- ESTADO DE CARGA: CAMPANA Y PERFIL (DERECHA)-->
-          <!-- ========================================== -->
           <ul v-if="authStore.isLoading" class="flex items-center space-x-4">
             <li><SkeletonLoader width="36px" height="36px" radius="8px" /></li>
             <li><SkeletonLoader width="140px" height="36px" radius="6px" /></li>
           </ul>
 
-          <!-- CAMPANA Y PERFIL REALES -->
           <ul v-else-if="authStore.isAuthenticated" class="flex items-center space-x-2">
             <NotificationBell />
 
@@ -188,7 +250,7 @@
       </div>
     </div>
 
-    <!-- Menú Móvil (Se mantiene intacto) -->
+    <!-- MENÚ MÓVIL (Con permisos granulares) -->
     <div v-show="mobileMenuOpen" class="lg:hidden bg-blue-700 px-2 pt-2 pb-3 space-y-1 shadow-inner">
       <RouterLink class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800 font-bold" to="/" @click="toggleMobileMenu">Inicio</RouterLink>
 
@@ -196,19 +258,35 @@
       <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/my-tasks" @click="toggleMobileMenu">Mis Tareas</RouterLink>
       <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/my-work-orders" @click="toggleMobileMenu">Mis Órdenes</RouterLink>
 
-      <template v-if="authStore.isAdmin">
-        <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Gestión (Admin)</div>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/suppliers" @click="toggleMobileMenu">Proveedores</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/clients" @click="toggleMobileMenu">Clientes</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/categories" @click="toggleMobileMenu">Categorías</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/products" @click="toggleMobileMenu">Productos</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/users" @click="toggleMobileMenu">Usuarios</RouterLink>
-        <hr class="border-gray-200 my-1" />
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/tasks" @click="toggleMobileMenu">Asignar Tareas</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/work-orders" @click="toggleMobileMenu">Órdenes de Trabajo</RouterLink>
-        <hr class="border-gray-200 my-1" />
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/adjustments" @click="toggleMobileMenu">Ajustes de Inventario</RouterLink>
-        <RouterLink class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/movements" @click="toggleMobileMenu">Historial de Mov.</RouterLink>
+      <template v-if="hasManagementAccess">
+        <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2">Gestión</div>
+        <RouterLink v-if="authStore.hasPermission('read_suppliers')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/suppliers" @click="toggleMobileMenu">
+          Proveedores
+        </RouterLink>
+        <RouterLink v-if="authStore.hasPermission('read_clients')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/clients" @click="toggleMobileMenu">Clientes</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('read_categories')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/categories" @click="toggleMobileMenu">
+          Categorías
+        </RouterLink>
+        <RouterLink v-if="authStore.hasPermission('read_products')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/products" @click="toggleMobileMenu">Productos</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('manage_users')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/users" @click="toggleMobileMenu">Usuarios</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('manage_users')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700" active-class="bg-blue-50 text-blue-700 font-bold" to="/permissions" @click="closeAllDropdowns">
+          Matriz de Permisos
+        </RouterLink>
+        <hr v-if="authStore.hasPermission('read_tasks') || authStore.hasPermission('read_workorders')" class="border-blue-500 my-1" />
+
+        <RouterLink v-if="authStore.hasPermission('read_tasks')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/tasks" @click="toggleMobileMenu">Asignar Tareas</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('read_workorders')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/work-orders" @click="toggleMobileMenu">
+          Órdenes de Trabajo
+        </RouterLink>
+
+        <hr v-if="authStore.hasPermission('manage_inventory') || authStore.hasPermission('read_inventory')" class="border-blue-500 my-1" />
+
+        <RouterLink v-if="authStore.hasPermission('manage_inventory')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/adjustments" @click="toggleMobileMenu">
+          Ajustes de Inventario
+        </RouterLink>
+        <RouterLink v-if="authStore.hasPermission('read_inventory')" class="block px-3 py-2 pl-6 rounded-md text-base font-medium text-white hover:bg-blue-600" active-class="bg-blue-800" to="/inventory/movements" @click="toggleMobileMenu">
+          Historial de Mov.
+        </RouterLink>
       </template>
 
       <div class="px-3 py-2 text-blue-200 text-sm font-semibold uppercase tracking-wider mt-2 border-t border-blue-500 pt-3">Mi Cuenta</div>

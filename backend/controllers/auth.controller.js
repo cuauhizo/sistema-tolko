@@ -41,24 +41,45 @@ export const signIn = async (req, res) => {
   const { email, password } = req.body
 
   try {
-    // 1. Buscar al usuario por email y que esté ACTIVO
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ? AND is_active = TRUE', [email])
+    // 1. Buscar al usuario por email y traer su rol
+    const query = `
+      SELECT u.*, r.name as role_name 
+      FROM users u 
+      LEFT JOIN roles r ON u.role_id = r.id 
+      WHERE u.email = ? AND u.is_active = TRUE
+    `
+    const [users] = await pool.query(query, [email])
+
     if (users.length === 0) {
       return res.status(404).json({ message: 'Usuario no encontrado o dado de baja' })
     }
     const user = users[0]
 
-    // 2. Comparar la contraseña ingresada con la hasheada en la BD
+    // 2. Comparar la contraseña ingresada con la hasheada
     const passwordIsValid = await bcrypt.compare(password, user.password)
     if (!passwordIsValid) {
       return res.status(401).json({ token: null, message: 'Contraseña no válida' })
     }
 
-    // 3. Si es válida, crear y enviar el token
+    // 3. Buscar los permisos específicos para el rol de este usuario
+    const [permissionsData] = await pool.query(
+      `SELECT p.name 
+       FROM permissions p 
+       JOIN role_permissions rp ON p.id = rp.permission_id 
+       WHERE rp.role_id = ?`,
+      [user.role_id],
+    )
+
+    // Transformamos el resultado en un arreglo simple (ej. ['read_clients', 'create_clients'])
+    const userPermissions = permissionsData.map(p => p.name)
+
+    // 4. Crear el token INCLUYENDO el arreglo de permisos
     const token = jwt.sign(
       {
         id: user.id,
         role_id: user.role_id,
+        role: user.role_name,
+        permissions: userPermissions,
         username: user.username,
         email: user.email,
         createdAt: user.created_at,

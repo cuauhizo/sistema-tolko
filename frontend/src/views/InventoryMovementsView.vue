@@ -2,6 +2,8 @@
   import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useInventoryStore } from '../stores/inventory'
+  import { useAuthStore } from '../stores/auth'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importaciones de PrimeVue
   import DataTable from 'primevue/datatable'
@@ -13,6 +15,7 @@
 
   const router = useRouter()
   const inventoryStore = useInventoryStore()
+  const authStore = useAuthStore()
 
   onMounted(() => {
     inventoryStore.fetchMovements()
@@ -54,13 +57,22 @@
       </div>
 
       <!-- Botón para ir a registrar un movimiento manual -->
-      <button @click="router.push('/inventory/adjustments')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors flex items-center">
+      <button v-if="authStore.hasPermission('manage_inventory')" @click="router.push('/inventory/adjustments')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors flex items-center">
         <i class="pi pi-plus-circle mr-2"></i>
         Registrar Movimiento
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="inventoryStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border p-6 border-gray-100 overflow-hidden">
       <DataTable
         :value="inventoryStore.movements"
         :paginator="true"
@@ -70,7 +82,6 @@
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         :globalFilterFields="['product_name', 'reason', 'work_order_title', 'user_name', 'movement_type']"
-        :loading="inventoryStore.isLoading"
         size="small"
         stripedRows
         showGridlines
@@ -87,12 +98,6 @@
 
         <template #empty>
           <div class="text-center py-4 text-gray-500">No se encontraron movimientos de inventario.</div>
-        </template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando historial...
-          </div>
         </template>
 
         <!-- Columna Fecha y Usuario combinados para ahorrar espacio -->

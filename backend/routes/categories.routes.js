@@ -1,13 +1,13 @@
-import { Router } from 'express';
-import { getCategories, createCategory, updateCategory, deleteCategory } from '../controllers/categories.controller.js';
-import { verifyToken, isAdmin } from '../middlewares/authJwt.js';
+import { Router } from 'express'
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../controllers/categories.controller.js'
+import { verifyToken, hasPermission } from '../middlewares/authJwt.js'
 
-const router = Router();
+const router = Router()
 
-// Solo los administradores podrán crear, actualizar o eliminar categorías
-router.get('/', [verifyToken, isAdmin], getCategories);
-router.post('/', [verifyToken, isAdmin], createCategory);
-router.put('/:id', [verifyToken, isAdmin], updateCategory);
-router.delete('/:id', [verifyToken, isAdmin], deleteCategory);
+// Protegemos cada ruta con su permiso granular correspondiente
+router.get('/', [verifyToken, hasPermission('read_categories')], getCategories)
+router.post('/', [verifyToken, hasPermission('create_categories')], createCategory)
+router.put('/:id', [verifyToken, hasPermission('update_categories')], updateCategory)
+router.delete('/:id', [verifyToken, hasPermission('delete_categories')], deleteCategory)
 
-export default router;
+export default router

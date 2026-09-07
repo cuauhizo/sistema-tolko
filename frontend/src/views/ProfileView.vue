@@ -61,8 +61,8 @@
             </button>
           </div>
           <h2 class="text-xl font-bold text-gray-900 capitalize">{{ authStore.username }}</h2>
-          <p class="text-blue-600 font-medium text-sm mb-4">
-            {{ authStore.isAdmin ? 'Administrador del Sistema' : 'Usuario Estándar' }}
+          <p class="text-blue-600 font-medium text-sm capitalize mb-4">
+            {{ authStore.userRole || 'Usuario Estándar' }}
           </p>
 
           <div class="border-t border-gray-100 pt-4 mt-2 text-left space-y-3">
@@ -72,7 +72,7 @@
             </div>
             <div class="flex items-center text-sm">
               <i class="pi pi-briefcase text-gray-400 w-6"></i>
-              <span class="text-gray-600">Área de Operaciones</span>
+              <span class="text-gray-600">{{ authStore.userRole || 'Usuario Estándar' }}</span>
             </div>
             <div class="flex items-center text-sm">
               <i class="pi pi-calendar text-gray-400 w-6"></i>

@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, watch, onMounted, computed } from 'vue'
   import { useUsersStore } from '../stores/users'
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
@@ -69,6 +69,38 @@
 
   defineExpose({ openModal, closeModal })
 
+  // --- Flujo Estricto de Estados ---
+  const allowedStatuses = computed(() => {
+    // Si es una tarea nueva, solo puede empezar como pendiente
+    if (!isEditMode.value) {
+      return [{ value: 'pendiente', label: 'Pendiente' }]
+    }
+
+    // Si la estamos editando, leemos su estado original (almacenado en props)
+    const current = props.taskToEdit?.status || 'pendiente'
+
+    if (current === 'pendiente') {
+      return [
+        { value: 'pendiente', label: 'Pendiente' },
+        { value: 'en_progreso', label: 'Iniciar Tarea (En Progreso)' },
+      ]
+    }
+
+    if (current === 'en_progreso') {
+      return [
+        { value: 'en_progreso', label: 'En Progreso' },
+        { value: 'completada', label: 'Marcar como Completada' },
+      ]
+    }
+
+    if (current === 'completada') {
+      return [{ value: 'completada', label: 'Completada (Cerrada)' }]
+    }
+
+    // Por seguridad, si hay un estado desconocido, lo mostramos
+    return [{ value: current, label: current }]
+  })
+
   // --- Watchers ---
   watch(
     () => props.taskToEdit,
@@ -134,9 +166,9 @@
                 name="status"
                 class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
                 :class="errors.status ? 'border-red-500 bg-red-50' : 'border-gray-300'">
-                <option value="pendiente">Pendiente</option>
-                <option value="en_progreso">En Progreso</option>
-                <option value="completada">Completada</option>
+                <option v-for="option in allowedStatuses" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
               </Field>
               <ErrorMessage name="status" class="text-red-500 text-xs mt-1 block font-medium" />
             </div>

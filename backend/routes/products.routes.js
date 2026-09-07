@@ -1,18 +1,23 @@
 import { Router } from 'express'
-import { getProducts, createProduct, updateProduct, deleteProduct, getLowStockProducts } from '../controllers/products.controller.js'
-import { verifyToken, isAdmin } from '../middlewares/authJwt.js'
+import * as productController from '../controllers/products.controller.js'
+import { verifyToken, hasPermission, hasRole } from '../middlewares/authJwt.js'
 
 const router = Router()
 
-// Cualquiera puede ver los productos
-router.get('/', [verifyToken], getProducts)
+// 1. Verificación básica: Debe tener sesión iniciada para cualquier cosa
+router.use(verifyToken)
 
-// Alertas de bajo stock (debe ir antes de cualquier ruta con /:id si la tuvieras)
-router.get('/low-stock', [verifyToken], getLowStockProducts)
+// 2. RUTAS DE LECTURA (Disponibles para todos, necesarias para llenar los selects en las órdenes)
+router.get('/low-stock', productController.getLowStockProducts)
+router.get('/', productController.getProducts)
+router.get('/:id', productController.getProductById)
 
-// Solo usuarios autenticados Y que sean admin pueden crear, actualizar o eliminar
-router.post('/', [verifyToken, isAdmin], createProduct)
-router.put('/:id', [verifyToken, isAdmin], updateProduct)
-router.delete('/:id', [verifyToken, isAdmin], deleteProduct)
+// 3. RUTAS DE MODIFICACIÓN (Solo quienes tengan el permiso específico pueden alterar el inventario)
+// Si prefieres usar roles temporalmente, cámbialo por: const canManage = hasRole(['superadmin', 'administracion']);
+const canManage = hasPermission('manage_inventory')
+
+router.post('/', canManage, productController.createProduct)
+router.put('/:id', canManage, productController.updateProduct)
+router.delete('/:id', canManage, productController.deleteProduct)
 
 export default router

@@ -19,6 +19,8 @@ import notificationsRoutes from './routes/notifications.routes.js'
 import publicRoutes from './routes/public.routes.js'
 import suppliersRoutes from './routes/suppliers.routes.js'
 import clientsRoutes from './routes/clients.routes.js'
+import rolesRoutes from './routes/roles.routes.js'
+import permissionsRoutes from './routes/roles.routes.js'
 
 // Variables de entorno
 dotenv.config()
@@ -92,6 +94,7 @@ app.use('/api/public', publicRoutes)
 // Definir una ruta
 // Rutas de la API
 app.use('/api/auth', authRoutes)
+app.use('/api/roles', rolesRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/products', productsRoutes)
 app.use('/api/dashboard', dashboardRoutes)

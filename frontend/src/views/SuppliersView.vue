@@ -1,6 +1,8 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useSuppliersStore } from '../stores/suppliers'
+  import { useAuthStore } from '../stores/auth'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importaciones de PrimeVue
   import DataTable from 'primevue/datatable'
@@ -13,6 +15,7 @@
 
   // --- Estado del Componente ---
   const suppliersStore = useSuppliersStore()
+  const authStore = useAuthStore()
 
   // Modales y Formularios
   const showFormModal = ref(false)
@@ -87,15 +90,28 @@
         <i class="pi pi-truck !text-3xl text-slate-600 mr-3"></i>
         <h1 class="text-2xl font-bold text-gray-800">Gestionar Proveedores</h1>
       </div>
-      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openCreateModal">
+      <!-- NUEVO: Validación de permiso para crear -->
+      <button
+        v-if="authStore.hasPermission('create_suppliers')"
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        @click="openCreateModal">
         <i class="pi pi-plus mr-2"></i>
         Nuevo Proveedor
       </button>
     </div>
 
-    <!-- Tabla PrimeVue -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <!-- NUEVO: Agregamos paginatorTemplate y currentPageReportTemplate -->
+    <!-- ESTADO DE CARGA: Skeleton Loader (Se muestra mientras isLoading es true) -->
+    <div v-if="suppliersStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <!-- Falso buscador superior -->
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <!-- Falsas filas de la tabla -->
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL (Se muestra cuando isLoading es false) -->
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
       <DataTable
         :value="suppliersStore.suppliers"
         :paginator="true"
@@ -109,7 +125,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="suppliersStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex justify-end p-2">
@@ -121,12 +136,6 @@
         </template>
 
         <template #empty><div class="text-center py-4 text-gray-500">No se encontraron proveedores.</div></template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando proveedores...
-          </div>
-        </template>
 
         <!-- Columnas -->
         <Column field="name" header="Proveedor / Giro" :sortable="true" style="min-width: 14rem">
@@ -155,7 +164,6 @@
               <i class="pi pi-user mr-2 text-blue-500"></i>
               {{ data.contact_name }}
             </div>
-            <!-- Mostrar Celular / WhatsApp del vendedor -->
             <div class="text-sm text-gray-600 flex items-center mb-1" v-if="data.contact_phone">
               <i class="pi pi-whatsapp mr-2 text-green-500"></i>
               {{ data.contact_phone }}
@@ -167,11 +175,12 @@
           </template>
         </Column>
 
+        <!-- Acciones con Permisos -->
         <Column header="Acciones" style="width: 10rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openEditModal(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+              <Button v-if="authStore.hasPermission('update_suppliers')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openEditModal(data)" />
+              <Button v-if="authStore.hasPermission('delete_suppliers')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
             </div>
           </template>
         </Column>

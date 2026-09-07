@@ -1,7 +1,9 @@
 <script setup>
   import { onMounted, ref, computed } from 'vue'
+  import { useAuthStore } from '../stores/auth'
   import { useWorkOrdersStore } from '../stores/workOrders'
   import WorkOrderForm from '../components/WorkOrderForm.vue'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
   import { formatStatus, formatWorkOrderId } from '@/utils/formatters'
 
   // Importaciones de PrimeVue
@@ -12,10 +14,10 @@
   import InputText from 'primevue/inputtext'
   import IconField from 'primevue/iconfield'
   import InputIcon from 'primevue/inputicon'
-  import Skeleton from 'primevue/skeleton'
   import { FilterMatchMode } from '@primevue/core/api'
 
   const workOrdersStore = useWorkOrdersStore()
+  const authStore = useAuthStore()
 
   const orderToEdit = ref(null)
   const orderToDelete = ref(null)
@@ -101,13 +103,26 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Órdenes de Trabajo</h1>
-      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openModalForNew">
+      <!-- NUEVO: Validación de permiso -->
+      <button
+        v-if="authStore.hasPermission('create_workorders')"
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        @click="openModalForNew">
         <i class="pi pi-plus mr-2"></i>
         Nueva Orden
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="workOrdersStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border p-6 border-gray-100 overflow-hidden">
       <DataTable
         ref="dt"
         :value="formattedWorkOrders"
@@ -118,7 +133,6 @@
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         v-model:filters="filters"
         :globalFilterFields="['folio', 'title', 'client_name', 'assigned_to', 'status']"
-        :loading="workOrdersStore.isLoading"
         size="small"
         stripedRows
         showGridlines
@@ -150,7 +164,7 @@
         </template>
 
         <!-- Skeleton Loaders -->
-        <template #loading>
+        <!-- <template #loading>
           <div class="p-4 border-t border-gray-100">
             <div v-for="i in 5" :key="i" class="flex space-x-4 mb-4 w-full">
               <Skeleton width="10%" height="2rem" />
@@ -161,7 +175,7 @@
               <Skeleton width="10%" height="2rem" />
             </div>
           </div>
-        </template>
+        </template> -->
 
         <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
           <template #body="{ data }">
@@ -193,10 +207,13 @@
           <template #body="{ data }">
             <div class="flex space-x-2">
               <RouterLink :to="{ name: 'work-order-detail', params: { id: data.id } }">
-                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-outlined p-button-sm" />
+                <Button icon="pi pi-eye" class="p-button-rounded p-button-info p-button-outlined p-button-sm" title="Ver Detalles" />
               </RouterLink>
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openModalForEdit(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+
+              <Button v-if="authStore.hasPermission('update_workorders')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openModalForEdit(data)" title="Editar" />
+
+              <!-- AQUI REEMPLAZAMOS EL hasRole POR hasPermission -->
+              <Button v-if="authStore.hasPermission('delete_workorders')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" title="Eliminar" />
             </div>
           </template>
         </Column>

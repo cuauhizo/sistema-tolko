@@ -29,9 +29,6 @@
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- ========================================== -->
-    <!-- ESTADO DE CARGA (TUS SKELETONS)            -->
-    <!-- ========================================== -->
     <div v-if="userDashboardStore.isLoading">
       <!-- Skeletons para las Tarjetas Superiores (KPIs) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -60,9 +57,6 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- CONTENIDO REAL (TU CÓDIGO ORIGINAL)        -->
-    <!-- ========================================== -->
     <div v-else key="dashboard-loaded-content">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl shadow-sm text-white p-6 relative overflow-hidden">

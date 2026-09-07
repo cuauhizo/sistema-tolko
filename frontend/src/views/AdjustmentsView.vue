@@ -117,6 +117,7 @@
               <Select
                 v-model="formData.product_id"
                 :options="productsStore.products"
+                id="product"
                 optionLabel="name"
                 optionValue="id"
                 :filterFields="['name', 'sku']"

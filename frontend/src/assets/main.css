@@ -1,5 +1,43 @@
+/* ─── Fuente Inter desde Google Fonts ─── */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Aquí abajo dejas cualquier otro CSS personalizado que ya tuvieras */
+/* ─── Variables globales del Design System Tolko ─── */
+@layer base {
+  :root {
+    --color-primary: #d62b2b;
+    --color-ink: #111111;
+    --color-surface: #f8f9fa;
+    --radius-card: 0.75rem;
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.07);
+  }
+
+  html {
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar personalizado sutil */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}

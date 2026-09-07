@@ -1,7 +1,9 @@
 <script setup>
   import { onMounted, ref, computed } from 'vue'
   import { useTasksStore } from '../stores/tasks'
+  import { useAuthStore } from '../stores/auth'
   import TaskForm from '../components/TaskForm.vue'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
   import { formatStatus, formatTaskId } from '@/utils/formatters'
 
   // Importaciones de PrimeVue
@@ -16,6 +18,7 @@
 
   // --- Estado del Componente ---
   const tasksStore = useTasksStore()
+  const authStore = useAuthStore()
 
   // Refs para controlar los datos y los modales
   const taskToEdit = ref(null)
@@ -102,13 +105,24 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Gestión de Tareas</h1>
-      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openTaskModal(null)">
+      <button
+        v-if="authStore.hasPermission('create_tasks')"
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        @click="openTaskModal(null)">
         <i class="pi pi-plus mr-2"></i>
         Nueva Tarea
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-if="tasksStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border p-6 border-gray-100 overflow-hidden">
       <DataTable
         :value="formattedTasks"
         :paginator="true"
@@ -122,7 +136,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="tasksStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex justify-end p-2">
@@ -134,12 +147,6 @@
         </template>
         <template #empty>
           <div class="text-center py-4 text-gray-500">No se encontraron tareas.</div>
-        </template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando datos de tareas...
-          </div>
         </template>
 
         <Column field="folio" header="Folio" :sortable="true" style="width: 8rem">
@@ -183,8 +190,8 @@
         <Column header="Acciones" style="width: 10rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openTaskModal(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+              <Button v-if="authStore.hasPermission('update_tasks')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openTaskModal(data)" />
+              <Button v-if="authStore.hasPermission('delete_tasks')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
             </div>
           </template>
         </Column>

@@ -3,6 +3,7 @@
   import { onMounted, ref } from 'vue'
   import { useProductsStore } from '../stores/products'
   import { useCategoriesStore } from '../stores/categories'
+  import { useAuthStore } from '../stores/auth'
   import ProductForm from '../components/ProductForm.vue'
 
   // Importaciones de PrimeVue para la tabla
@@ -18,6 +19,7 @@
   // --- Estado del Componente ---
   const productsStore = useProductsStore()
   const categoriesStore = useCategoriesStore()
+  const authStore = useAuthStore()
 
   // Refs para controlar los datos y los modales
   const productToEdit = ref(null)
@@ -99,15 +101,22 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Inventario de Productos</h1>
-      <button
-        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        @click="openProductModal(null)">
+      <button v-if="authStore.hasPermission('create_products')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm..." @click="openProductModal(null)">
         <i class="pi pi-plus mr-2"></i>
         Nuevo Producto
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="productsStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
       <DataTable
         ref="dt"
         :value="productsStore.products"
@@ -122,7 +131,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="productsStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex flex-col sm:flex-row justify-end items-center gap-3 p-2">
@@ -146,19 +154,6 @@
               <i class="pi pi-plus mr-2 text-sm"></i>
               Agregar mi primer producto
             </button>
-          </div>
-        </template>
-
-        <!-- NUEVO: Skeleton Loaders Personalizados -->
-        <template #loading>
-          <div class="p-4 border-t border-gray-100">
-            <div v-for="i in 5" :key="i" class="flex space-x-4 mb-4 w-full">
-              <SkeletonLoader width="25%" height="2rem" />
-              <SkeletonLoader width="15%" height="2rem" />
-              <SkeletonLoader width="20%" height="2rem" />
-              <SkeletonLoader width="15%" height="2rem" />
-              <SkeletonLoader width="10%" height="2rem" />
-            </div>
           </div>
         </template>
 
@@ -207,8 +202,8 @@
         <Column header="Acciones" :exportable="false" style="width: 8rem">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click.stop="openProductModal(data)" title="Editar" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click.stop="openDeleteModal(data)" title="Eliminar" />
+              <Button v-if="authStore.hasPermission('update_products')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click.stop="openProductModal(data)" title="Editar" />
+              <Button v-if="authStore.hasPermission('delete_products')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click.stop="openDeleteModal(data)" title="Eliminar" />
             </div>
           </template>
         </Column>

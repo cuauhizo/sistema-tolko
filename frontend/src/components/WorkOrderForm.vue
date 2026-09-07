@@ -1,8 +1,9 @@
 <script setup>
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, watch, onMounted, computed } from 'vue'
   import { useUsersStore } from '../stores/users'
   import { useProductsStore } from '../stores/products'
   import { useClientsStore } from '../stores/clients'
+  import { useAuthStore } from '../stores/auth'
   import { Form, Field, ErrorMessage } from 'vee-validate'
   import * as yup from 'yup'
 
@@ -32,6 +33,7 @@
   const usersStore = useUsersStore()
   const productsStore = useProductsStore()
   const clientsStore = useClientsStore()
+  const authStore = useAuthStore()
 
   // --- Estado del Componente ---
   const order = ref({})
@@ -39,6 +41,61 @@
   const productSearch = ref(null)
   const isEditMode = ref(false)
 
+  // --- Flujo Estricto de Estados para Órdenes ---
+  const allowedStatuses = computed(() => {
+    // MODO DIOS: Si es Admin/Superadmin, puede elegir cualquier estado en cualquier momento
+    if (authStore.isAdmin) {
+      return [
+        { value: 'pendiente', label: 'Pendiente' },
+        { value: 'en_progreso', label: 'En Progreso' },
+        { value: 'por_aprobar', label: 'Pendiente de Aprobación' },
+        { value: 'completada', label: 'Completada' },
+        { value: 'cancelada', label: 'Cancelada' },
+      ]
+    }
+
+    // FLUJO ESTRICTO: Para los demás usuarios (Operativos/Coordinadores)
+    if (!isEditMode.value) {
+      return [{ value: 'pendiente', label: 'Pendiente' }]
+    }
+
+    const current = props.orderToEdit?.status || 'pendiente'
+
+    if (current === 'pendiente') {
+      return [
+        { value: 'pendiente', label: 'Pendiente' },
+        { value: 'en_progreso', label: 'Iniciar Trabajo (En Progreso)' },
+        { value: 'cancelada', label: 'Cancelar Orden' },
+      ]
+    }
+
+    if (current === 'en_progreso') {
+      return [
+        { value: 'en_progreso', label: 'En Progreso' },
+        { value: 'por_aprobar', label: 'Terminar y Enviar a Aprobación' },
+        { value: 'cancelada', label: 'Cancelar Orden' },
+      ]
+    }
+
+    if (current === 'por_aprobar') {
+      return [
+        { value: 'por_aprobar', label: 'Pendiente de Aprobación' },
+        { value: 'completada', label: 'Aprobar y Marcar Completada' },
+        { value: 'en_progreso', label: 'Rechazar (Regresar a Progreso)' },
+        { value: 'cancelada', label: 'Cancelar Orden' },
+      ]
+    }
+
+    if (current === 'completada') {
+      return [{ value: 'completada', label: 'Completada (Cerrada)' }]
+    }
+
+    if (current === 'cancelada') {
+      return [{ value: 'cancelada', label: 'Cancelada (Cerrada)' }]
+    }
+
+    return [{ value: current, label: current }]
+  })
   // --- Esquema de Validación con Yup ---
   const schema = yup.object({
     title: yup.string().required('El título es obligatorio').trim(),
@@ -118,12 +175,12 @@
         if (formattedOrder.end_date) {
           formattedOrder.end_date = new Date(formattedOrder.end_date).toISOString().split('T')[0]
         }
-        
+
         // Aseguramos que task_types sea un arreglo
         if (!formattedOrder.task_types) {
           formattedOrder.task_types = []
         }
-        
+
         order.value = formattedOrder
         modalTitle.value = 'Editar Orden de Trabajo'
         isEditMode.value = true
@@ -222,8 +279,6 @@
             </div>
           </div>
 
-
-
           <!-- FILA 3: Asignación y Fechas (Ahora ocupa 6 y 6 columnas sin start_date) -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
             <div class="md:col-span-6">
@@ -275,12 +330,12 @@
                 <Field type="checkbox" name="task_types" value="impresion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                 <span class="ml-2 text-sm text-gray-700 font-medium">Impresión</span>
               </label>
-              
+
               <label class="inline-flex items-center cursor-pointer">
                 <Field type="checkbox" name="task_types" value="construccion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                 <span class="ml-2 text-sm text-gray-700 font-medium">Construcción</span>
               </label>
-              
+
               <label class="inline-flex items-center cursor-pointer">
                 <Field type="checkbox" name="task_types" value="instalacion" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                 <span class="ml-2 text-sm text-gray-700 font-medium">Instalación</span>
@@ -319,11 +374,9 @@
                 :class="errors.status ? 'border-red-500 bg-red-50' : 'border-gray-300'"
                 id="status"
                 name="status">
-                <option value="pendiente">Pendiente</option>
-                <option value="en_progreso">En Progreso</option>
-                <option value="por_aprobar">Pendiente de Aprobación</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
+                <option v-for="option in allowedStatuses" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
               </Field>
               <ErrorMessage name="status" class="text-red-500 text-xs mt-1 block" />
             </div>

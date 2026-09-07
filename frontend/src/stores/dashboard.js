@@ -15,18 +15,23 @@ export const useDashboardStore = defineStore('dashboard', {
   }),
 
   actions: {
-    async fetchStats() {
-      this.isLoading = true
+    // Agregamos el parámetro isSilent por defecto en false
+    async fetchStats(isSilent = false) {
+      // Solo encendemos el loading (y los esqueletos) si NO es silencioso
+      if (!isSilent) {
+        this.isLoading = true
+      }
       this.error = null
+
       try {
         const { data } = await apiClient.get('/dashboard')
         this.stats = data
       } catch (error) {
-        this.error = 'No se pudieron cargar las estadísticas.'
-        console.error('Error al obtener las estadísticas del dashboard:', error)
+        this.error = 'Error al cargar los datos del dashboard'
+        console.error(error)
       } finally {
         this.isLoading = false
       }
-    },
-  },
+    }
+  }
 })

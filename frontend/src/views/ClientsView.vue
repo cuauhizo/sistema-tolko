@@ -1,6 +1,8 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useClientsStore } from '../stores/clients'
+  import { useAuthStore } from '../stores/auth'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importaciones de PrimeVue
   import DataTable from 'primevue/datatable'
@@ -13,6 +15,7 @@
 
   // --- Estado del Componente ---
   const clientsStore = useClientsStore()
+  const authStore = useAuthStore()
 
   // Modales y Formularios
   const showFormModal = ref(false)
@@ -85,14 +88,25 @@
         <i class="pi pi-users !text-3xl text-slate-600 mr-3"></i>
         <h1 class="text-2xl font-bold text-gray-800">Directorio de Clientes</h1>
       </div>
-      <button class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" @click="openCreateModal">
+      <button
+        v-if="authStore.hasPermission('create_clients')"
+        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        @click="openCreateModal">
         <i class="pi pi-plus mr-2"></i>
         Nuevo Cliente
       </button>
     </div>
 
-    <!-- Tabla PrimeVue -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="clientsStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
       <DataTable
         :value="clientsStore.clients"
         :paginator="true"
@@ -106,7 +120,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="clientsStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex justify-end p-2">
@@ -118,12 +131,6 @@
         </template>
 
         <template #empty><div class="text-center py-4 text-gray-500">No se encontraron clientes.</div></template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando clientes...
-          </div>
-        </template>
 
         <!-- Columnas -->
         <Column field="name" header="Cliente / Empresa" :sortable="true" style="min-width: 14rem">
@@ -155,11 +162,12 @@
           </template>
         </Column>
 
+        <!-- Acciones con Permisos -->
         <Column header="Acciones" style="width: 10rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openEditModal(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+              <Button v-if="authStore.hasPermission('update_clients')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openEditModal(data)" />
+              <Button v-if="authStore.hasPermission('delete_clients')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
             </div>
           </template>
         </Column>

@@ -1,7 +1,9 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useCategoriesStore } from '../stores/categories'
+  import { useAuthStore } from '../stores/auth'
   import CategoryForm from '../components/CategoryForm.vue'
+  import SkeletonLoader from '../components/SkeletonLoader.vue'
 
   // Importaciones de PrimeVue
   import DataTable from 'primevue/datatable'
@@ -14,6 +16,7 @@
 
   // --- Estado del Componente ---
   const categoriesStore = useCategoriesStore()
+  const authStore = useAuthStore()
 
   // Refs para controlar los datos y los modales
   const categoryToEdit = ref(null)
@@ -80,6 +83,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <h1 class="text-2xl font-bold text-gray-800">Gestionar Categorías</h1>
       <button
+        v-if="authStore.hasPermission('create_categories')"
         class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         @click="openCategoryModal(null)">
         <i class="pi pi-plus mr-2"></i>
@@ -87,7 +91,16 @@
       </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- ESTADO DE CARGA: Skeleton Loader -->
+    <div v-if="categoriesStore.isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <div class="flex justify-end mb-4">
+        <SkeletonLoader width="250px" height="40px" radius="8px" />
+      </div>
+      <SkeletonLoader v-for="i in 6" :key="i" width="100%" height="50px" radius="8px" />
+    </div>
+
+    <!-- TABLA REAL -->
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
       <DataTable
         :value="categoriesStore.categories"
         :paginator="true"
@@ -101,7 +114,6 @@
         stripedRows
         showGridlines
         responsiveLayout="scroll"
-        :loading="categoriesStore.isLoading"
         class="border-none">
         <template #header>
           <div class="flex justify-end p-2">
@@ -113,14 +125,9 @@
             </IconField>
           </div>
         </template>
+
         <template #empty>
           <div class="text-center py-4 text-gray-500">No se encontraron categorías.</div>
-        </template>
-        <template #loading>
-          <div class="text-center py-4 text-gray-500">
-            <i class="pi pi-spin pi-spinner mr-2"></i>
-            Cargando categorías...
-          </div>
         </template>
 
         <Column field="name" header="Nombre Categoría" :sortable="true" style="min-width: 14rem"></Column>
@@ -128,8 +135,8 @@
         <Column header="Acciones" style="width: 10rem" :exportable="false">
           <template #body="{ data }">
             <div class="flex space-x-2">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openCategoryModal(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
+              <Button v-if="authStore.hasPermission('update_categories')" icon="pi pi-pencil" class="p-button-rounded p-button-warning p-button-outlined p-button-sm" @click="openCategoryModal(data)" />
+              <Button v-if="authStore.hasPermission('delete_categories')" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-outlined p-button-sm" @click="openDeleteModal(data)" />
             </div>
           </template>
         </Column>
